@@ -1,14 +1,26 @@
+
+/**
+ * 参考工具使用手册：
+ * 1. minimist: https://www.npmjs.com/package/minimist
+ *
+ * */
+import * as minimist from 'minimist'
 import * as path from 'node:path'
 
 import { dotenvParse, fs, patchEnv } from '@tarojs/helper'
 import { Config, Kernel } from '@tarojs/service'
-import * as minimist from 'minimist'
 
 import customCommand from './commands/customCommand'
 import { getPkgVersion } from './util'
 
 const DISABLE_GLOBAL_CONFIG_COMMANDS = ['build', 'global-config', 'doctor', 'update', 'config']
 const DEFAULT_FRAMEWORK = 'react'
+
+// TODO: 1. eslint / prettier 格式化问题未生效
+// TODO: 2. tslint ，ts 版本校验问题，貌似 vscode 内置的 ts 与 仓库的 ts 不匹配，调整为 仓库自带的 ts 版本
+// TODO: 3. debugger，断点调试待配置
+// TODO: 4. node 装包>18, 装 pnpm 包管理工具
+// TODO: 5. vscode TODO 主题插件颜色配置下
 
 export default class CLI {
   appPath: string
@@ -26,14 +38,23 @@ export default class CLI {
         version: ['v'],
         help: ['h'],
         port: ['p'],
-        resetCache: ['reset-cache'], // specially for rn, Removes cached files.
-        publicPath: ['public-path'], // specially for rn, assets public path.
-        bundleOutput: ['bundle-output'], // specially for rn, File name where to store the resulting bundle.
-        sourcemapOutput: ['sourcemap-output'], // specially for rn, File name where to store the sourcemap file for resulting bundle.
-        sourceMapUrl: ['sourcemap-use-absolute-path'], // specially for rn, Report SourceMapURL using its full path.
-        sourcemapSourcesRoot: ['sourcemap-sources-root'], // specially for rn, Path to make sourcemaps sources entries relative to.
-        assetsDest: ['assets-dest'], // specially for rn, Directory name where to store assets referenced in the bundle.
         envPrefix: ['env-prefix'],
+
+        /** specially for rn, RN 相关的指定配置项 */
+        // Removes cached files.
+        resetCache: ['reset-cache'],
+        // assets public path.
+        publicPath: ['public-path'],
+        // File name where to store the resulting bundle.
+        bundleOutput: ['bundle-output'],
+        // File name where to store the sourcemap file for resulting bundle.
+        sourcemapOutput: ['sourcemap-output'],
+        // Report SourceMapURL using its full path.
+        sourceMapUrl: ['sourcemap-use-absolute-path'],
+        // Path to make sourcemaps sources entries relative to.
+        sourcemapSourcesRoot: ['sourcemap-sources-root'],
+        // Directory name where to store assets referenced in the bundle.
+        assetsDest: ['assets-dest'],
       },
       boolean: ['version', 'help', 'disable-global-config'],
       default: {
@@ -42,8 +63,11 @@ export default class CLI {
         'inject-global-style': true
       },
     })
+
     const _ = args._
-    const command = _[0]
+    const [command, projectName] = _
+
+    // TODO: 看到这里了！！！
     if (command) {
       const appPath = this.appPath
       const presetsPath = path.resolve(__dirname, 'presets')
@@ -75,8 +99,8 @@ export default class CLI {
         command,
       }
       const config = new Config({
-        appPath: this.appPath,
-        disableGlobalConfig: disableGlobalConfig
+        appPath,
+        disableGlobalConfig,
       })
       await config.init(configEnv)
 
@@ -108,12 +132,18 @@ export default class CLI {
         .filter(commandFileName => /^[\w-]+(\.[\w-]+)*\.js$/.test(commandFileName))
         .map(fileName => fileName.replace(/\.js$/, ''))
 
+
       switch (command) {
         case 'inspect':
         case 'build': {
+          // TODO: 122 -180 行，尝试下是否可收起到1个函数内。弄懂这段代码在做什么???
+          // TODO: 保持程序入口/主函数干净，收起函数具体实现，改善代码可读性; 做到不看函数内具体实现即可明确功能；（参考 react 源码风格）
+
+          const { publicPath, bundleOutput, sourcemapOutput, sourceMapUrl, sourcemapSourcesRoot, assetsDest } = args
+
+          // FIXME:【特殊处理】引入/改写 plugin 和 platform 变量 => 解决不支持微信小程序插件编译问题
           let plugin
           let platform = args.type
-          const { publicPath, bundleOutput, sourcemapOutput, sourceMapUrl, sourcemapSourcesRoot, assetsDest } = args
 
           // 针对不同的内置平台注册对应的端平台插件
           switch (platform) {
@@ -146,8 +176,9 @@ export default class CLI {
             preact: '@tarojs/plugin-framework-react',
             solid: '@tarojs/plugin-framework-solid',
           }
-          if (frameworkMap[framework]) {
-            kernel.optsPlugins.push(frameworkMap[framework])
+          const targetFrameworkPlugin = frameworkMap[framework]
+          if (targetFrameworkPlugin) {
+            kernel.optsPlugins.push(targetFrameworkPlugin)
           }
 
           // 编译小程序插件
@@ -155,7 +186,12 @@ export default class CLI {
             plugin = args.plugin
             platform = 'plugin'
             kernel.optsPlugins.push(path.resolve(platformsPath, 'plugin.js'))
-            if (plugin === 'weapp' || plugin === 'alipay' || plugin === 'jd') {
+
+            // TODO: ??? 这是 pluginList, 还是部分的 platform, 如何命名 ???
+            // TODO: 是否已由其他公共的 常量配置文件，不需要单个仓库重复写一份。是否需要提取出去变成公共常量
+            const pluginList = ['weapp', 'alipay', 'jd']
+
+            if (pluginList.includes(plugin)) {
               kernel.optsPlugins.push(`@tarojs/plugin-platform-${plugin}`)
             }
           }
@@ -172,7 +208,7 @@ export default class CLI {
             plugin,
             isWatch: Boolean(args.watch),
             // Note: 是否把 Taro 组件编译为原生自定义组件
-            isBuildNativeComp: _[1] === 'native-components',
+            isBuildNativeComp: projectName === 'native-components',
             // Note: 新的混合编译模式，支持把组件单独编译为原生组件
             newBlended: Boolean(args['new-blended']),
             // Note: 是否禁用编译
@@ -199,7 +235,7 @@ export default class CLI {
           customCommand(command, kernel, {
             _,
             appPath,
-            projectName: _[1] || args.name,
+            projectName: projectName || args.name,
             description: args.description,
             typescript: args.typescript,
             framework: args.framework,
