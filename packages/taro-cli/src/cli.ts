@@ -17,10 +17,8 @@ const DISABLE_GLOBAL_CONFIG_COMMANDS = ['build', 'global-config', 'doctor', 'upd
 const DEFAULT_FRAMEWORK = 'react'
 
 // TODO: 1. eslint / prettier 格式化问题未生效
-// TODO: 2. tslint ，ts 版本校验问题，貌似 vscode 内置的 ts 与 仓库的 ts 不匹配，调整为 仓库自带的 ts 版本
+// TODO: 2. tslint，ts 版本校验问题，貌似 vscode 内置的 ts 与 仓库的 ts 不匹配，调整为 仓库自带的 ts 版本
 // TODO: 3. debugger，断点调试待配置
-// TODO: 4. node 装包>18, 装 pnpm 包管理工具
-// TODO: 5. vscode TODO 主题插件颜色配置下
 
 export default class CLI {
   appPath: string
@@ -67,7 +65,7 @@ export default class CLI {
     const _ = args._
     const [command, projectName] = _
 
-    // TODO: 看到这里了！！！
+
     if (command) {
       const appPath = this.appPath
       const presetsPath = path.resolve(__dirname, 'presets')
@@ -76,18 +74,24 @@ export default class CLI {
       const commandPlugins = fs.readdirSync(commandsPath)
       const targetPlugin = `${command}.js`
 
-      // 设置环境变量
+      /***************** 【读取命令行参数，写入 process.env】设置环境变量 *****************/
       process.env.NODE_ENV ||= args.env
       if (process.env.NODE_ENV === 'undefined' && (command === 'build' || command === 'inspect')) {
         process.env.NODE_ENV = (args.watch ? 'development' : 'production')
       }
       args.type ||= args.t
-      if (args.type) {
-        process.env.TARO_ENV = args.type
-      }
       if (typeof args.plugin === 'string') {
         process.env.TARO_ENV = 'plugin'
+      } else if (args.type) {
+        process.env.TARO_ENV = args.type
       }
+
+
+      // *******************************************
+      // *********** TODO: 看到这里了！！！！**********
+      // *******************************************
+
+
       const mode = args.mode || process.env.NODE_ENV
       // 这里解析 dotenv 以便于 config 解析时能获取 dotenv 配置信息
       const expandEnv = dotenvParse(appPath, args.envPrefix, mode)
