@@ -1,52 +1,55 @@
 import * as path from 'node:path'
+import * as fs from 'fs-extra'
 
 import { parse } from 'dotenv'
 import { expand } from 'dotenv-expand'
-import * as fs from 'fs-extra'
 
 import type { IProjectConfig } from '@tarojs/taro/types/compile'
 
 // 支持 --env-prefix=TARO_APP_,aa 类型参数
 export const formatPrefix = (prefixs: string | string[] = ['TARO_APP_']): string[] => {
-  const prefixsArr: string[] = (Array.isArray(prefixs) ? prefixs : prefixs.split(',')).map(prefix => prefix.trim()).filter(prefix => !!prefix)
+  const prefixsArr = (Array.isArray(prefixs) ? prefixs : prefixs.split(',')).map(prefix => prefix.trim()).filter(prefix => !!prefix)
   return prefixsArr
 }
+
+// 使用 dotenv 库，解析获取所有 .env[.*][.locol] 文件内容
+const parseEnvFiles = (root:string, envFiles: Set<string>): Record<string, string> => {
+  let mergedEnvFileContent = {}
+
+  const readEnvFileFn = (envFilePath: string) => {
+    if (!fs.existsSync(envFilePath)) return
+    const targetEnvFileContent = parse(fs.readFileSync(envFilePath))
+    mergedEnvFileContent = { ...mergedEnvFileContent, ...targetEnvFileContent }
+  }
+
+  envFiles.forEach(envFilePath => {
+    readEnvFileFn(path.resolve(root, envFilePath))
+  })
+
+  return mergedEnvFileContent
+}
+
+// 获取 .env 相关配置文件信息
 export const dotenvParse = (root: string, prefixs: string | string[] = ['TARO_APP_'], mode?: string): Record<string, string> => {
-  const prefixsArr: string[] = formatPrefix(prefixs)
-
-  const envFiles = new Set([
-    /** default file */ `.env`,
-    /** local file */ `.env.local`,
-  ])
-
+  const envFiles = new Set([`.env`, `.env.local`])
   if (mode) {
-    envFiles.add(/** mode file */ `.env.${mode}`)
-    envFiles.add(/** mode local file */ `.env.${mode}.local`)
+    envFiles.add(`.env.${mode}`)
+    envFiles.add(`.env.${mode}.local`)
   }
 
-  let parseTemp = {}
-  const load = envPath => {
-    // file doesn'et exist
-    if (!fs.existsSync(envPath)) return
-    const env = parse(fs.readFileSync(envPath))
-    parseTemp = {
-      ...parseTemp,
-      ...env
-    }
-  }
-
-  envFiles.forEach(envPath => {
-    load(path.resolve(root, envPath))
-  })
-
-  const parsed = {}
-  Object.entries(parseTemp).forEach(([key, value]) => {
-    if (prefixsArr.some(prefix => key.startsWith(prefix)) || ['TARO_APP_ID'].includes(key)) {
-      parsed[key] = value
+  const prefixArr = formatPrefix(prefixs)
+  const originEnvFileContentObj = parseEnvFiles(root, envFiles)
+  const mergedEnvFileContentObj = {}
+  Object.entries(originEnvFileContentObj).forEach(([envKey, envValue]) => {
+    const isTargetEnv = ['TARO_APP_ID'].includes(envKey)
+    const hasTargetPrefix = prefixArr.some(prefixKey => envKey.startsWith(prefixKey))
+    if (isTargetEnv || hasTargetPrefix) {
+      mergedEnvFileContentObj[envKey] = envValue
     }
   })
-  expand({ parsed })
-  return parsed
+  expand({ parsed: mergedEnvFileContentObj })
+
+  return mergedEnvFileContentObj
 }
 
 // 扩展 env

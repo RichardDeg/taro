@@ -86,27 +86,19 @@ export default class CLI {
         process.env.TARO_ENV = args.type
       }
 
+      const mode = args.mode || process.env.NODE_ENV
+      // 需要优先解析 .env 环境变量配置文件 => 以便于后续解析 config 时，能获取到 dotenv 配置信息
+      const dotExpandEnv: Record<string, string> = dotenvParse(appPath, args.envPrefix, mode)
 
       // *******************************************
       // *********** TODO: 看到这里了！！！！**********
       // *******************************************
 
+      const disableGlobalConfig = !!args['disable-global-config'] || DISABLE_GLOBAL_CONFIG_COMMANDS.includes(command)
+      const config = new Config({ appPath, disableGlobalConfig })
+      await config.init({mode, command})
 
-      const mode = args.mode || process.env.NODE_ENV
-      // 这里解析 dotenv 以便于 config 解析时能获取 dotenv 配置信息
-      const expandEnv = dotenvParse(appPath, args.envPrefix, mode)
 
-      const disableGlobalConfig = !!(args['disable-global-config'] || DISABLE_GLOBAL_CONFIG_COMMANDS.includes(command))
-
-      const configEnv = {
-        mode,
-        command,
-      }
-      const config = new Config({
-        appPath,
-        disableGlobalConfig,
-      })
-      await config.init(configEnv)
 
       const kernel = new Kernel({
         appPath,
@@ -121,7 +113,7 @@ export default class CLI {
       // 将自定义的 变量 添加到 config.env 中，实现 definePlugin 字段定义
       const initialConfig = kernel.config?.initialConfig
       if (initialConfig) {
-        initialConfig.env = patchEnv(initialConfig, expandEnv)
+        initialConfig.env = patchEnv(initialConfig, dotExpandEnv)
       }
       if (command === 'doctor') {
         kernel.optsPlugins.push('@tarojs/plugin-doctor')
