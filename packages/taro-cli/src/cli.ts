@@ -90,15 +90,12 @@ export default class CLI {
       // 需要优先解析 .env 环境变量配置文件 => 以便于后续解析 config 时，能获取到 dotenv 配置信息
       const dotExpandEnv: Record<string, string> = dotenvParse(appPath, args.envPrefix, mode)
 
-      // *******************************************
-      // *********** TODO: 看到这里了！！！！**********
-      // *******************************************
-
       const disableGlobalConfig = !!args['disable-global-config'] || DISABLE_GLOBAL_CONFIG_COMMANDS.includes(command)
       const config = new Config({ appPath, disableGlobalConfig })
-      await config.init({mode, command})
-
-
+      // *******************************************************
+      // *********** TODO: 看到 init 方法内部 实现！！！！**********
+      // *******************************************************
+      await config.init({ mode, command })
 
       const kernel = new Kernel({
         appPath,

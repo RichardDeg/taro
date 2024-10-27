@@ -6,7 +6,7 @@ type WebpackMerge = (...configs: Array<object | null | undefined>) => object
 export interface ConfigEnv {
   /** taro 当前执行的命令 */
   command: string
-  /** 当前模式 (mode) */
+  /** 当前模式 */
   mode: string
 }
 

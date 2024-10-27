@@ -241,12 +241,21 @@ export function resolveSync(id: string, opts: TResolve.SyncOpts & { mainFields?:
   }
 }
 
+// TODO: 看到这里了  ??? 待优化代码
+// 解析/拼接/查询 .config.js(x) 或 .config.ts(x) 后缀的配置文件
 export function resolveMainFilePath (p: string, extArrs = SCRIPT_EXT): string {
   if (p.startsWith('pages/') || p === 'app.config') {
     return p
   }
   const realPath = p
   const taroEnv = process.env.TARO_ENV
+
+  /**
+   * TODO: 这段代码有优化空间么???
+   * * 重复计算变量两次???
+   * * taroEnv 的有无处理 逻辑上有重复???
+   * * 是否可通过 for + for 两层 list，简化代码行数
+   * */
   for (let i = 0; i < extArrs.length; i++) {
     const item = extArrs[i]
     if (taroEnv) {

@@ -20,50 +20,48 @@ import {
   DEFAULT_CONFIG_FILE
 } from './utils/constants'
 
+// TODO:??? type 类型文件是如何归置的 ???
 import type { IProjectConfig } from '@tarojs/taro/types/compile'
-
-interface IConfigOptions {
-  appPath: string
-  disableGlobalConfig?: boolean
-}
+import type { IConfigEnv, IConfigOptions } from './utils/types'
 
 export default class Config {
+  /** IConfigOptions['appPath'] */
   appPath: string
-  configPath: string
+  /** IConfigOptions['disableGlobalConfig'] */
+  disableGlobalConfig: boolean
   initialConfig: IProjectConfig
   initialGlobalConfig: IProjectConfig
   isInitSuccess: boolean
-  disableGlobalConfig: boolean
+  configPath: string
 
-  constructor (opts: IConfigOptions) {
-    this.appPath = opts.appPath
-    this.disableGlobalConfig = !!opts?.disableGlobalConfig
-  }
-
-  async init (configEnv: {
-    mode: string
-    command: string
-  }) {
+  constructor ({ appPath, disableGlobalConfig }: IConfigOptions) {
+    this.appPath = appPath
+    this.disableGlobalConfig = !!disableGlobalConfig
     this.initialConfig = {}
     this.initialGlobalConfig = {}
     this.isInitSuccess = false
+  }
+
+  async init (configEnv: IConfigEnv) {
+    // TODO: 看到这里了 resolveScriptPath 函数
     this.configPath = resolveScriptPath(path.join(this.appPath, CONFIG_DIR_NAME, DEFAULT_CONFIG_FILE))
-    if (!fs.existsSync(this.configPath)) {
-      if (this.disableGlobalConfig) return
-      this.initGlobalConfig()
-    } else {
-      createSwcRegister({
-        only: [
-          filePath => filePath.indexOf(path.join(this.appPath, CONFIG_DIR_NAME)) >= 0
-        ]
-      })
-      try {
-        const userExport = getModuleDefaultExport(require(this.configPath))
-        this.initialConfig = typeof userExport === 'function' ? await userExport(merge, configEnv) : userExport
-        this.isInitSuccess = true
-      } catch (err) {
-        console.log(err)
-      }
+    const hasGlobalConfig = fs.existsSync(this.configPath)
+
+    if (!hasGlobalConfig && this.disableGlobalConfig) return
+    if (!hasGlobalConfig && !this.disableGlobalConfig) return this.initGlobalConfig()
+
+    createSwcRegister({
+      only: [
+        filePath => filePath.indexOf(path.join(this.appPath, CONFIG_DIR_NAME)) >= 0
+      ]
+    })
+
+    try {
+      const userExport = getModuleDefaultExport(require(this.configPath))
+      this.initialConfig = typeof userExport === 'function' ? await userExport(merge, configEnv) : userExport
+      this.isInitSuccess = true
+    } catch (err) {
+      console.log(err)
     }
   }
 

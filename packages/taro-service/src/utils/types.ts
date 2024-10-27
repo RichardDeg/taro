@@ -169,3 +169,15 @@ export declare interface IPluginContext {
 }
 
 export declare type TConfig = Record<string, any>
+
+export interface IConfigEnv {
+  /** taro 当前执行的命令 */
+  command: string
+  /** 当前模式 */
+  mode: string
+}
+
+export interface IConfigOptions {
+  appPath: string
+  disableGlobalConfig?: boolean
+}
