@@ -241,46 +241,40 @@ export function resolveSync(id: string, opts: TResolve.SyncOpts & { mainFields?:
   }
 }
 
-// TODO: 看到这里了  ??? 待优化代码
 // 解析/拼接/查询 .config.js(x) 或 .config.ts(x) 后缀的配置文件
 export function resolveMainFilePath (p: string, extArrs = SCRIPT_EXT): string {
-  if (p.startsWith('pages/') || p === 'app.config') {
-    return p
-  }
   const realPath = p
-  const taroEnv = process.env.TARO_ENV
+  if (realPath.startsWith('pages/') || realPath === 'app.config') return realPath
 
-  /**
-   * TODO: 这段代码有优化空间么???
-   * * 重复计算变量两次???
-   * * taroEnv 的有无处理 逻辑上有重复???
-   * * 是否可通过 for + for 两层 list，简化代码行数
-   * */
+  const taroEnv = process.env.TARO_ENV
   for (let i = 0; i < extArrs.length; i++) {
-    const item = extArrs[i]
-    if (taroEnv) {
-      if (fs.existsSync(`${p}.${taroEnv}${item}`)) {
-        return `${p}.${taroEnv}${item}`
-      }
-      if (fs.existsSync(`${p}${path.sep}index.${taroEnv}${item}`)) {
-        return `${p}${path.sep}index.${taroEnv}${item}`
-      }
-      if (fs.existsSync(`${p.replace(/\/index$/, `.${taroEnv}/index`)}${item}`)) {
-        return `${p.replace(/\/index$/, `.${taroEnv}/index`)}${item}`
-      }
-    }
-    if (fs.existsSync(`${p}${item}`)) {
-      return `${p}${item}`
-    }
-    if (fs.existsSync(`${p}${path.sep}index${item}`)) {
-      return `${p}${path.sep}index${item}`
+    const extItem = extArrs[i]
+
+    /** 有 taroEnv 标识的 path */
+    const taroEnvSep = `.${taroEnv}`
+    const taroEnvFilePath1 = `${p}${taroEnvSep}${extItem}`
+    const taroEnvFilePath2 = `${p}${path.sep}index${taroEnvSep}${extItem}`
+    const taroEnvFilePath3 = `${p.replace(/\/index$/, `${taroEnvSep}/index`)}${extItem}`
+    const taroEnvFilePathArrs = [taroEnvFilePath1, taroEnvFilePath2, taroEnvFilePath3]
+    /** 无 taroEnv 标识的 path */
+    const filePath1 = `${p}${extItem}`
+    const filePath2 = `${p}${path.sep}index${extItem}`
+    /** 合并的 path */
+    const filePathArrs = !!taroEnv ?taroEnvFilePathArrs :[filePath1, filePath2]
+
+    for(let j = 0; j < filePathArrs.length; j++) {
+      const filePathItem = filePathArrs[j]
+      if (fs.existsSync(filePathItem)) return filePathItem
     }
   }
+
+  // TODO: 是否可以换一种实现方式，使用正则替换/简化代码，递归传参；p 是什么格式的，有很多层级么，是否有递归的必要性??
   // 存在多端页面但是对应的多端页面配置不存在时，使用该页面默认配置
   if (taroEnv && path.parse(p).base.endsWith(`.${taroEnv}.config`)) {
     const idx = p.lastIndexOf(`.${taroEnv}.config`)
     return resolveMainFilePath(p.slice(0, idx) + '.config')
   }
+
   return realPath
 }
 

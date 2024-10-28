@@ -43,13 +43,13 @@ export default class Config {
   }
 
   async init (configEnv: IConfigEnv) {
-    // TODO: 看到这里了 resolveScriptPath 函数
     this.configPath = resolveScriptPath(path.join(this.appPath, CONFIG_DIR_NAME, DEFAULT_CONFIG_FILE))
     const hasGlobalConfig = fs.existsSync(this.configPath)
 
     if (!hasGlobalConfig && this.disableGlobalConfig) return
     if (!hasGlobalConfig && !this.disableGlobalConfig) return this.initGlobalConfig()
 
+    // TODO: 看到这里了 resolveScriptPath 函数
     createSwcRegister({
       only: [
         filePath => filePath.indexOf(path.join(this.appPath, CONFIG_DIR_NAME)) >= 0
