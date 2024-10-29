@@ -1,10 +1,10 @@
 interface ICreateSwcRegisterParam {
-  only
+  only?: any
   plugins?: [string, any][]
 }
 
 export default function createSwcRegister ({ only, plugins }: ICreateSwcRegisterParam) {
-  const config: Record<string, any> = {
+  const swcRegisteConfig: Record<string, any> = {
     only: Array.from(new Set([...only])),
     jsc: {
       parser: {
@@ -21,10 +21,11 @@ export default function createSwcRegister ({ only, plugins }: ICreateSwcRegister
   }
 
   if (plugins) {
-    config.jsc.experimental = {
+    swcRegisteConfig.jsc.experimental = {
       plugins
     }
   }
 
-  require('@swc/register')(config)
+  // TODO: @swc/register 包已废弃，待升级
+  require('@swc/register')(swcRegisteConfig)
 }

@@ -31,6 +31,7 @@ export default class CLI {
   }
 
   async parseArgs () {
+    /*****************【解析/获取命令行参数】*****************************************/
     const args = minimist(process.argv.slice(2), {
       alias: {
         version: ['v'],
@@ -65,7 +66,6 @@ export default class CLI {
     const _ = args._
     const [command, projectName] = _
 
-
     if (command) {
       const appPath = this.appPath
       const presetsPath = path.resolve(__dirname, 'presets')
@@ -74,7 +74,7 @@ export default class CLI {
       const commandPlugins = fs.readdirSync(commandsPath)
       const targetPlugin = `${command}.js`
 
-      /***************** 【读取命令行参数，写入 process.env】设置环境变量 *****************/
+      /*****************【读取命令行参数，写入 process.env】设置环境变量 *****************/
       process.env.NODE_ENV ||= args.env
       if (process.env.NODE_ENV === 'undefined' && (command === 'build' || command === 'inspect')) {
         process.env.NODE_ENV = (args.watch ? 'development' : 'production')
@@ -87,16 +87,19 @@ export default class CLI {
       }
 
       const mode = args.mode || process.env.NODE_ENV
-      // 需要优先解析 .env 环境变量配置文件 => 以便于后续解析 config 时，能获取到 dotenv 配置信息
+      /*****************【解析 .env 环境变量配置文件】**********************************
+      ******** 需要优先解析 => 以便于后面扩展 kernel.config 内容时 => dotenv 的内容非空 ***
+      *****************************************************************************/
       const dotExpandEnv: Record<string, string> = dotenvParse(appPath, args.envPrefix, mode)
 
+      /*****************【读取 config 配置文件内容】***********************************/
       const disableGlobalConfig = !!args['disable-global-config'] || DISABLE_GLOBAL_CONFIG_COMMANDS.includes(command)
       const config = new Config({ appPath, disableGlobalConfig })
-      // *******************************************************
-      // *********** TODO: 看到 init 方法内部 实现！！！！**********
-      // *******************************************************
       await config.init({ mode, command })
 
+      // ***************************************************************************
+      // *********** TODO: 看到 这里了！！！ ******************************************
+      // ***************************************************************************
       const kernel = new Kernel({
         appPath,
         presets: [

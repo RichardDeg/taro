@@ -146,22 +146,19 @@ export function recursiveFindNodeModules(filePath: string, lastFindPath?: string
 export function getUserHomeDir(): string {
   function homedir(): string {
     const env = process.env
-    const home = env.HOME
+    const home = env.HOME || ''
     const user = env.LOGNAME || env.USER || env.LNAME || env.USERNAME
 
     if (process.platform === 'win32') {
-      return env.USERPROFILE || '' + env.HOMEDRIVE + env.HOMEPATH || home || ''
+      return `${env.USERPROFILE || ''}${env.HOMEDRIVE}${env.HOMEPATH || home}`
     }
-
     if (process.platform === 'darwin') {
-      return home || (user ? '/Users/' + user : '')
+      return home || (user ? `/Users/${user}` : '')
     }
-
     if (process.platform === 'linux') {
-      return home || (process.getuid?.() === 0 ? '/root' : user ? '/home/' + user : '')
+      return home || (process.getuid?.() === 0 ? '/root' : user ? `/home/${user}`: '')
     }
-
-    return home || ''
+    return home
   }
   return typeof (os.homedir as (() => string) | undefined) === 'function' ? os.homedir() : homedir()
 }

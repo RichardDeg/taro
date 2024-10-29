@@ -49,7 +49,7 @@ export default class Config {
     if (!hasGlobalConfig && this.disableGlobalConfig) return
     if (!hasGlobalConfig && !this.disableGlobalConfig) return this.initGlobalConfig()
 
-    // TODO: 看到这里了 resolveScriptPath 函数
+    // TODO:??? 函数在做什么，esbuild 打包工具配置项
     createSwcRegister({
       only: [
         filePath => filePath.indexOf(path.join(this.appPath, CONFIG_DIR_NAME)) >= 0
@@ -58,6 +58,7 @@ export default class Config {
 
     try {
       const userExport = getModuleDefaultExport(require(this.configPath))
+      // TODO: 怎样查看 this.configPath 模块的 default 导出内容是什么，如何进行与 configEnv 的配置项进行 webpack-merge 合并的
       this.initialConfig = typeof userExport === 'function' ? await userExport(merge, configEnv) : userExport
       this.isInitSuccess = true
     } catch (err) {
