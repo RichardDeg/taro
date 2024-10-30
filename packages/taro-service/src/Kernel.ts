@@ -1,11 +1,12 @@
+
+import { merge } from 'lodash'
+import { AsyncSeriesWaterfallHook } from 'tapable'
 import { EventEmitter } from 'node:events'
 import * as path from 'node:path'
 
 import * as helper from '@tarojs/helper'
 import * as runnerUtils from '@tarojs/runner-utils'
 import { getPlatformType } from '@tarojs/shared'
-import { merge } from 'lodash'
-import { AsyncSeriesWaterfallHook } from 'tapable'
 
 import Plugin from './Plugin'
 import { convertPluginsToObject, mergePlugins, printHelpLog, resolvePresetsOrPlugins } from './utils'
@@ -29,8 +30,8 @@ import type {
 } from './utils/types'
 
 interface IKernelOptions {
-  appPath: string
   config: Config
+  appPath: string
   presets?: PluginItem[]
   plugins?: PluginItem[]
 }

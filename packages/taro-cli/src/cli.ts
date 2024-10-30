@@ -22,7 +22,7 @@ const DEFAULT_FRAMEWORK = 'react'
 
 export default class CLI {
   appPath: string
-  constructor(appPath) {
+  constructor(appPath: string) {
     this.appPath = appPath || process.cwd()
   }
 
@@ -97,19 +97,19 @@ export default class CLI {
       const config = new Config({ appPath, disableGlobalConfig })
       await config.init({ mode, command })
 
-      // ***************************************************************************
-      // *********** TODO: 看到 这里了！！！ ******************************************
-      // ***************************************************************************
       const kernel = new Kernel({
+        config,
         appPath,
         presets: [
           path.resolve(__dirname, '.', 'presets', 'index.js')
         ],
-        config,
         plugins: []
       })
       kernel.optsPlugins ||= []
 
+      // ***************************************************************************
+      // *********** TODO: 看到 Kernel 的实现！！！ ***********************************
+      // ***************************************************************************
       // 将自定义的 变量 添加到 config.env 中，实现 definePlugin 字段定义
       const initialConfig = kernel.config?.initialConfig
       if (initialConfig) {
