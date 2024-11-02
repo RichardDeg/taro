@@ -4,7 +4,7 @@ import * as path from 'node:path'
 import { parse as parseFile } from '@babel/parser'
 import traverse, { NodePath, Visitor } from '@babel/traverse'
 import * as t from '@babel/types'
-import { printLog, processTypeEnum } from '@tarojs/helper'
+import { printLog, ProcessTypeEnum } from '@tarojs/helper'
 // @ts-ignore
 import { toCamelCase } from '@tarojs/shared'
 import { parse, parseDefaults } from 'himalaya-wxml'
@@ -217,7 +217,7 @@ export function convertStyleUnit (value: string) {
         tempValue,
         globals.currentParseFile
       )
-      printLog(processTypeEnum.ERROR, `wxml内px/rpx单位转换失败: ${error}`)
+      printLog(ProcessTypeEnum.ERROR, `wxml内px/rpx单位转换失败: ${error}`)
       updateLogFileContent(
         `WARN [taroize] convertStyleUnit - wxml内px/rpx单位转换异常 ${getLineBreak()}${error} ${getLineBreak()}`
       )
@@ -1113,7 +1113,7 @@ function transformLoop (name: string, attr: NodePath<t.JSXAttribute>, jsx: NodeP
       })
 
     if (t.isJSXEmptyExpression(value.expression)) {
-      printLog(processTypeEnum.WARNING, 'value.expression', 'wxml.ts -> t.isJSXEmptyExpression(value.expression)')
+      printLog(ProcessTypeEnum.WARNING, 'value.expression', 'wxml.ts -> t.isJSXEmptyExpression(value.expression)')
       return
     }
     const replacement = t.jSXExpressionContainer(
@@ -1244,7 +1244,7 @@ function handleConditions (conditions: Condition[]) {
         currentCondition = condition
         if (t.isJSXEmptyExpression(condition.tester.expression)) {
           printLog(
-            processTypeEnum.WARNING,
+            ProcessTypeEnum.WARNING,
             'condition.tester.expression',
             't.isJSXEmptyExpression(condition.tester.expression)'
           )

@@ -5,7 +5,7 @@ import { chalk } from './terminal'
 // eslint-disable-next-line dot-notation
 export const PLATFORMS = (global['PLATFORMS'] = global['PLATFORMS'] || {})
 
-export const enum processTypeEnum {
+export const enum ProcessTypeEnum {
   START = 'start',
   CREATE = 'create',
   COMPILE = 'compile',
@@ -28,51 +28,51 @@ export interface IProcessTypeMap {
 }
 
 export const processTypeMap: IProcessTypeMap = {
-  [processTypeEnum.CREATE]: {
+  [ProcessTypeEnum.CREATE]: {
     name: '创建',
     color: 'cyan',
   },
-  [processTypeEnum.COMPILE]: {
+  [ProcessTypeEnum.COMPILE]: {
     name: '编译',
     color: 'green',
   },
-  [processTypeEnum.CONVERT]: {
+  [ProcessTypeEnum.CONVERT]: {
     name: '转换',
     color: chalk.rgb(255, 136, 0),
   },
-  [processTypeEnum.COPY]: {
+  [ProcessTypeEnum.COPY]: {
     name: '拷贝',
     color: 'magenta',
   },
-  [processTypeEnum.GENERATE]: {
+  [ProcessTypeEnum.GENERATE]: {
     name: '生成',
     color: 'blue',
   },
-  [processTypeEnum.MODIFY]: {
+  [ProcessTypeEnum.MODIFY]: {
     name: '修改',
     color: 'yellow',
   },
-  [processTypeEnum.ERROR]: {
+  [ProcessTypeEnum.ERROR]: {
     name: '错误',
     color: 'red',
   },
-  [processTypeEnum.WARNING]: {
+  [ProcessTypeEnum.WARNING]: {
     name: '警告',
     color: 'yellowBright',
   },
-  [processTypeEnum.UNLINK]: {
+  [ProcessTypeEnum.UNLINK]: {
     name: '删除',
     color: 'magenta',
   },
-  [processTypeEnum.START]: {
+  [ProcessTypeEnum.START]: {
     name: '启动',
     color: 'green',
   },
-  [processTypeEnum.REFERENCE]: {
+  [ProcessTypeEnum.REFERENCE]: {
     name: '引用',
     color: 'blue',
   },
-  [processTypeEnum.REMIND]: {
+  [ProcessTypeEnum.REMIND]: {
     name: '提示',
     color: 'green',
   },

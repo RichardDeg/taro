@@ -112,9 +112,9 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
   })
 
   const doAction = async (platform: string, action: EnumAction, projectPath: string) => {
-    const { printLog, processTypeEnum, fs } = ctx.helper
+    const { printLog, ProcessTypeEnum, fs } = ctx.helper
     if (typeof platform !== 'string') {
-      printLog(processTypeEnum.ERROR, '请传入正确的编译类型！')
+      printLog(ProcessTypeEnum.ERROR, '请传入正确的编译类型！')
       process.exit(0)
     }
     // 可通过异步函数获取插件选项
@@ -145,7 +145,7 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
         break
     }
     if (!ci) {
-      printLog(processTypeEnum.WARNING, `"@tarojs/plugin-mini-ci" 插件暂时不支持 "${platform}" 平台`)
+      printLog(ProcessTypeEnum.WARNING, `"@tarojs/plugin-mini-ci" 插件暂时不支持 "${platform}" 平台`)
       return
     }
 
@@ -153,7 +153,7 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
     projectPath = path.isAbsolute(projectPath) ? projectPath : path.join(ctx.paths.appPath, projectPath)
 
     if (!fs.pathExistsSync(projectPath)) {
-      printLog(processTypeEnum.ERROR, `"projectPath"选项配置的路径不存在:${projectPath}`)
+      printLog(ProcessTypeEnum.ERROR, `"projectPath"选项配置的路径不存在:${projectPath}`)
       process.exit(0)
     }
     ci.setProjectPath(projectPath)

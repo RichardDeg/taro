@@ -8,7 +8,7 @@ import {
   META_TYPE,
   NODE_MODULES,
   printLog,
-  processTypeEnum,
+  ProcessTypeEnum,
   promoteRelativePath,
   readConfig,
   REG_NODE_MODULES,
@@ -542,7 +542,7 @@ export default class TaroMiniPlugin {
     })
     this.pages.forEach(item => {
       if (!this.isWatch && this.options.logger?.quiet === false) {
-        printLog(processTypeEnum.COMPILE, '发现页面', this.getShowPath(item.path))
+        printLog(ProcessTypeEnum.COMPILE, '发现页面', this.getShowPath(item.path))
       }
       this.compileFile(item)
       if (item.isNative) {
@@ -634,7 +634,7 @@ export default class TaroMiniPlugin {
     }
 
     if (!this.isWatch && this.options.logger?.quiet === false) {
-      printLog(processTypeEnum.COMPILE, '发现入口', this.getShowPath(this.appEntry))
+      printLog(ProcessTypeEnum.COMPILE, '发现入口', this.getShowPath(this.appEntry))
     }
 
     const { newBlended, frameworkExts, combination } = this.options
@@ -675,7 +675,7 @@ export default class TaroMiniPlugin {
         isNative: false,
       }
       if (!this.isWatch && this.options.logger?.quiet === false) {
-        printLog(processTypeEnum.COMPILE, `发现[${item}]Native组件`)
+        printLog(ProcessTypeEnum.COMPILE, `发现[${item}]Native组件`)
       }
       this.pages.add(componentObj)
       // 登记需要编译成原生版本的组件
@@ -689,7 +689,7 @@ export default class TaroMiniPlugin {
   getPagesConfig () {
     this.pages.forEach(page => {
       if (!this.isWatch && this.options.logger?.quiet === false) {
-        printLog(processTypeEnum.COMPILE, '发现页面', this.getShowPath(page.path))
+        printLog(ProcessTypeEnum.COMPILE, '发现页面', this.getShowPath(page.path))
       }
 
       const pagePath = page.path
@@ -1062,7 +1062,7 @@ export default class TaroMiniPlugin {
           const customTabBarComponentTemplPath = this.getTemplatePath(customTabBarComponentPath)
           const isNative = this.isNativePageORComponent(customTabBarComponentTemplPath)
           if (!this.isWatch && this.options.logger?.quiet === false) {
-            printLog(processTypeEnum.COMPILE, '自定义 tabBar', this.getShowPath(customTabBarComponentPath))
+            printLog(ProcessTypeEnum.COMPILE, '自定义 tabBar', this.getShowPath(customTabBarComponentPath))
           }
           const componentObj: IComponent = {
             name: isAlipay ? 'customize-tab-bar/index' : 'custom-tab-bar/index',

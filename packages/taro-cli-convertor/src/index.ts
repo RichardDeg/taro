@@ -13,7 +13,7 @@ import {
   normalizePath,
   pascalCase,
   printLog,
-  processTypeEnum,
+  ProcessTypeEnum,
   promoteRelativePath,
   REG_CSS_IMPORT,
   REG_IMAGE,
@@ -901,7 +901,7 @@ export default class Convertor {
                 const outputImagePath = self.getDistFilePath(sourceImagePath)
                 if (fs.existsSync(sourceImagePath)) {
                   copyFileToTaro(sourceImagePath, outputImagePath)
-                  printLog(processTypeEnum.COPY, '图片', self.generateShowPath(outputImagePath))
+                  printLog(ProcessTypeEnum.COPY, '图片', self.generateShowPath(outputImagePath))
                 } else if (!t.isBinaryExpression(astPath.parent) || astPath.parent.operator !== '+') {
                   const position = {
                     row: astPath.node.loc?.start?.line || 0,
@@ -914,7 +914,7 @@ export default class Convertor {
                     sourceFilePath,
                     position
                   )
-                  printLog(processTypeEnum.ERROR, '图片不存在', self.generateShowPath(sourceImagePath))
+                  printLog(ProcessTypeEnum.ERROR, '图片不存在', self.generateShowPath(sourceImagePath))
                   updateLogFileContent(
                     `WARN [taro-cli-convertor] parseAst - 图片不存在 ${getLineBreak()}${self.generateShowPath(
                       sourceImagePath
@@ -1266,11 +1266,11 @@ export default class Convertor {
         this.parsePluginName(this.entryJSON)
       }
 
-      printLog(processTypeEnum.CONVERT, '入口文件', this.generateShowPath(this.entryJSPath))
-      printLog(processTypeEnum.CONVERT, '入口配置', this.generateShowPath(this.entryJSONPath))
+      printLog(ProcessTypeEnum.CONVERT, '入口文件', this.generateShowPath(this.entryJSPath))
+      printLog(ProcessTypeEnum.CONVERT, '入口配置', this.generateShowPath(this.entryJSONPath))
       if (fs.existsSync(this.entryStylePath)) {
         this.entryStyle = String(fs.readFileSync(this.entryStylePath))
-        printLog(processTypeEnum.CONVERT, '入口样式', this.generateShowPath(this.entryStylePath))
+        printLog(ProcessTypeEnum.CONVERT, '入口样式', this.generateShowPath(this.entryStylePath))
       }
     } catch (err) {
       this.entryJSON = {}
@@ -1401,7 +1401,7 @@ export default class Convertor {
           })
           const jsCode = generateMinimalEscapeCode(ast)
           this.writeFileToTaro(outputFilePath, prettier.format(jsCode, prettierJSConfig))
-          printLog(processTypeEnum.COPY, 'JS 文件', this.generateShowPath(outputFilePath))
+          printLog(ProcessTypeEnum.COPY, 'JS 文件', this.generateShowPath(outputFilePath))
           this.hadBeenCopyedFiles.add(file)
           globals.currentParseFile = file
           this.generateScriptFiles(scriptFiles)
@@ -1500,7 +1500,7 @@ export default class Convertor {
       const jsCode = generateMinimalEscapeCode(ast)
       this.writeFileToTaro(entryDistJSPath, jsCode)
       this.writeFileToConfig(entryDistJSPath, entryJSON)
-      printLog(processTypeEnum.GENERATE, '入口文件', this.generateShowPath(entryDistJSPath))
+      printLog(ProcessTypeEnum.GENERATE, '入口文件', this.generateShowPath(entryDistJSPath))
       if (this.entryStyle) {
         this.traverseStyle(this.entryStylePath, this.entryStyle)
       }
@@ -1562,7 +1562,7 @@ export default class Convertor {
           .forEach((iconPath) => {
             const iconDistPath = this.getDistFilePath(iconPath)
             copyFileToTaro(iconPath, iconDistPath)
-            printLog(processTypeEnum.COPY, 'TabBar 图标', this.generateShowPath(iconDistPath))
+            printLog(ProcessTypeEnum.COPY, 'TabBar 图标', this.generateShowPath(iconDistPath))
           })
       }
     }
@@ -1575,7 +1575,7 @@ export default class Convertor {
     if (fs.existsSync(customTabbarPath)) {
       const customTabbarDistPath = this.getDistFilePath(customTabbarPath)
       copyFileToTaro(customTabbarPath, customTabbarDistPath)
-      printLog(processTypeEnum.COPY, '自定义 TabBar', this.generateShowPath(customTabbarDistPath))
+      printLog(ProcessTypeEnum.COPY, '自定义 TabBar', this.generateShowPath(customTabbarDistPath))
     }
   }
 
@@ -1653,11 +1653,11 @@ export default class Convertor {
           throw new IReportError(`页面 ${page} 没有 JS 文件！`, 'MissingJSFileError', pagePath, '')
         }
         const param: ITaroizeOptions = {}
-        printLog(processTypeEnum.CONVERT, '页面文件', this.generateShowPath(pageJSPath))
+        printLog(ProcessTypeEnum.CONVERT, '页面文件', this.generateShowPath(pageJSPath))
 
         let pageConfig
         if (fs.existsSync(pageConfigPath)) {
-          printLog(processTypeEnum.CONVERT, '页面配置', this.generateShowPath(pageConfigPath))
+          printLog(ProcessTypeEnum.CONVERT, '页面配置', this.generateShowPath(pageConfigPath))
           const pageConfigStr = String(fs.readFileSync(pageConfigPath))
           pageConfig = JSON.parse(pageConfigStr)
         } else if (this.entryUsingComponents) {
@@ -1719,12 +1719,12 @@ export default class Convertor {
         param.script = String(fs.readFileSync(pageJSPath))
         param.scriptPath = pageJSPath
         if (fs.existsSync(pageTemplPath)) {
-          printLog(processTypeEnum.CONVERT, '页面模板', this.generateShowPath(pageTemplPath))
+          printLog(ProcessTypeEnum.CONVERT, '页面模板', this.generateShowPath(pageTemplPath))
           param.wxml = String(fs.readFileSync(pageTemplPath))
         }
         let pageStyle: string | null = null
         if (fs.existsSync(pageStylePath)) {
-          printLog(processTypeEnum.CONVERT, '页面样式', this.generateShowPath(pageStylePath))
+          printLog(ProcessTypeEnum.CONVERT, '页面样式', this.generateShowPath(pageStylePath))
           pageStyle = String(fs.readFileSync(pageStylePath))
         }
         param.path = path.dirname(pageJSPath)
@@ -1749,9 +1749,9 @@ export default class Convertor {
         })
         const jsCode = generateMinimalEscapeCode(ast)
         this.writeFileToTaro(this.getComponentDest(pageDistJSPath), this.formatFile(jsCode, taroizeResult.template))
-        printLog(processTypeEnum.GENERATE, 'writeFileToTaro', this.generateShowPath(pageDistJSPath))
+        printLog(ProcessTypeEnum.GENERATE, 'writeFileToTaro', this.generateShowPath(pageDistJSPath))
         this.writeFileToConfig(pageDistJSPath, param.json)
-        printLog(processTypeEnum.GENERATE, '页面文件', this.generateShowPath(pageDistJSPath))
+        printLog(ProcessTypeEnum.GENERATE, '页面文件', this.generateShowPath(pageDistJSPath))
         if (pageStyle) {
           this.traverseStyle(pageStylePath, pageStyle)
         }
@@ -1759,7 +1759,7 @@ export default class Convertor {
         this.generateScriptFiles(scriptFiles)
         this.traverseComponents(depComponents)
       } catch (err) {
-        printLog(processTypeEnum.ERROR, '页面转换', this.generateShowPath(pageJSPath))
+        printLog(ProcessTypeEnum.ERROR, '页面转换', this.generateShowPath(pageJSPath))
         updateLogFileContent(
           `WARN [taro-cli-convertor] processStyleAssets - 页面转换异常 ${getLineBreak()}Path: ${this.generateShowPath(
             pageJSPath
@@ -1801,10 +1801,10 @@ export default class Convertor {
           )
           throw new IReportError(`自定义组件 ${component} 没有 JS 文件！`, 'MissingJSFileError', componentJSPath, '')
         }
-        printLog(processTypeEnum.CONVERT, '组件文件', this.generateShowPath(componentJSPath))
+        printLog(ProcessTypeEnum.CONVERT, '组件文件', this.generateShowPath(componentJSPath))
         let componentConfig
         if (fs.existsSync(componentConfigPath)) {
-          printLog(processTypeEnum.CONVERT, '组件配置', this.generateShowPath(componentConfigPath))
+          printLog(ProcessTypeEnum.CONVERT, '组件配置', this.generateShowPath(componentConfigPath))
           const componentConfigStr = String(fs.readFileSync(componentConfigPath))
           componentConfig = JSON.parse(componentConfigStr)
         } else if (this.entryUsingComponents) {
@@ -1866,12 +1866,12 @@ export default class Convertor {
         }
         param.script = String(fs.readFileSync(componentJSPath))
         if (fs.existsSync(componentTemplPath)) {
-          printLog(processTypeEnum.CONVERT, '组件模板', this.generateShowPath(componentTemplPath))
+          printLog(ProcessTypeEnum.CONVERT, '组件模板', this.generateShowPath(componentTemplPath))
           param.wxml = String(fs.readFileSync(componentTemplPath))
         }
         let componentStyle: string | null = null
         if (fs.existsSync(componentStylePath)) {
-          printLog(processTypeEnum.CONVERT, '组件样式', this.generateShowPath(componentStylePath))
+          printLog(ProcessTypeEnum.CONVERT, '组件样式', this.generateShowPath(componentStylePath))
           componentStyle = String(fs.readFileSync(componentStylePath))
         }
         param.path = path.dirname(componentJSPath)
@@ -1901,7 +1901,7 @@ export default class Convertor {
           this.getComponentDest(componentDistJSPath),
           this.formatFile(jsCode, taroizeResult.template)
         )
-        printLog(processTypeEnum.GENERATE, '组件文件', this.generateShowPath(componentDistJSPath))
+        printLog(ProcessTypeEnum.GENERATE, '组件文件', this.generateShowPath(componentDistJSPath))
         if (componentStyle) {
           this.traverseStyle(componentStylePath, componentStyle)
         }
@@ -1909,7 +1909,7 @@ export default class Convertor {
         this.generateScriptFiles(scriptFiles)
         this.traverseComponents(depComponents)
       } catch (err) {
-        printLog(processTypeEnum.ERROR, '组件转换', this.generateShowPath(componentJSPath))
+        printLog(ProcessTypeEnum.ERROR, '组件转换', this.generateShowPath(componentJSPath))
         updateLogFileContent(
           `WARN [taro-cli-convertor] traverseComponents - 组件转换异常 ${getLineBreak()}Path: ${this.generateShowPath(
             componentJSPath
@@ -1948,14 +1948,14 @@ export default class Convertor {
         const destDir = path.dirname(destPath)
 
         if (!fs.existsSync(originPath)) {
-          printLog(processTypeEnum.WARNING, '静态资源', `找不到资源：${originPath}`)
+          printLog(ProcessTypeEnum.WARNING, '静态资源', `找不到资源：${originPath}`)
           updateLogFileContent(
             `WARN [taro-cli-convertor] processStyleAssets - 找不到资源 ${getLineBreak()}${originPath} ${getLineBreak()}`
           )
         } else if (!fs.existsSync(destPath)) {
           fs.ensureDirSync(destDir)
           fs.copyFile(originPath, destPath)
-          printLog(processTypeEnum.COPY, '样式资源', this.generateShowPath(destPath))
+          printLog(ProcessTypeEnum.COPY, '样式资源', this.generateShowPath(destPath))
         }
       }
 
@@ -1978,7 +1978,7 @@ export default class Convertor {
     this.processStyleAssets(content, filePath, styleDist)
     const { css } = await this.styleUnitTransform(filePath, content)
     this.writeFileToTaro(styleDist, css)
-    printLog(processTypeEnum.GENERATE, '样式文件', this.generateShowPath(styleDist))
+    printLog(ProcessTypeEnum.GENERATE, '样式文件', this.generateShowPath(styleDist))
     if (imports && imports.length) {
       imports.forEach((importItem) => {
         const importPath = path.isAbsolute(importItem)
@@ -2106,19 +2106,19 @@ export default class Convertor {
         spaces: 2,
         EOL: '\n',
       })
-      printLog(processTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, 'package.json')))
-      printLog(processTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, 'config/index.js')))
-      printLog(processTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, 'config/dev.js')))
-      printLog(processTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, 'config/prod')))
+      printLog(ProcessTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, 'package.json')))
+      printLog(ProcessTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, 'config/index.js')))
+      printLog(ProcessTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, 'config/dev.js')))
+      printLog(ProcessTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, 'config/prod')))
       printLog(
-        processTypeEnum.GENERATE,
+        ProcessTypeEnum.GENERATE,
         '文件',
         this.generateShowPath(path.join(this.convertRoot, 'project.config.json'))
       )
-      printLog(processTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, '.gitignore')))
-      printLog(processTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, '.editorconfig')))
-      printLog(processTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, '.eslintrc')))
-      printLog(processTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertDir, 'index.html')))
+      printLog(ProcessTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, '.gitignore')))
+      printLog(ProcessTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, '.editorconfig')))
+      printLog(ProcessTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertRoot, '.eslintrc')))
+      printLog(ProcessTypeEnum.GENERATE, '文件', this.generateShowPath(path.join(this.convertDir, 'index.html')))
       this.showLog()
     })
   }

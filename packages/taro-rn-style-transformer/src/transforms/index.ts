@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 
-import { printLog, processTypeEnum, recursiveMerge } from '@tarojs/helper'
+import { printLog, ProcessTypeEnum, recursiveMerge } from '@tarojs/helper'
 import transformCSS from 'taro-css-to-react-native'
 
 import { Config, PostcssConfig, RenderAdditionalResult, TransformOptions } from '../types'
@@ -33,7 +33,7 @@ function validateStyle ({ styleObject, filename }) {
     } catch (err) {
       // 先忽略掉 scalePx2dp 的报错
       if (/Invalid prop `.*` of type `string` supplied to `.*`, expected `number`[^]*/g.test(err.message)) return
-      printLog(processTypeEnum.WARNING, err.message, `entry file: ${filename}`)
+      printLog(ProcessTypeEnum.WARNING, err.message, `entry file: ${filename}`)
     }
   }
 }
@@ -205,7 +205,7 @@ export default class StyleTransform {
    * @return {string} JSONString
    */
   async transform (src: string, filename: string, options: TransformOptions) {
-    // printLog(processTypeEnum.START, '样式文件处理开始', filename)
+    // printLog(ProcessTypeEnum.START, '样式文件处理开始', filename)
     const result = await this.processStyle(src, filename, options)
 
     // 把 css 转换成对象 rn 的样式，接入 taro 的 css-to-react-native，比如有单位的处理

@@ -55,8 +55,8 @@ export abstract class TaroPlatformBase<T extends TConfig = TConfig> extends Taro
       this.generateProjectConfig(this.projectConfigJson)
     }
     if (this.ctx.initialConfig.logger?.quiet === false) {
-      const { printLog, processTypeEnum } = this.ctx.helper
-      printLog(processTypeEnum.START, '开发者工具-项目目录', `${this.ctx.paths.outputPath}`)
+      const { printLog, ProcessTypeEnum } = this.ctx.helper
+      printLog(ProcessTypeEnum.START, '开发者工具-项目目录', `${this.ctx.paths.outputPath}`)
     }
     // Webpack5 代码自动热重载
     if (this.compiler === 'webpack5' && this.config.isWatch && this.projectConfigJsonOutputPath) {

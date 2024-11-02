@@ -19,12 +19,12 @@ export default class DingtalkCI extends BaseCI {
     if (this.pluginOpts.dd == null) {
       throw new Error('请为"@tarojs/plugin-mini-ci"插件配置 "dd" 选项')
     }
-    const { printLog, processTypeEnum, chalk } = this.ctx.helper
+    const { printLog, ProcessTypeEnum, chalk } = this.ctx.helper
     const { token } = this.pluginOpts.dd!
     try {
       this.dingtalkSDK = getNpmPkgSync('dingtalk-miniapp-opensdk', process.cwd()).sdk
     } catch (error) {
-      printLog(processTypeEnum.ERROR, chalk.red('请安装依赖：dingtalk-miniapp-opensdk , 该依赖用于CI预览、上传钉钉小程序'))
+      printLog(ProcessTypeEnum.ERROR, chalk.red('请安装依赖：dingtalk-miniapp-opensdk , 该依赖用于CI预览、上传钉钉小程序'))
       process.exit(1)
     }
 
@@ -46,16 +46,16 @@ export default class DingtalkCI extends BaseCI {
   //  和支付宝小程序共用ide
   async open () {
     const { devToolsInstallPath, projectType = 'dingtalk-biz' } = this.pluginOpts.dd!
-    const { chalk, printLog, processTypeEnum } = this.ctx.helper
+    const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     let minidev: AlipayInstance
     try {
       minidev = getNpmPkgSync('minidev', process.cwd())
     } catch (error) {
-      printLog(processTypeEnum.ERROR, chalk.red('请安装依赖：minidev ,该依赖用于编译后自动打开小程序开发者工具'))
+      printLog(ProcessTypeEnum.ERROR, chalk.red('请安装依赖：minidev ,该依赖用于编译后自动打开小程序开发者工具'))
       process.exit(1)
     }
     try {
-      printLog(processTypeEnum.START, '小程序开发者工具...', this.projectPath)
+      printLog(ProcessTypeEnum.START, '小程序开发者工具...', this.projectPath)
       await minidev.minidev.startIde(
         Object.assign(
           {
@@ -66,13 +66,13 @@ export default class DingtalkCI extends BaseCI {
         )
       )
     } catch (error) {
-      printLog(processTypeEnum.ERROR, chalk.red(error.message))
+      printLog(ProcessTypeEnum.ERROR, chalk.red(error.message))
     }
   }
 
   //  特性： CI 内部会自己打印二维码； 预览版不会上传到后台，只有预览码作为入口访问
   async preview () {
-    const { chalk, printLog, processTypeEnum } = this.ctx.helper
+    const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     const { appid, } = this.pluginOpts.dd!
 
     try {
@@ -99,7 +99,7 @@ export default class DingtalkCI extends BaseCI {
 
       const previewQrcodePath = path.join(this.projectPath, 'preview.png')
       await generateQrcodeImageFile(previewQrcodePath, previewUrl)
-      printLog(processTypeEnum.REMIND, `预览版二维码已生成，存储在:"${previewQrcodePath}",二维码内容是："${previewUrl}"`)
+      printLog(ProcessTypeEnum.REMIND, `预览版二维码已生成，存储在:"${previewQrcodePath}",二维码内容是："${previewUrl}"`)
 
       this.triggerPreviewHooks({
         success: true,
@@ -110,7 +110,7 @@ export default class DingtalkCI extends BaseCI {
         }
       })
     } catch (error) {
-      printLog(processTypeEnum.ERROR, chalk.red(`预览失败 ${new Date().toLocaleString()} \n${error.message}`))
+      printLog(ProcessTypeEnum.ERROR, chalk.red(`预览失败 ${new Date().toLocaleString()} \n${error.message}`))
 
       this.triggerPreviewHooks({
         success: false,
@@ -126,9 +126,9 @@ export default class DingtalkCI extends BaseCI {
 
   // 特性： CI内部暂时未支持上传后返回体验码,等待官方支持： https://github.com/open-dingtalk/dingtalk-design-cli/issues/34
   async upload () {
-    const { chalk, printLog, processTypeEnum } = this.ctx.helper
+    const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     const { appid } = this.pluginOpts.dd!
-    printLog(processTypeEnum.START, '上传代码到钉钉小程序后台')
+    printLog(ProcessTypeEnum.START, '上传代码到钉钉小程序后台')
 
     let hasDone = false
     const uploadCommonParams = {
@@ -180,7 +180,7 @@ export default class DingtalkCI extends BaseCI {
         }
       })
     } catch (error) {
-      printLog(processTypeEnum.ERROR, chalk.red(`体验版上传失败 ${new Date().toLocaleString()} \n${error.message}`))
+      printLog(ProcessTypeEnum.ERROR, chalk.red(`体验版上传失败 ${new Date().toLocaleString()} \n${error.message}`))
 
       this.triggerUploadHooks({
         success: false,

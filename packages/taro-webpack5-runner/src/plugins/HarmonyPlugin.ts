@@ -7,7 +7,7 @@ import {
   META_TYPE,
   NODE_MODULES,
   printLog,
-  processTypeEnum,
+  ProcessTypeEnum,
   readConfig,
   REG_NODE_MODULES,
   REG_NODE_MODULES_DIR,
@@ -427,7 +427,7 @@ export default class TaroHarmonyPlugin {
     }
 
     if (!this.isWatch && this.options.logger?.quiet === false) {
-      printLog(processTypeEnum.COMPILE, '发现入口', this.getShowPath(this.appEntry))
+      printLog(ProcessTypeEnum.COMPILE, '发现入口', this.getShowPath(this.appEntry))
     }
     const { frameworkExts } = this.options
     this.getTabBarFiles(this.appConfig)
@@ -462,7 +462,7 @@ export default class TaroHarmonyPlugin {
         isNative: false,
       }
       if (!this.isWatch && this.options.logger?.quiet === false) {
-        printLog(processTypeEnum.COMPILE, `发现[${item}]Native组件`)
+        printLog(ProcessTypeEnum.COMPILE, `发现[${item}]Native组件`)
       }
       this.pages.add(componentObj)
       // 登记需要编译成原生版本的组件
@@ -476,7 +476,7 @@ export default class TaroHarmonyPlugin {
   getPagesConfig () {
     this.pages.forEach(page => {
       if (!this.isWatch && this.options.logger?.quiet === false) {
-        printLog(processTypeEnum.COMPILE, '发现页面', this.getShowPath(page.path))
+        printLog(ProcessTypeEnum.COMPILE, '发现页面', this.getShowPath(page.path))
       }
       this.compileFile(page)
     })
@@ -789,7 +789,7 @@ export default class TaroHarmonyPlugin {
           const customTabBarComponentTemplPath = this.getTemplatePath(customTabBarComponentPath)
           const isNative = this.isNativePageORComponent(customTabBarComponentTemplPath)
           if (!this.isWatch && this.options.logger?.quiet === false) {
-            printLog(processTypeEnum.COMPILE, '自定义 tabBar', this.getShowPath(customTabBarComponentPath))
+            printLog(ProcessTypeEnum.COMPILE, '自定义 tabBar', this.getShowPath(customTabBarComponentPath))
           }
           const componentObj: IComponent = {
             name: isAlipay ? 'customize-tab-bar/index' : 'custom-tab-bar/index',

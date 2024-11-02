@@ -5,9 +5,9 @@ import type { IPluginContext } from '@tarojs/service'
 export default (ctx: IPluginContext) => {
   ctx.registerMethod('writeFileToDist', ({ filePath, content }) => {
     const { outputPath } = ctx.paths
-    const { printLog, processTypeEnum, fs } = ctx.helper
+    const { printLog, ProcessTypeEnum, fs } = ctx.helper
     if (path.isAbsolute(filePath)) {
-      printLog(processTypeEnum.ERROR, 'ctx.writeFileToDist 不能接受绝对路径')
+      printLog(ProcessTypeEnum.ERROR, 'ctx.writeFileToDist 不能接受绝对路径')
       return
     }
     const absFilePath = path.join(outputPath, filePath)

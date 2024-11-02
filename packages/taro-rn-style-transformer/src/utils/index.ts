@@ -1,7 +1,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
-import { printLog, processTypeEnum } from '@tarojs/helper'
+import { printLog, ProcessTypeEnum } from '@tarojs/helper'
 import * as resolve from 'resolve'
 import nodeModulesPaths from 'resolve/lib/node-modules-paths'
 
@@ -140,7 +140,7 @@ export function resolveStyle (id: string, opts: ResolveStyleOptions) {
       throw new Error(levelMessage)
     }
     if (logLevel === ResolveLogLevelEnum.WARNING) {
-      printLog(processTypeEnum.WARNING, levelMessage)
+      printLog(ProcessTypeEnum.WARNING, levelMessage)
       return id
     }
   }

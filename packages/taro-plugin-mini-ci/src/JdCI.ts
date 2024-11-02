@@ -19,17 +19,17 @@ export default class JdCI extends BaseCI {
   }
 
   async open () {
-    const { printLog, processTypeEnum } = this.ctx.helper
-    printLog(processTypeEnum.WARNING, '京东小程序不支持 "--open" 参数打开开发者工具')
+    const { printLog, ProcessTypeEnum } = this.ctx.helper
+    printLog(ProcessTypeEnum.WARNING, '京东小程序不支持 "--open" 参数打开开发者工具')
   }
 
   async preview () {
     const { privateKey, ignores } = this.pluginOpts.jd!
-    const { chalk, printLog, processTypeEnum } = this.ctx.helper
+    const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     const previewQrcodePath = join(this.projectPath, 'preview.jpg')
 
     try {
-      printLog(processTypeEnum.REMIND, `本次上传版本号为："${this.version}"，上传描述为：“${this.desc}”`)
+      printLog(ProcessTypeEnum.REMIND, `本次上传版本号为："${this.version}"，上传描述为：“${this.desc}”`)
       // 返回 图片 base64转换效果
       const result = await this.jdCi.preview({
         desc: this.desc,
@@ -43,7 +43,7 @@ export default class JdCI extends BaseCI {
       const qrcodeContent = await readQrcodeImageContent(result.imgUrl)
       await generateQrcodeImageFile(previewQrcodePath, qrcodeContent)
       await printQrcode2Terminal(qrcodeContent)
-      printLog(processTypeEnum.REMIND, `预览二维码已生成，存储在:"${previewQrcodePath}",二维码内容是："${qrcodeContent}"`)
+      printLog(ProcessTypeEnum.REMIND, `预览二维码已生成，存储在:"${previewQrcodePath}",二维码内容是："${qrcodeContent}"`)
 
       this.triggerPreviewHooks({
         success: true,
@@ -69,11 +69,11 @@ export default class JdCI extends BaseCI {
 
   async upload () {
     const { privateKey, robot, ignores } = this.pluginOpts.jd!
-    const { chalk, printLog, processTypeEnum } = this.ctx.helper
+    const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     const uploadQrcodePath = join(this.projectPath, 'upload.jpg')
 
     try {
-      printLog(processTypeEnum.REMIND, `本次上传版本号为："${this.version}"，上传描述为：“${this.desc}”`)
+      printLog(ProcessTypeEnum.REMIND, `本次上传版本号为："${this.version}"，上传描述为：“${this.desc}”`)
       const result = await this.jdCi.upload({
         desc: this.desc,
         privateKey,
@@ -87,7 +87,7 @@ export default class JdCI extends BaseCI {
       const qrcodeContent = await readQrcodeImageContent(result.imgUrl)
       await generateQrcodeImageFile(uploadQrcodePath, qrcodeContent)
       await printQrcode2Terminal(qrcodeContent)
-      printLog(processTypeEnum.REMIND, `体验版二维码已生成，存储在:"${uploadQrcodePath}",二维码内容是："${qrcodeContent}"`)
+      printLog(ProcessTypeEnum.REMIND, `体验版二维码已生成，存储在:"${uploadQrcodePath}",二维码内容是："${qrcodeContent}"`)
 
       this.triggerUploadHooks({
         success: true,

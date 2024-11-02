@@ -9,7 +9,7 @@ export default (ctx: IPluginContext) => {
     if (blended || newBlended) return
 
     const { appPath, sourcePath, outputPath } = ctx.paths
-    const { printLog, processTypeEnum, fs } = ctx.helper
+    const { printLog, ProcessTypeEnum, fs } = ctx.helper
     // 生成 project.config.json
     const projectConfigFileName = srcConfigName
     let projectConfigPath = path.join(appPath, projectConfigFileName)
@@ -34,8 +34,8 @@ export default (ctx: IPluginContext) => {
     })
 
     if (ctx.initialConfig.logger?.quiet === false) {
-      printLog(processTypeEnum.REMIND, 'appid', `${origProjectConfig.appid}`)
-      printLog(processTypeEnum.GENERATE, '工具配置', `${outputPath}/${distConfigName}`)
+      printLog(ProcessTypeEnum.REMIND, 'appid', `${origProjectConfig.appid}`)
+      printLog(ProcessTypeEnum.GENERATE, '工具配置', `${outputPath}/${distConfigName}`)
     }
   })
 }

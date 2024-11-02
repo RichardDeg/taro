@@ -3,7 +3,7 @@ import path from 'node:path'
 import {
   isEmptyObject,
   printLog,
-  processTypeEnum,
+  ProcessTypeEnum,
   REG_STYLE,
   resolveMainFilePath,
 } from '@tarojs/helper'
@@ -45,7 +45,7 @@ export default class BuildNativePlugin extends MiniPlugin {
     }
 
     if (!this.isWatch) {
-      printLog(processTypeEnum.COMPILE, '发现入口', this.getShowPath(this.appEntry))
+      printLog(ProcessTypeEnum.COMPILE, '发现入口', this.getShowPath(this.appEntry))
     }
 
     const { frameworkExts } = this.options

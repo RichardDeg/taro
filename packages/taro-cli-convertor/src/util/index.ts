@@ -6,7 +6,7 @@ import {
   fs,
   NODE_MODULES,
   printLog,
-  processTypeEnum,
+  ProcessTypeEnum,
   promoteRelativePath,
   REG_CSS_IMPORT,
   REG_SCRIPT,
@@ -216,7 +216,7 @@ export function analyzeImportUrl (
       `${value}`,
       sourceFilePath
     )
-    printLog(processTypeEnum.ERROR, '引用文件', `文件 ${sourceFilePath} 中引用 ${value} 不存在！`)
+    printLog(ProcessTypeEnum.ERROR, '引用文件', `文件 ${sourceFilePath} 中引用 ${value} 不存在！`)
     updateLogFileContent(
       `WARN [taro-cli-convertor] analyzeImportUrl - 文件 ${sourceFilePath} 中引用 ${value} 不存在 ${getLineBreak()}`
     )
@@ -239,7 +239,7 @@ export function analyzeImportUrl (
           `${value}`,
           sourceFilePath
         )
-        printLog(processTypeEnum.ERROR, '引用文件', `文件 ${sourceFilePath} 中引用 ${value} 不存在！`)
+        printLog(ProcessTypeEnum.ERROR, '引用文件', `文件 ${sourceFilePath} 中引用 ${value} 不存在！`)
         updateLogFileContent(
           `WARN [taro-cli-convertor] analyzeImportUrl - 文件 ${sourceFilePath} 中引用 ${value} 不存在 ${getLineBreak()}`
         )
@@ -255,7 +255,7 @@ export function analyzeImportUrl (
             `${value}`,
             sourceFilePath
           )
-          printLog(processTypeEnum.ERROR, '引用文件', `文件 ${sourceFilePath} 中引用 ${value} 不存在！`)
+          printLog(ProcessTypeEnum.ERROR, '引用文件', `文件 ${sourceFilePath} 中引用 ${value} 不存在！`)
           updateLogFileContent(
             `WARN [taro-cli-convertor] analyzeImportUrl - 文件 ${sourceFilePath} 中引用 ${value} 不存在！ ${getLineBreak()}`
           )
@@ -270,7 +270,7 @@ export function analyzeImportUrl (
                 `${value}`,
                 sourceFilePath
               )
-              printLog(processTypeEnum.ERROR, '引用目录', `文件 ${sourceFilePath} 中引用了目录 ${value}！`)
+              printLog(ProcessTypeEnum.ERROR, '引用目录', `文件 ${sourceFilePath} 中引用了目录 ${value}！`)
               updateLogFileContent(
                 `WARN [taro-cli-convertor] analyzeImportUrl - 文件 ${sourceFilePath} 中引用了目录 ${value}！ ${getLineBreak()}`
               )
@@ -337,7 +337,7 @@ export function handleThirdPartyLib (filePath: string, nodePath: string[], root:
         const moduleConvertPath = path.join(convertRoot, NODE_MODULES, parts[0])
         if (!fs.existsSync(moduleConvertPath)) {
           copyFolderToTaro(npmModulePath, moduleConvertPath)
-          printLog(processTypeEnum.COPY, '三方库', normalizePath(npmModulePath.replace(path.join(root, '/'), '')))
+          printLog(ProcessTypeEnum.COPY, '三方库', normalizePath(npmModulePath.replace(path.join(root, '/'), '')))
         }
         break
       }
@@ -399,7 +399,7 @@ export function handleUnconvertDir (matchUnconvertDir: string, rootPath: string,
   const outputFilePath = matchUnconvertDir.replace(normalizePath(rootPath), normalizePath(convertRoot))
   if (!fs.existsSync(outputFilePath)) {
     copyFileToTaro(matchUnconvertDir, outputFilePath)
-    printLog(processTypeEnum.COPY, '不转换目录', matchUnconvertDir.replace(normalizePath(path.join(rootPath, '/')), ''))
+    printLog(ProcessTypeEnum.COPY, '不转换目录', matchUnconvertDir.replace(normalizePath(path.join(rootPath, '/')), ''))
   }
 }
 

@@ -15,11 +15,11 @@ export default class AlipayCI extends BaseCI {
     if (this.pluginOpts.alipay == null) {
       throw new Error('请为"@tarojs/plugin-mini-ci"插件配置 "alipay" 选项')
     }
-    const { fs, printLog, processTypeEnum, chalk } = this.ctx.helper
+    const { fs, printLog, ProcessTypeEnum, chalk } = this.ctx.helper
     try {
       this.minidev = getNpmPkgSync('minidev', process.cwd())
     } catch (error) {
-      printLog(processTypeEnum.ERROR, chalk.red('请安装依赖：minidev'))
+      printLog(ProcessTypeEnum.ERROR, chalk.red('请安装依赖：minidev'))
       process.exit(1)
     }
 
@@ -30,7 +30,7 @@ export default class AlipayCI extends BaseCI {
     if (!privateKey) {
       const privateKeyPath = path.isAbsolute(_privateKeyPath) ? _privateKeyPath : path.join(appPath, _privateKeyPath)
       if (!fs.pathExistsSync(privateKeyPath)) {
-        printLog(processTypeEnum.ERROR, chalk.red(`"alipay.privateKeyPath"选项配置的路径"${privateKeyPath}"不存在,本次上传终止`))
+        printLog(ProcessTypeEnum.ERROR, chalk.red(`"alipay.privateKeyPath"选项配置的路径"${privateKeyPath}"不存在,本次上传终止`))
         process.exit(1)
       } else {
         privateKey = fs.readFileSync(privateKeyPath, 'utf-8')
@@ -49,9 +49,9 @@ export default class AlipayCI extends BaseCI {
 
   async open () {
     const { devToolsInstallPath } = this.pluginOpts.alipay!
-    const { chalk, printLog, processTypeEnum } = this.ctx.helper
+    const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     try {
-      printLog(processTypeEnum.START, '小程序开发者工具...', this.projectPath)
+      printLog(ProcessTypeEnum.START, '小程序开发者工具...', this.projectPath)
       await this.minidev.minidev
         .startIde(
           Object.assign(
@@ -62,12 +62,12 @@ export default class AlipayCI extends BaseCI {
           )
         )
     } catch (error) {
-      printLog(processTypeEnum.ERROR, chalk.red(error.message))
+      printLog(ProcessTypeEnum.ERROR, chalk.red(error.message))
     }
   }
 
   async preview () {
-    const { chalk, printLog, processTypeEnum } = this.ctx.helper
+    const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     const { appid: appId, clientType = 'alipay' } = this.pluginOpts.alipay!
     try {
       const previewResult = await this.minidev.minidev.preview({
@@ -84,7 +84,7 @@ export default class AlipayCI extends BaseCI {
       const qrcodeContent = await readQrcodeImageContent(qrcodeUrl)
       // console.log('qrcodeContent', qrcodeContent)
       await generateQrcodeImageFile(previewQrcodePath, qrcodeContent)
-      printLog(processTypeEnum.REMIND, `预览版二维码已生成，存储在:"${previewQrcodePath}",二维码内容是："${qrcodeContent}"`)
+      printLog(ProcessTypeEnum.REMIND, `预览版二维码已生成，存储在:"${previewQrcodePath}",二维码内容是："${qrcodeContent}"`)
 
       this.triggerPreviewHooks({
         success: true,
@@ -95,7 +95,7 @@ export default class AlipayCI extends BaseCI {
         }
       })
     } catch (error) {
-      printLog(processTypeEnum.ERROR, chalk.red(`预览上传失败 ${new Date().toLocaleString()} \n${error.message}`))
+      printLog(ProcessTypeEnum.ERROR, chalk.red(`预览上传失败 ${new Date().toLocaleString()} \n${error.message}`))
 
       this.triggerPreviewHooks({
         success: false,
@@ -110,9 +110,9 @@ export default class AlipayCI extends BaseCI {
   }
 
   async upload () {
-    const { chalk, printLog, processTypeEnum } = this.ctx.helper
+    const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     const { clientType = 'alipay', appid: appId, deleteVersion } = this.pluginOpts.alipay!
-    printLog(processTypeEnum.START, '上传代码到阿里小程序后台', clientType)
+    printLog(ProcessTypeEnum.START, '上传代码到阿里小程序后台', clientType)
 
     //  SDK上传不支持设置描述信息; 版本号必须大于现有版本号
     try {
@@ -121,7 +121,7 @@ export default class AlipayCI extends BaseCI {
         clientType
       })
       if (this.version && compareVersion(this.version, lasterVersion) <= 0) {
-        printLog(processTypeEnum.ERROR, chalk.red(`上传版本号 "${this.version}" 必须大于最新上传版本 "${lasterVersion}"`))
+        printLog(ProcessTypeEnum.ERROR, chalk.red(`上传版本号 "${this.version}" 必须大于最新上传版本 "${lasterVersion}"`))
       }
       const result = await this.minidev.minidev.upload({
         project: this.projectPath,
@@ -138,7 +138,7 @@ export default class AlipayCI extends BaseCI {
       const uploadQrcodePath = path.join(this.projectPath, 'upload.png')
       await printQrcode2Terminal(qrcodeContent)
       await generateQrcodeImageFile(uploadQrcodePath, qrcodeContent)
-      printLog(processTypeEnum.REMIND, `体验版二维码已生成，存储在:"${uploadQrcodePath}",二维码内容是："${qrcodeContent}"`)
+      printLog(ProcessTypeEnum.REMIND, `体验版二维码已生成，存储在:"${uploadQrcodePath}",二维码内容是："${qrcodeContent}"`)
 
       this.triggerUploadHooks({
         success: true,
@@ -149,7 +149,7 @@ export default class AlipayCI extends BaseCI {
         },
       })
     } catch (error) {
-      printLog(processTypeEnum.ERROR, chalk.red(`体验版上传失败 ${new Date().toLocaleString()} \n${error}`))
+      printLog(ProcessTypeEnum.ERROR, chalk.red(`体验版上传失败 ${new Date().toLocaleString()} \n${error}`))
 
       this.triggerUploadHooks({
         success: false,

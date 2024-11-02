@@ -14,7 +14,7 @@ import { camelCase, defaults, flatMap, isPlainObject, mergeWith } from 'lodash'
 import {
   CSS_EXT,
   PLATFORMS,
-  processTypeEnum,
+  ProcessTypeEnum,
   processTypeMap,
   REG_CSS_IMPORT,
   REG_JSON,
@@ -108,7 +108,7 @@ export function resolveStylePath(p: string): string {
   return realPath
 }
 
-export function printLog(type: processTypeEnum, tag: string, filePath?: string) {
+export function printLog(type: ProcessTypeEnum, tag: string, filePath?: string) {
   const typeShow = processTypeMap[type]
   const tagLen = tag.replace(/[\u0391-\uFFE5]/g, 'aa').length
   const tagFormatLen = 8
@@ -137,7 +137,7 @@ export function recursiveFindNodeModules(filePath: string, lastFindPath?: string
     return nodeModules
   }
   if (dirname.split(path.sep).length <= 1) {
-    printLog(processTypeEnum.ERROR, `在${dirname}目录下`, '未找到node_modules文件夹，请先安装相关依赖库！')
+    printLog(ProcessTypeEnum.ERROR, `在${dirname}目录下`, '未找到node_modules文件夹，请先安装相关依赖库！')
     return nodeModules
   }
   return recursiveFindNodeModules(dirname, filePath)

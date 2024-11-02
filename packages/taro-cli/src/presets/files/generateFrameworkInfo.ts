@@ -4,7 +4,7 @@ import type { IPluginContext } from '@tarojs/service'
 
 export default (ctx: IPluginContext) => {
   ctx.registerMethod('generateFrameworkInfo', () => {
-    const { getInstalledNpmPkgVersion, processTypeEnum, printLog, chalk } = ctx.helper
+    const { getInstalledNpmPkgVersion, ProcessTypeEnum, printLog, chalk } = ctx.helper
     const { nodeModulesPath } = ctx.paths
     const { date, outputRoot } = ctx.initialConfig
     const frameworkInfoFileName = '.frameworkinfo'
@@ -22,9 +22,9 @@ export default (ctx: IPluginContext) => {
         filePath: frameworkInfoFileName,
         content: JSON.stringify(frameworkinfo, null, 2)
       })
-      printLog(processTypeEnum.GENERATE, '框架信息', `${outputRoot}/${frameworkInfoFileName}`)
+      printLog(ProcessTypeEnum.GENERATE, '框架信息', `${outputRoot}/${frameworkInfoFileName}`)
     } else {
-      printLog(processTypeEnum.WARNING, '依赖安装', chalk.red(`项目依赖 ${frameworkName} 未安装，或安装有误！`))
+      printLog(ProcessTypeEnum.WARNING, '依赖安装', chalk.red(`项目依赖 ${frameworkName} 未安装，或安装有误！`))
     }
   })
 }

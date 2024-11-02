@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 
-import { isNpmPkg, printLog, processTypeEnum, recursiveMerge, resolveSync } from '@tarojs/helper'
+import { isNpmPkg, printLog, ProcessTypeEnum, recursiveMerge, resolveSync } from '@tarojs/helper'
 import postcss from 'postcss'
 import postcssCssVariables from 'postcss-css-variables'
 import postcssImport from 'postcss-import'
@@ -96,7 +96,7 @@ export function makePostcssPlugins ({
       plugins.push(require(pluginPath)((pluginOption as any).config || {}))
     } catch (e) {
       const msg = e.code === 'MODULE_NOT_FOUND' ? `缺少postcss插件${pluginName}, 已忽略` : e
-      printLog(msg, processTypeEnum.WARNING)
+      printLog(msg, ProcessTypeEnum.WARNING)
     }
   })
 

@@ -14,33 +14,33 @@ export default class SwanCI extends BaseCI {
     if (this.pluginOpts.swan == null) {
       throw new Error('请为"@tarojs/plugin-mini-ci"插件配置 "swan" 选项')
     }
-    const { chalk, printLog, processTypeEnum } = this.ctx.helper
+    const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     try {
       this.swanBin = resolveNpmSync('swan-toolkit/bin/swan', process.cwd())
     } catch (error) {
-      printLog(processTypeEnum.ERROR, chalk.red('请安装依赖：swan-toolkit'))
+      printLog(ProcessTypeEnum.ERROR, chalk.red('请安装依赖：swan-toolkit'))
       process.exit(1)
     }
   }
 
   async open () {
     // 官方CI包不支持CLI打开IDE，吾通过查看百度开发者工具安装包下的cli文件、以及类比微信开发者工具的调用方式，再加上一点“推理”，发现了调用协议，从而实现了此功能
-    const { printLog, processTypeEnum, fs } = this.ctx.helper
+    const { printLog, ProcessTypeEnum, fs } = this.ctx.helper
     const isMac = process.platform === 'darwin'
     const devToolsInstallPath = this.pluginOpts.swan!.devToolsInstallPath || (isMac ? '/Applications/百度开发者工具.app' : 'C:\\Program Files\\swan-ide-gui')
     const cliPath = path.join(devToolsInstallPath, isMac ? '/Contents/MacOS/cli' : '/cli.bat')
 
     if (!(await fs.pathExists(cliPath))) {
-      printLog(processTypeEnum.ERROR, '命令行工具路径不存在', cliPath)
+      printLog(ProcessTypeEnum.ERROR, '命令行工具路径不存在', cliPath)
     }
-    printLog(processTypeEnum.START, '百度开发者工具...', this.projectPath)
+    printLog(ProcessTypeEnum.START, '百度开发者工具...', this.projectPath)
     shell.exec(`${cliPath}  --project-path ${this.projectPath}`)
   }
 
   async preview () {
-    const { printLog, processTypeEnum } = this.ctx.helper
+    const { printLog, ProcessTypeEnum } = this.ctx.helper
     const previewQrcodePath = path.join(this.projectPath, 'preview.png')
-    printLog(processTypeEnum.START, '预览百度小程序')
+    printLog(ProcessTypeEnum.START, '预览百度小程序')
     shell.exec(`${this.swanBin} preview --project-path ${this.projectPath} --token ${this.pluginOpts.swan!.token} --min-swan-version ${this.pluginOpts.swan!.minSwanVersion || '3.350.6'} --json`, async (_code, stdout, stderr) => {
       if (!stderr) {
         stdout = JSON.parse(stdout)
@@ -50,7 +50,7 @@ export default class SwanCI extends BaseCI {
         await printQrcode2Terminal(qrContent)
         await generateQrcodeImageFile(previewQrcodePath, qrContent)
         printLog(
-          processTypeEnum.REMIND,
+          ProcessTypeEnum.REMIND,
           `预览二维码已生成，存储在:"${previewQrcodePath}",二维码内容是：${qrContent}`
         )
 
@@ -77,9 +77,9 @@ export default class SwanCI extends BaseCI {
   }
 
   async upload () {
-    const { chalk, printLog, processTypeEnum } = this.ctx.helper
-    printLog(processTypeEnum.START, '上传体验版代码到百度后台')
-    printLog(processTypeEnum.REMIND, `本次上传版本号为："${this.version}"，上传描述为：“${this.desc}”`)
+    const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
+    printLog(ProcessTypeEnum.START, '上传体验版代码到百度后台')
+    printLog(ProcessTypeEnum.REMIND, `本次上传版本号为："${this.version}"，上传描述为：“${this.desc}”`)
     shell.exec(`${this.swanBin} upload --project-path ${this.projectPath} --token ${this.pluginOpts.swan!.token} --release-version ${this.version} --min-swan-version ${this.pluginOpts.swan!.minSwanVersion || '3.350.6'} --desc ${this.desc} --json`, async (_code, stdout, stderr) => {
       if (!stderr) {
         console.log(chalk.green(`上传成功 ${new Date().toLocaleString()}`))
@@ -91,7 +91,7 @@ export default class SwanCI extends BaseCI {
         await printQrcode2Terminal(qrContent)
         await generateQrcodeImageFile(uploadQrcodePath, qrContent)
         printLog(
-          processTypeEnum.REMIND,
+          ProcessTypeEnum.REMIND,
           `体验版二维码已生成，存储在:"${uploadQrcodePath}",二维码内容是：${qrContent}`
         )
 
