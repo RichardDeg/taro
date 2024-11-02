@@ -108,21 +108,19 @@ export function resolveStylePath(p: string): string {
   return realPath
 }
 
-export function printLog(type: ProcessTypeEnum, tag: string, filePath?: string) {
-  const typeShow = processTypeMap[type]
-  const tagLen = tag.replace(/[\u0391-\uFFE5]/g, 'aa').length
-  const tagFormatLen = 8
-  if (tagLen < tagFormatLen) {
-    const rightPadding = new Array(tagFormatLen - tagLen + 1).join(' ')
-    tag += rightPadding
-  }
-  const padding = ''
-  filePath = filePath || ''
-  if (typeof typeShow.color === 'string') {
-    console.log(chalk[typeShow.color](typeShow.name), padding, tag, padding, filePath)
-  } else {
-    console.log(typeShow.color(typeShow.name), padding, tag, padding, filePath)
-  }
+export function printLog(type: ProcessTypeEnum, tag: string, filePath: string='') {
+  const { color, name } = processTypeMap[type]
+  const colorFn = color === 'string' ?chalk[color] :color
+  const typeStr = colorFn(name)
+
+  const tagSingleByteLen = tag.length
+  const tagDoubleByteLen = tag.replace(/[\u0391-\uFFE5]/g, 'aa').length
+  const tagDiffLen = tagDoubleByteLen - tagSingleByteLen
+  const tagFormatLen = 8 - tagDiffLen
+  const tagStr = tag.padEnd(tagFormatLen)
+
+  const separator = ''
+  console.log(typeStr, separator, tagStr, separator, filePath)
 }
 
 export function recursiveFindNodeModules(filePath: string, lastFindPath?: string): string {
