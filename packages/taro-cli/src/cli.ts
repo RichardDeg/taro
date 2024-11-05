@@ -71,8 +71,6 @@ export default class CLI {
       const presetsPath = path.resolve(__dirname, 'presets')
       const commandsPath = path.resolve(presetsPath, 'commands')
       const platformsPath = path.resolve(presetsPath, 'platforms')
-      const commandPlugins = fs.readdirSync(commandsPath)
-      const targetPlugin = `${command}.js`
 
       /*****************【读取命令行参数，写入 process.env】设置环境变量 *****************/
       process.env.NODE_ENV ||= args.env
@@ -105,23 +103,27 @@ export default class CLI {
         ],
         plugins: []
       })
+      // 插件集合
       kernel.optsPlugins ||= []
 
-      // ***************************************************************************
-      // *********** TODO: 看到 Kernel 的实现！！！ ***********************************
-      // ***************************************************************************
       // 将自定义的 变量 添加到 config.env 中，实现 definePlugin 字段定义
       const initialConfig = kernel.config?.initialConfig
       if (initialConfig) {
         initialConfig.env = patchEnv(initialConfig, dotExpandEnv)
       }
+
+      /*****************【根据内置命令 command，写入 kernel 插件 optsPlugins】**********/
+      const commandPlugins = fs.readdirSync(commandsPath)
+      const targetCommandPlugin = `${command}.js`
       if (command === 'doctor') {
         kernel.optsPlugins.push('@tarojs/plugin-doctor')
-      } else if (commandPlugins.includes(targetPlugin)) {
-        // 针对不同的内置命令注册对应的命令插件
-        kernel.optsPlugins.push(path.resolve(commandsPath, targetPlugin))
+      } else if (commandPlugins.includes(targetCommandPlugin)) {
+        kernel.optsPlugins.push(path.resolve(commandsPath, targetCommandPlugin))
       }
 
+      // ***************************************************************************
+      // *********** TODO: 看到 这里了 **********************************************
+      // ***************************************************************************
       // 把内置命令插件传递给 kernel，可以暴露给其他插件使用
       kernel.cliCommandsPath = commandsPath
       kernel.cliCommands = commandPlugins
@@ -141,7 +143,7 @@ export default class CLI {
           let plugin
           let platform = args.type
 
-          // 针对不同的内置平台注册对应的端平台插件
+          /*****************【根据平台 platform，写入 kernel 插件 optsPlugins】************/
           switch (platform) {
             case 'weapp':
             case 'alipay':
@@ -156,9 +158,9 @@ export default class CLI {
             default: {
               // plugin, rn
               const platformPlugins = fs.readdirSync(platformsPath)
-              const targetPlugin = `${platform}.js`
-              if (platformPlugins.includes(targetPlugin)) {
-                kernel.optsPlugins.push(path.resolve(platformsPath, targetPlugin))
+              const targetPlatformPlugin = `${platform}.js`
+              if (platformPlugins.includes(targetPlatformPlugin)) {
+                kernel.optsPlugins.push(path.resolve(platformsPath, targetPlatformPlugin))
               }
               break
             }
