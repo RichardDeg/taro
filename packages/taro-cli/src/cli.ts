@@ -16,9 +16,8 @@ import { getPkgVersion } from './util'
 const DISABLE_GLOBAL_CONFIG_COMMANDS = ['build', 'global-config', 'doctor', 'update', 'config']
 const DEFAULT_FRAMEWORK = 'react'
 
-// TODO: 1. eslint / prettier 格式化问题未生效
-// TODO: 2. tslint，ts 版本校验问题，貌似 vscode 内置的 ts 与 仓库的 ts 不匹配，调整为 仓库自带的 ts 版本
-// TODO: 3. debugger，断点调试待配置
+// TODO: 1. 设置保存代码时，自动格式化：eslint / prettier 格式化问题未生效,
+// TODO: 2. debugger，断点调试待配置
 
 export default class CLI {
   appPath: string
@@ -69,8 +68,8 @@ export default class CLI {
     if (command) {
       const appPath = this.appPath
       const presetsPath = path.resolve(__dirname, 'presets')
-      const commandsPath = path.resolve(presetsPath, 'commands')
-      const platformsPath = path.resolve(presetsPath, 'platforms')
+      const presetsCommandsPath = path.resolve(presetsPath, 'commands')
+      const presetsPlatformsPath = path.resolve(presetsPath, 'platforms')
 
       /*****************【读取命令行参数，写入 process.env】设置环境变量 *****************/
       process.env.NODE_ENV ||= args.env
@@ -99,7 +98,7 @@ export default class CLI {
         config,
         appPath,
         presets: [
-          path.resolve(__dirname, '.', 'presets', 'index.js')
+          path.resolve(presetsPath, 'index.js')
         ],
         plugins: []
       })
@@ -113,23 +112,19 @@ export default class CLI {
       }
 
       /*****************【根据内置命令 command，写入 kernel 插件 optsPlugins】**********/
-      const commandPlugins = fs.readdirSync(commandsPath)
+      const presetsCommandsPlugins = fs.readdirSync(presetsCommandsPath)
       const targetCommandPlugin = `${command}.js`
       if (command === 'doctor') {
         kernel.optsPlugins.push('@tarojs/plugin-doctor')
-      } else if (commandPlugins.includes(targetCommandPlugin)) {
-        kernel.optsPlugins.push(path.resolve(commandsPath, targetCommandPlugin))
+      } else if (presetsCommandsPlugins.includes(targetCommandPlugin)) {
+        kernel.optsPlugins.push(path.resolve(presetsCommandsPath, targetCommandPlugin))
       }
 
-      // ***************************************************************************
-      // *********** TODO: 看到 这里了 **********************************************
-      // ***************************************************************************
       // 把内置命令插件传递给 kernel，可以暴露给其他插件使用
-      kernel.cliCommandsPath = commandsPath
-      kernel.cliCommands = commandPlugins
-        .filter(commandFileName => /^[\w-]+(\.[\w-]+)*\.js$/.test(commandFileName))
-        .map(fileName => fileName.replace(/\.js$/, ''))
-
+      kernel.cliCommandsPath = presetsCommandsPath
+      kernel.cliCommands = presetsCommandsPlugins
+      .filter(fileName => /^[\w-]+(\.[\w-]+)*\.js$/.test(fileName))
+      .map(fileName => fileName.replace(/\.js$/, ''))
 
       switch (command) {
         case 'inspect':
@@ -156,16 +151,18 @@ export default class CLI {
               kernel.optsPlugins.push(`@tarojs/plugin-platform-${platform}`)
               break
             default: {
-              // plugin, rn
-              const platformPlugins = fs.readdirSync(platformsPath)
+              // case 'rn' 等，参考：packages/taro-api/src/env.ts
+              const presetsPlatformsPlugins = fs.readdirSync(presetsPlatformsPath)
               const targetPlatformPlugin = `${platform}.js`
-              if (platformPlugins.includes(targetPlatformPlugin)) {
-                kernel.optsPlugins.push(path.resolve(platformsPath, targetPlatformPlugin))
+              if (presetsPlatformsPlugins.includes(targetPlatformPlugin)) {
+                kernel.optsPlugins.push(path.resolve(presetsPlatformsPath, targetPlatformPlugin))
               }
-              break
             }
           }
 
+          // ***************************************************************************
+          // *********** TODO: 看到 这里了 **********************************************
+          // ***************************************************************************
           // 根据 framework 启用插件
           const framework = kernel.config?.initialConfig.framework || DEFAULT_FRAMEWORK
           const frameworkMap = {
@@ -183,7 +180,7 @@ export default class CLI {
           if (typeof args.plugin === 'string') {
             plugin = args.plugin
             platform = 'plugin'
-            kernel.optsPlugins.push(path.resolve(platformsPath, 'plugin.js'))
+            kernel.optsPlugins.push(path.resolve(presetsPlatformsPath, 'plugin.js'))
 
             // TODO: ??? 这是 pluginList, 还是部分的 platform, 如何命名 ???
             // TODO: 是否已由其他公共的 常量配置文件，不需要单个仓库重复写一份。是否需要提取出去变成公共常量
@@ -250,7 +247,6 @@ export default class CLI {
         }
         default:
           customCommand(command, kernel, args)
-          break
       }
     } else {
       if (args.h) {
