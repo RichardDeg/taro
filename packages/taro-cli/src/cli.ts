@@ -71,13 +71,16 @@ export default class CLI {
       const presetsCommandsPath = path.resolve(presetsPath, 'commands')
       const presetsPlatformsPath = path.resolve(presetsPath, 'platforms')
 
+      const miniPlugin = args.plugin
+      const isMiniPlugin = typeof miniPlugin === 'string'
+
       /*****************【读取命令行参数，写入 process.env】设置环境变量 *****************/
       process.env.NODE_ENV ||= args.env
       if (process.env.NODE_ENV === 'undefined' && (command === 'build' || command === 'inspect')) {
         process.env.NODE_ENV = (args.watch ? 'development' : 'production')
       }
       args.type ||= args.t
-      if (typeof args.plugin === 'string') {
+      if (isMiniPlugin) {
         process.env.TARO_ENV = 'plugin'
       } else if (args.type) {
         process.env.TARO_ENV = args.type
@@ -132,13 +135,8 @@ export default class CLI {
           // TODO: 122 -180 行，尝试下是否可收起到1个函数内。弄懂这段代码在做什么???
           // TODO: 保持程序入口/主函数干净，收起函数具体实现，改善代码可读性; 做到不看函数内具体实现即可明确功能；（参考 react 源码风格）
 
-          const { publicPath, bundleOutput, sourcemapOutput, sourceMapUrl, sourcemapSourcesRoot, assetsDest } = args
-
-          // FIXME:【特殊处理】引入/改写 plugin 和 platform 变量 => 解决不支持微信小程序插件编译问题
-          let plugin
-          let platform = args.type
-
           /*****************【根据平台 platform，写入 kernel 插件 optsPlugins】************/
+          const platform = args.type
           switch (platform) {
             case 'weapp':
             case 'alipay':
@@ -160,10 +158,7 @@ export default class CLI {
             }
           }
 
-          // ***************************************************************************
-          // *********** TODO: 看到 这里了 **********************************************
-          // ***************************************************************************
-          // 根据 framework 启用插件
+          /*****************【根据框架 framework，写入 kernel 插件 optsPlugins】************/
           const framework = kernel.config?.initialConfig.framework || DEFAULT_FRAMEWORK
           const frameworkMap = {
             vue3: '@tarojs/plugin-framework-vue3',
@@ -176,31 +171,34 @@ export default class CLI {
             kernel.optsPlugins.push(targetFrameworkPlugin)
           }
 
-          // 编译小程序插件
-          if (typeof args.plugin === 'string') {
-            plugin = args.plugin
-            platform = 'plugin'
+          /*****************【根据小程序类型，写入 kernel 插件 optsPlugins】*****************/
+          if (isMiniPlugin) {
+            const miniPlugins = ['weapp', 'alipay', 'jd']
             kernel.optsPlugins.push(path.resolve(presetsPlatformsPath, 'plugin.js'))
-
-            // TODO: ??? 这是 pluginList, 还是部分的 platform, 如何命名 ???
-            // TODO: 是否已由其他公共的 常量配置文件，不需要单个仓库重复写一份。是否需要提取出去变成公共常量
-            const pluginList = ['weapp', 'alipay', 'jd']
-
-            if (pluginList.includes(plugin)) {
-              kernel.optsPlugins.push(`@tarojs/plugin-platform-${plugin}`)
+            if (miniPlugins.includes(miniPlugin)) {
+              kernel.optsPlugins.push(`@tarojs/plugin-platform-${miniPlugin}`)
             }
           }
 
+          // ***************************************************************************
+          // ************************* TODO: 看到 这里了 *********************************
+          // ***************************************************************************
+
+          // TODO: ??? 外层 合并了 inspect 和 build, 里面却又分离 inspect 和 build 的部分逻辑
+          // FIXME: switch 语句，使用的不好，两个 case 是否可抽离公共部分为单个函数！！！
+          // 分别调用/获取返回参数后，差异化处理不同的调用
           // 传递 inspect 参数即可
           if (command === 'inspect') {
             customCommand(command, kernel, args)
             break
           }
+
           customCommand(command, kernel, {
             args,
             _,
-            platform,
-            plugin,
+            //【特殊处理】引入/改写 plugin 和 platform 变量 => 解决不支持微信小程序插件编译问题
+            platform: isMiniPlugin ?'plugin' :platform,
+            plugin: isMiniPlugin ?miniPlugin :undefined,
             isWatch: Boolean(args.watch),
             // Note: 是否把 Taro 组件编译为原生自定义组件
             isBuildNativeComp: projectName === 'native-components',
@@ -210,19 +208,19 @@ export default class CLI {
             withoutBuild: !args.build,
             noInjectGlobalStyle: !args['inject-global-style'],
             noCheck: !args.check,
-            port: args.port,
-            env: args.env,
             deviceType: args.platform,
             resetCache: !!args.resetCache,
-            publicPath,
-            bundleOutput,
-            sourcemapOutput,
-            sourceMapUrl,
-            sourcemapSourcesRoot,
-            assetsDest,
             qr: !!args.qr,
             blended: Boolean(args.blended),
-            h: args.h
+            h: args.h,
+            env: args.env,
+            port: args.port,
+            publicPath: args.publicPath,
+            assetsDest: args.assetsDest,
+            sourceMapUrl: args.sourceMapUrl,
+            bundleOutput: args.bundleOutput,
+            sourcemapOutput: args.sourcemapOutput,
+            sourcemapSourcesRoot: args.sourcemapSourcesRoot,
           })
           break
         }
@@ -231,17 +229,17 @@ export default class CLI {
             _,
             appPath,
             projectName: projectName || args.name,
-            description: args.description,
-            typescript: args.typescript,
-            framework: args.framework,
-            compiler: args.compiler,
-            npm: args.npm,
             templateSource: args['template-source'],
             clone: !!args.clone,
-            template: args.template,
+            h: args.h,
             css: args.css,
+            npm: args.npm,
+            compiler: args.compiler,
+            template: args.template,
+            framework: args.framework,
+            typescript: args.typescript,
             autoInstall: args.autoInstall,
-            h: args.h
+            description: args.description,
           })
           break
         }
