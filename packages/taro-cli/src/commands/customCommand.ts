@@ -17,8 +17,8 @@ export default function customCommand (
     kernel.run({
       name: command,
       opts: {
-        _: args._,
         options,
+        _: args._,
         isHelp: args.h
       }
     })

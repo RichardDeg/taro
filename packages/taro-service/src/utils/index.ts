@@ -16,30 +16,26 @@ export function getPluginPath (pluginPath: string) {
   throw new Error('plugin 和 preset 配置必须为绝对路径或者包名')
 }
 
-export function convertPluginsToObject (items: PluginItem[]): () => IPluginsObject {
-  return () => {
-    const obj: IPluginsObject = {}
-    if (Array.isArray(items)) {
-      items.forEach(item => {
-        if (typeof item === 'string') {
-          const name = getPluginPath(item)
-          obj[name] = null
-        } else if (Array.isArray(item)) {
-          const name = getPluginPath(item[0])
-          obj[name] = item[1]
-        }
-      })
-    }
-    return obj
+export function convertPluginsToObject (items: PluginItem[]): IPluginsObject {
+  const obj: IPluginsObject = {}
+  if (Array.isArray(items)) {
+    items.forEach(item => {
+      if (typeof item === 'string') {
+        const name = getPluginPath(item)
+        obj[name] = null
+      } else if (Array.isArray(item)) {
+        const name = getPluginPath(item[0])
+        obj[name] = item[1]
+      }
+    })
   }
+  return obj
 }
 
 export function mergePlugins (dist: PluginItem[], src: PluginItem[]) {
-  return () => {
-    const srcObj = convertPluginsToObject(src)()
-    const distObj = convertPluginsToObject(dist)()
-    return merge(distObj, srcObj)
-  }
+  const srcObj = convertPluginsToObject(src)
+  const distObj = convertPluginsToObject(dist)
+  return merge(distObj, srcObj)
 }
 
 // getModuleDefaultExport

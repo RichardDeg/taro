@@ -110,22 +110,27 @@ export default class Kernel extends EventEmitter {
 
   initPresetsAndPlugins () {
     const initialConfig = this.initialConfig
-    const initialGlobalConfig = this.initialGlobalConfig
-    const cliAndProjectConfigPresets = mergePlugins(this.optsPresets || [], initialConfig.presets || [])()
-    const cliAndProjectPlugins = mergePlugins(this.optsPlugins || [], initialConfig.plugins || [])()
-    const globalPlugins = convertPluginsToObject(initialGlobalConfig.plugins || [])()
-    const globalPresets = convertPluginsToObject(initialGlobalConfig.presets || [])()
+    const cliAndProjectConfigPresets = mergePlugins(this.optsPresets || [], initialConfig.presets || [])
+    const cliAndProjectPlugins = mergePlugins(this.optsPlugins || [], initialConfig.plugins || [])
     this.debugger('initPresetsAndPlugins', cliAndProjectConfigPresets, cliAndProjectPlugins)
+
+    const initialGlobalConfig = this.initialGlobalConfig
+    const globalPlugins = convertPluginsToObject(initialGlobalConfig.plugins || [])
+    const globalPresets = convertPluginsToObject(initialGlobalConfig.presets || [])
     this.debugger('globalPresetsAndPlugins', globalPlugins, globalPresets)
-    process.env.NODE_ENV !== 'test' &&
-    helper.createSwcRegister({
-      only: [
-        ...Object.keys(cliAndProjectConfigPresets),
-        ...Object.keys(cliAndProjectPlugins),
-        ...Object.keys(globalPresets),
-        ...Object.keys(globalPlugins)
-      ]
-    })
+
+    // TODO: 看到这里了
+    if(process.env.NODE_ENV !== 'test') {
+      helper.createSwcRegister({
+        only: [
+          ...Object.keys(cliAndProjectConfigPresets),
+          ...Object.keys(cliAndProjectPlugins),
+          ...Object.keys(globalPresets),
+          ...Object.keys(globalPlugins)
+        ]
+      })
+    }
+
     this.plugins = new Map()
     this.extraPlugins = {}
     this.globalExtraPlugins = {}
@@ -171,15 +176,15 @@ export default class Kernel extends EventEmitter {
     const { presets, plugins } = apply()(pluginCtx, opts) || {}
     this.registerPlugin(preset)
     if (Array.isArray(presets)) {
-      const _presets = resolvePresetsOrPlugins(this.appPath, convertPluginsToObject(presets)(), PluginType.Preset, isGlobalConfigPreset)
+      const _presets = resolvePresetsOrPlugins(this.appPath, convertPluginsToObject(presets), PluginType.Preset, isGlobalConfigPreset)
       while (_presets.length) {
         this.initPreset(_presets.shift()!, isGlobalConfigPreset)
       }
     }
     if (Array.isArray(plugins)) {
       isGlobalConfigPreset
-        ? (this.globalExtraPlugins = merge(this.globalExtraPlugins, convertPluginsToObject(plugins)()))
-        : (this.extraPlugins = merge(this.extraPlugins, convertPluginsToObject(plugins)()))
+        ? (this.globalExtraPlugins = merge(this.globalExtraPlugins, convertPluginsToObject(plugins)))
+        : (this.extraPlugins = merge(this.extraPlugins, convertPluginsToObject(plugins)))
     }
   }
 
@@ -199,7 +204,7 @@ export default class Kernel extends EventEmitter {
       const commandFilePath = path.resolve(this.cliCommandsPath, `${commandName}.js`)
       if (this.cliCommands.includes(commandName)) existsCliCommand.push(commandFilePath)
     }
-    const commandPlugins = convertPluginsToObject(existsCliCommand || [])()
+    const commandPlugins = convertPluginsToObject(existsCliCommand || [])
     helper.createSwcRegister({ only: [...Object.keys(commandPlugins)] })
     const resolvedCommandPlugins = resolvePresetsOrPlugins(this.appPath, commandPlugins, PluginType.Plugin)
     while (resolvedCommandPlugins.length) {
@@ -361,6 +366,7 @@ export default class Kernel extends EventEmitter {
     this.debugger(`command:runOpts:${JSON.stringify(opts, null, 2)}`)
     this.setRunOpts(opts)
 
+    // TODO: 看到这里了
     this.debugger('initPresetsAndPlugins')
     this.initPresetsAndPlugins()
 
