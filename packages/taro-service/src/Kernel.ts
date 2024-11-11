@@ -119,7 +119,6 @@ export default class Kernel extends EventEmitter {
     const globalPresets = convertPluginsToObject(initialGlobalConfig.presets || [])
     this.debugger('globalPresetsAndPlugins', globalPlugins, globalPresets)
 
-    // TODO: 看到这里了
     if(process.env.NODE_ENV !== 'test') {
       helper.createSwcRegister({
         only: [
@@ -134,6 +133,8 @@ export default class Kernel extends EventEmitter {
     this.plugins = new Map()
     this.extraPlugins = {}
     this.globalExtraPlugins = {}
+
+    // TODO: 看到这里了
     this.resolvePresets(cliAndProjectConfigPresets, globalPresets)
     this.resolvePlugins(cliAndProjectPlugins, globalPlugins)
   }
@@ -205,7 +206,7 @@ export default class Kernel extends EventEmitter {
       if (this.cliCommands.includes(commandName)) existsCliCommand.push(commandFilePath)
     }
     const commandPlugins = convertPluginsToObject(existsCliCommand || [])
-    helper.createSwcRegister({ only: [...Object.keys(commandPlugins)] })
+    helper.createSwcRegister({ only: Object.keys(commandPlugins) })
     const resolvedCommandPlugins = resolvePresetsOrPlugins(this.appPath, commandPlugins, PluginType.Plugin)
     while (resolvedCommandPlugins.length) {
       this.initPlugin(resolvedCommandPlugins.shift()!)
