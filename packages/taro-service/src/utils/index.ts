@@ -38,13 +38,15 @@ export function mergePlugins (dist: PluginItem[], src: PluginItem[]) {
   return merge(distObj, srcObj)
 }
 
-// getModuleDefaultExport
+/**
+ * @param skipError 值为 true 时，用于当全局的插件引入报错时，不抛出 Error 影响主流程，而是通过 log 提醒然后把插件 filter 掉，保证主流程不变
+ */
 export function resolvePresetsOrPlugins (root: string, args: IPluginsObject, type: PluginType, skipError?: boolean): IPlugin[] {
-  // 全局的插件引入报错，不抛出 Error 影响主流程，而是通过 log 提醒然后把插件 filter 掉，保证主流程不变
   const resolvedPresetsOrPlugins: IPlugin[] = []
   const presetsOrPluginsNames = Object.keys(args) || []
   for (let i = 0; i < presetsOrPluginsNames.length; i++) {
     const item = presetsOrPluginsNames[i]
+    const itemValue = args[item] || {}
     let fPath
     try {
       fPath = resolve.sync(item, {
@@ -52,15 +54,17 @@ export function resolvePresetsOrPlugins (root: string, args: IPluginsObject, typ
         extensions: ['.js', '.ts']
       })
     } catch (err) {
-      if (args[item]?.backup) {
+      const customErrorInfo = `找不到插件依赖 "${item}"，请先在项目中安装，项目路径：${root}`
+
+      if (itemValue.backup) {
         // 如果项目中没有，可以使用 CLI 中的插件
-        fPath = args[item]?.backup
+        fPath = itemValue.backup
       } else if (skipError) {
         // 如果跳过报错，那么 log 提醒，并且不使用该插件
-        console.log(chalk.yellow(`找不到插件依赖 "${item}"，请先在项目中安装，项目路径：${root}`))
+        console.log(chalk.yellow(customErrorInfo))
         continue
       } else {
-        console.log(chalk.red(`找不到插件依赖 "${item}"，请先在项目中安装，项目路径：${root}`))
+        console.log(chalk.red(customErrorInfo))
         process.exit(1)
       }
     }
@@ -68,17 +72,17 @@ export function resolvePresetsOrPlugins (root: string, args: IPluginsObject, typ
       id: fPath,
       path: fPath,
       type,
-      opts: args[item] || {},
+      opts: itemValue,
       apply () {
         try {
           return getModuleDefaultExport(require(fPath))
         } catch (error) {
           console.error(error)
-          // 全局的插件运行报错，不抛出 Error 影响主流程，而是通过 log 提醒然后把插件 filter 掉，保证主流程不变
+          const customErrorInfo = `插件依赖 "${item}" 加载失败，请检查插件配置`
           if (skipError) {
-            console.error(`插件依赖 "${item}" 加载失败，请检查插件配置`)
+            console.error(customErrorInfo)
           } else {
-            throw new Error(`插件依赖 "${item}" 加载失败，请检查插件配置`)
+            throw new Error(customErrorInfo)
           }
         }
       }
