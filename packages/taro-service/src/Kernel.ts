@@ -142,6 +142,7 @@ export default class Kernel extends EventEmitter {
   resolvePresets (cliAndProjectPresets: IPluginsObject, globalPresets: IPluginsObject) {
     const resolvedCliAndProjectPresets = resolvePresetsOrPlugins(this.appPath, cliAndProjectPresets, PluginType.Preset)
     while (resolvedCliAndProjectPresets.length) {
+      // TODO: 看到这里了
       this.initPreset(resolvedCliAndProjectPresets.shift()!)
     }
 
@@ -170,9 +171,11 @@ export default class Kernel extends EventEmitter {
     this.globalExtraPlugins = {}
   }
 
+  // TODO: 看到这里了
   initPreset (preset: IPreset, isGlobalConfigPreset?: boolean) {
     this.debugger('initPreset', preset)
     const { id, path, opts, apply } = preset
+    // TODO: 看到这里了
     const pluginCtx = this.initPluginCtx({ id, path, ctx: this })
     const { presets, plugins } = apply()(pluginCtx, opts) || {}
     this.registerPlugin(preset)
@@ -238,7 +241,9 @@ export default class Kernel extends EventEmitter {
     this.plugins.set(plugin.id, plugin)
   }
 
+  // TODO: 看到这里了
   initPluginCtx ({ id, path, ctx }: { id: string, path: string, ctx: Kernel }) {
+    // TODO: 看到这里了
     const pluginCtx = new Plugin({ id, path, ctx })
     const internalMethods = ['onReady', 'onStart']
     const kernelApis = [

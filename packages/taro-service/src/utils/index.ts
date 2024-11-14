@@ -39,7 +39,7 @@ export function mergePlugins (dist: PluginItem[], src: PluginItem[]) {
 }
 
 /**
- * @param skipError 值为 true 时，用于当全局的插件引入报错时，不抛出 Error 影响主流程，而是通过 log 提醒然后把插件 filter 掉，保证主流程不变
+ * @param { boolean } skipError - 值为 true 时，用于当全局的插件引入报错时，不抛出 Error 影响主流程，而是通过 log 提醒然后把插件 filter 掉，保证主流程不变
  */
 export function resolvePresetsOrPlugins (root: string, args: IPluginsObject, type: PluginType, skipError?: boolean): IPlugin[] {
   const resolvedPresetsOrPlugins: IPlugin[] = []
@@ -92,6 +92,34 @@ export function resolvePresetsOrPlugins (root: string, args: IPluginsObject, typ
 
   return resolvedPresetsOrPlugins
 }
+
+
+/**
+ * 解析 PluginCtx 的 RegisterMethod 方法的入参
+ * @param { any[] } args
+ * @param { string | { name: string, fn?: Func } } args[0] - 参数 1
+ * @param { Func= } args[1] - 参数 2，可选参数
+ */
+export function processRegisterMethodArgs (args: any[]) {
+  const [firstArgument, secondArgument] = args
+  const argsLen = args.length
+  if (!argsLen) throw new Error('参数为空')
+
+  let name, fn
+  if (argsLen === 1) {
+    if (typeof firstArgument === 'string') {
+      name = firstArgument
+    } else {
+      name = firstArgument.name
+      fn = firstArgument.fn
+    }
+  } else {
+    name = firstArgument
+    fn = secondArgument
+  }
+  return { name, fn }
+}
+
 
 function supplementBlank (length) {
   return Array(length).map(() => '').join(' ')

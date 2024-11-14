@@ -2,18 +2,21 @@ import { addPlatforms } from '@tarojs/helper'
 
 import type { Func } from '@tarojs/taro/types/compile'
 import type Kernel from './Kernel'
+import { processRegisterMethodArgs } from './utils'
 import type { ICommand, IHook, IPlatform } from './utils/types'
 
+type PluginConstructorParams = { id: string, path: string, ctx: Kernel }
+
 export default class Plugin {
-  id: string
-  path: string
-  ctx: Kernel
+  id: PluginConstructorParams['id']
+  path: PluginConstructorParams['path']
+  ctx: PluginConstructorParams['ctx']
   optsSchema: Func
 
-  constructor (opts) {
-    this.id = opts.id
-    this.path = opts.path
-    this.ctx = opts.ctx
+  constructor ({ id, path, ctx }: PluginConstructorParams) {
+    this.id = id
+    this.path = path
+    this.ctx = ctx
   }
 
   register (hook: IHook) {
@@ -46,7 +49,7 @@ export default class Plugin {
   }
 
   registerMethod (...args) {
-    const { name, fn } = processArgs(args)
+    const { name, fn } = processRegisterMethodArgs(args)
     const methods = this.ctx.methods.get(name) || []
     methods.push(fn || function (fn: Func) {
       this.register({
@@ -60,22 +63,4 @@ export default class Plugin {
   addPluginOptsSchema (schema) {
     this.optsSchema = schema
   }
-}
-
-function processArgs (args) {
-  let name, fn
-  if (!args.length) {
-    throw new Error('参数为空')
-  } else if (args.length === 1) {
-    if (typeof args[0] === 'string') {
-      name = args[0]
-    } else {
-      name = args[0].name
-      fn = args[0].fn
-    }
-  } else {
-    name = args[0]
-    fn = args[1]
-  }
-  return { name, fn }
 }
