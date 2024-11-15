@@ -31,6 +31,7 @@ export default class CLI {
 
   async parseArgs () {
     /*****************【解析/获取命令行参数】*****************************************/
+    // TODO: 是否存在优化空间，静态配置项单独抽离 对象常量
     const args = minimist(process.argv.slice(2), {
       alias: {
         version: ['v'],
@@ -97,6 +98,7 @@ export default class CLI {
       const config = new Config({ appPath, disableGlobalConfig })
       await config.init({ mode, command })
 
+      // TODO: 101 - 132 行，是否存在优化空间，对 kernel 带有副作用的处理逻辑，抽离成单个函数
       const kernel = new Kernel({
         config,
         appPath,
@@ -130,70 +132,18 @@ export default class CLI {
       .map(fileName => fileName.replace(/\.js$/, ''))
 
       switch (command) {
-        case 'inspect':
+        case 'inspect': {
+          this.setKernelOptsPlugins(kernel, args, presetsPlatformsPath)
+          customCommand(command, kernel, args)
+          break
+        }
         case 'build': {
-          // TODO: 122 -180 行，尝试下是否可收起到1个函数内。弄懂这段代码在做什么???
-          // TODO: 保持程序入口/主函数干净，收起函数具体实现，改善代码可读性; 做到不看函数内具体实现即可明确功能；（参考 react 源码风格）
-
-          /*****************【根据平台 platform，写入 kernel 插件 optsPlugins】************/
-          const platform = args.type
-          switch (platform) {
-            case 'weapp':
-            case 'alipay':
-            case 'swan':
-            case 'tt':
-            case 'qq':
-            case 'jd':
-            case 'h5':
-            case 'harmony-hybrid':
-              kernel.optsPlugins.push(`@tarojs/plugin-platform-${platform}`)
-              break
-            default: {
-              // case 'rn' 等，参考：packages/taro-api/src/env.ts
-              const presetsPlatformsPlugins = fs.readdirSync(presetsPlatformsPath)
-              const targetPlatformPlugin = `${platform}.js`
-              if (presetsPlatformsPlugins.includes(targetPlatformPlugin)) {
-                kernel.optsPlugins.push(path.resolve(presetsPlatformsPath, targetPlatformPlugin))
-              }
-            }
-          }
-
-          /*****************【根据框架 framework，写入 kernel 插件 optsPlugins】************/
-          const framework = kernel.config?.initialConfig.framework || DEFAULT_FRAMEWORK
-          const frameworkMap = {
-            vue3: '@tarojs/plugin-framework-vue3',
-            react: '@tarojs/plugin-framework-react',
-            preact: '@tarojs/plugin-framework-react',
-            solid: '@tarojs/plugin-framework-solid',
-          }
-          const targetFrameworkPlugin = frameworkMap[framework]
-          if (targetFrameworkPlugin) {
-            kernel.optsPlugins.push(targetFrameworkPlugin)
-          }
-
-          /*****************【根据小程序类型，写入 kernel 插件 optsPlugins】*****************/
-          if (isMiniPlugin) {
-            const miniPlugins = ['weapp', 'alipay', 'jd']
-            kernel.optsPlugins.push(path.resolve(presetsPlatformsPath, 'plugin.js'))
-            if (miniPlugins.includes(miniPlugin)) {
-              kernel.optsPlugins.push(`@tarojs/plugin-platform-${miniPlugin}`)
-            }
-          }
-
-          // TODO: ??? 外层 合并了 inspect 和 build, 里面却又分离 inspect 和 build 的部分逻辑
-          // FIXME: switch 语句，使用的不好，两个 case 是否可抽离公共部分为单个函数！！！
-          // 分别调用/获取返回参数后，差异化处理不同的调用
-          // 传递 inspect 参数即可
-          if (command === 'inspect') {
-            customCommand(command, kernel, args)
-            break
-          }
-
+          this.setKernelOptsPlugins(kernel, args, presetsPlatformsPath)
           customCommand(command, kernel, {
             args,
             _,
             //【特殊处理】引入/改写 plugin 和 platform 变量 => 解决不支持微信小程序插件编译问题
-            platform: isMiniPlugin ?'plugin' :platform,
+            platform: isMiniPlugin ?'plugin' :args.type,
             plugin: isMiniPlugin ?miniPlugin :undefined,
             isWatch: Boolean(args.watch),
             // Note: 是否把 Taro 组件编译为原生自定义组件
@@ -239,8 +189,9 @@ export default class CLI {
           })
           break
         }
-        default:
+        default: {
           customCommand(command, kernel, args)
+        }
       }
     } else {
       if (args.h) {
@@ -262,6 +213,55 @@ export default class CLI {
         console.log('  help [cmd]          display help for [cmd]')
       } else if (args.v) {
         console.log(getPkgVersion())
+      }
+    }
+  }
+
+  setKernelOptsPlugins(kernel: typeof Kernel, args: minimist.ParsedArgs, presetsPlatformsPath: string) {
+    /*****************【根据平台 platform，写入 kernel 插件 optsPlugins】************/
+    const platform = args.type
+    switch (platform) {
+      case 'weapp':
+      case 'alipay':
+      case 'swan':
+      case 'tt':
+      case 'qq':
+      case 'jd':
+      case 'h5':
+      case 'harmony-hybrid':
+        kernel.optsPlugins.push(`@tarojs/plugin-platform-${platform}`)
+        break
+      default: {
+        // case 'rn' 等，参考：packages/taro-api/src/env.ts
+        const presetsPlatformsPlugins = fs.readdirSync(presetsPlatformsPath)
+        const targetPlatformPlugin = `${platform}.js`
+        if (presetsPlatformsPlugins.includes(targetPlatformPlugin)) {
+          kernel.optsPlugins.push(path.resolve(presetsPlatformsPath, targetPlatformPlugin))
+        }
+      }
+    }
+
+    /*****************【根据框架 framework，写入 kernel 插件 optsPlugins】************/
+    const framework = kernel.config?.initialConfig.framework || DEFAULT_FRAMEWORK
+    const frameworkMap = {
+      vue3: '@tarojs/plugin-framework-vue3',
+      react: '@tarojs/plugin-framework-react',
+      preact: '@tarojs/plugin-framework-react',
+      solid: '@tarojs/plugin-framework-solid',
+    }
+    const targetFrameworkPlugin = frameworkMap[framework]
+    if (targetFrameworkPlugin) {
+      kernel.optsPlugins.push(targetFrameworkPlugin)
+    }
+
+    /*****************【根据小程序类型，写入 kernel 插件 optsPlugins】*****************/
+    const miniPlugin = args.plugin
+    const isMiniPlugin = typeof miniPlugin === 'string'
+    if (isMiniPlugin) {
+      const miniPlugins = ['weapp', 'alipay', 'jd']
+      kernel.optsPlugins.push(path.resolve(presetsPlatformsPath, 'plugin.js'))
+      if (miniPlugins.includes(miniPlugin)) {
+        kernel.optsPlugins.push(`@tarojs/plugin-platform-${miniPlugin}`)
       }
     }
   }
