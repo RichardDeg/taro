@@ -203,10 +203,7 @@ export default class Kernel extends EventEmitter {
 
   // TODO: 看到这里了
   initPluginCtx ({ id, path, ctx }: { id: string, path: string, ctx: Kernel }) {
-    // TODO: 看到这里了
-    const pluginCtx = new Plugin({ id, path, ctx })
-    const internalMethods = ['onReady', 'onStart']
-    const kernelApis = [
+    const kernelMemberVariablesAndFunctions = [
       'appPath',
       'plugins',
       'platforms',
@@ -218,6 +215,9 @@ export default class Kernel extends EventEmitter {
       'applyPlugins',
       'applyCliCommandPlugin'
     ]
+    // TODO: 看到这里了
+    const pluginCtx = new Plugin({ id, path, ctx })
+    const internalMethods = ['onReady', 'onStart']
     internalMethods.forEach(name => {
       if (!this.methods.has(name)) {
         pluginCtx.registerMethod(name)
@@ -236,7 +236,7 @@ export default class Kernel extends EventEmitter {
           }
           return method
         }
-        if (kernelApis.includes(name)) {
+        if (kernelMemberVariablesAndFunctions.includes(name)) {
           return typeof this[name] === 'function' ? this[name].bind(this) : this[name]
         }
         return target[name]
