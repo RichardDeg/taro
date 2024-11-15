@@ -29,9 +29,13 @@ export default class CLI {
     return this.parseArgs()
   }
 
+  // TODO: 从小到大 一点点/慢慢来 拆分多个子函数，
+  // ??怎么降低函数间的耦合性/关联,
+  // 副作用的变量如何处理??
+  // 子函数是否需要 return 返回值??
   async parseArgs () {
     /*****************【解析/获取命令行参数】*****************************************/
-    // TODO: 是否存在优化空间，静态配置项单独抽离 对象常量
+    // TODO: ??? 是否存在优化空间，抽离个 readArgs 方法，返回 args, 将静态配置项的参数设置都包裹在独立函数内。在入口处只暴露调用
     const args = minimist(process.argv.slice(2), {
       alias: {
         version: ['v'],
@@ -66,6 +70,10 @@ export default class CLI {
     const _ = args._
     const [command, projectName] = _
 
+    // TODO: ???改写 if... esle... 语句，
+    // 封装 console.log 为单独 helpConsole 函数；
+    // 并前置helpConsole 函数，通过提前 return，去除一层 if...else...判断，
+    // 将 switch command 语句作为主函数暴露出来
     if (command) {
       const appPath = this.appPath
       const presetsPath = path.resolve(__dirname, 'presets')
@@ -134,6 +142,7 @@ export default class CLI {
       switch (command) {
         case 'inspect': {
           this.setKernelOptsPlugins(kernel, args, presetsPlatformsPath)
+          // TODO: 看到 customCommand 方法实现了
           customCommand(command, kernel, args)
           break
         }

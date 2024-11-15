@@ -201,46 +201,6 @@ export default class Kernel extends EventEmitter {
     this.checkPluginOpts(pluginCtx, opts)
   }
 
-  applyCliCommandPlugin (commandNames: string[] = []) {
-    const existsCliCommand: string[] = []
-    for (let i = 0; i < commandNames.length; i++) {
-      const commandName = commandNames[i]
-      const commandFilePath = path.resolve(this.cliCommandsPath, `${commandName}.js`)
-      if (this.cliCommands.includes(commandName)) existsCliCommand.push(commandFilePath)
-    }
-    const commandPlugins = convertPluginsToObject(existsCliCommand || [])
-    helper.createSwcRegister({ only: Object.keys(commandPlugins) })
-    const resolvedCommandPlugins = resolvePresetsOrPlugins(this.appPath, commandPlugins, PluginType.Plugin)
-    while (resolvedCommandPlugins.length) {
-      this.initPlugin(resolvedCommandPlugins.shift()!)
-    }
-  }
-
-  checkPluginOpts (pluginCtx, opts) {
-    if (typeof pluginCtx.optsSchema !== 'function') {
-      return
-    }
-    this.debugger('checkPluginOpts', pluginCtx)
-    const joi = require('joi')
-    const schema = pluginCtx.optsSchema(joi)
-    if (!joi.isSchema(schema)) {
-      throw new Error(`插件${pluginCtx.id}中设置参数检查 schema 有误，请检查！`)
-    }
-    const { error } = schema.validate(opts)
-    if (error) {
-      error.message = `插件${pluginCtx.id}获得的参数不符合要求，请检查！`
-      throw error
-    }
-  }
-
-  registerPlugin (plugin: IPlugin) {
-    this.debugger('registerPlugin', plugin)
-    if (this.plugins.has(plugin.id)) {
-      throw new Error(`插件 ${plugin.id} 已被注册`)
-    }
-    this.plugins.set(plugin.id, plugin)
-  }
-
   // TODO: 看到这里了
   initPluginCtx ({ id, path, ctx }: { id: string, path: string, ctx: Kernel }) {
     // TODO: 看到这里了
@@ -282,6 +242,46 @@ export default class Kernel extends EventEmitter {
         return target[name]
       }
     })
+  }
+
+  registerPlugin (plugin: IPlugin) {
+    this.debugger('registerPlugin', plugin)
+    if (this.plugins.has(plugin.id)) {
+      throw new Error(`插件 ${plugin.id} 已被注册`)
+    }
+    this.plugins.set(plugin.id, plugin)
+  }
+
+  checkPluginOpts (pluginCtx, opts) {
+    if (typeof pluginCtx.optsSchema !== 'function') {
+      return
+    }
+    this.debugger('checkPluginOpts', pluginCtx)
+    const joi = require('joi')
+    const schema = pluginCtx.optsSchema(joi)
+    if (!joi.isSchema(schema)) {
+      throw new Error(`插件${pluginCtx.id}中设置参数检查 schema 有误，请检查！`)
+    }
+    const { error } = schema.validate(opts)
+    if (error) {
+      error.message = `插件${pluginCtx.id}获得的参数不符合要求，请检查！`
+      throw error
+    }
+  }
+
+  applyCliCommandPlugin (commandNames: string[] = []) {
+    const existsCliCommand: string[] = []
+    for (let i = 0; i < commandNames.length; i++) {
+      const commandName = commandNames[i]
+      const commandFilePath = path.resolve(this.cliCommandsPath, `${commandName}.js`)
+      if (this.cliCommands.includes(commandName)) existsCliCommand.push(commandFilePath)
+    }
+    const commandPlugins = convertPluginsToObject(existsCliCommand || [])
+    helper.createSwcRegister({ only: Object.keys(commandPlugins) })
+    const resolvedCommandPlugins = resolvePresetsOrPlugins(this.appPath, commandPlugins, PluginType.Plugin)
+    while (resolvedCommandPlugins.length) {
+      this.initPlugin(resolvedCommandPlugins.shift()!)
+    }
   }
 
   async applyPlugins (args: string | { name: string, initialVal?: any, opts?: any }) {
@@ -331,16 +331,6 @@ export default class Kernel extends EventEmitter {
     return await waterfall.promise(initialVal)
   }
 
-  runWithPlatform (platform) {
-    if (!this.platforms.has(platform)) {
-      throw new Error(`不存在编译平台 ${platform}`)
-    }
-    const config = this.platforms.get(platform)!
-    const withNameConfig = this.config.getConfigWithNamed(config.name, config.useConfigName)
-    process.env.TARO_PLATFORM = getPlatformType(config.name, config.useConfigName)
-    return withNameConfig
-  }
-
   setRunOpts (opts) {
     this.runOpts = opts
   }
@@ -355,6 +345,16 @@ export default class Kernel extends EventEmitter {
     }
     const optionsMap = new Map([...customOptionsMap, ...defaultOptionsMap])
     printHelpLog(name, optionsMap, command?.synopsisList ? new Set(command?.synopsisList) : new Set())
+  }
+
+  runWithPlatform (platform) {
+    if (!this.platforms.has(platform)) {
+      throw new Error(`不存在编译平台 ${platform}`)
+    }
+    const config = this.platforms.get(platform)!
+    const withNameConfig = this.config.getConfigWithNamed(config.name, config.useConfigName)
+    process.env.TARO_PLATFORM = getPlatformType(config.name, config.useConfigName)
+    return withNameConfig
   }
 
   async run (args: string | { name: string, opts?: any }) {

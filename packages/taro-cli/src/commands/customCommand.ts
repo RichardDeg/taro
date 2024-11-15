@@ -14,6 +14,7 @@ export default function customCommand (
       }
     })
 
+    // TODO: 看到这里了
     kernel.run({
       name: command,
       opts: {
