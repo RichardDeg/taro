@@ -176,7 +176,7 @@ export default class Kernel extends EventEmitter {
     this.debugger('initPreset', preset)
     const { id, path, opts, apply } = preset
     // TODO: 看到这里了
-    const pluginCtx = this.initPluginCtx({ id, path, ctx: this })
+    const pluginCtx = this.initPluginCtx({ id, path })
     const { presets, plugins } = apply()(pluginCtx, opts) || {}
     this.registerPlugin(preset)
     if (Array.isArray(presets)) {
@@ -194,7 +194,7 @@ export default class Kernel extends EventEmitter {
 
   initPlugin (plugin: IPlugin) {
     const { id, path, opts, apply } = plugin
-    const pluginCtx = this.initPluginCtx({ id, path, ctx: this })
+    const pluginCtx = this.initPluginCtx({ id, path })
     this.debugger('initPlugin', plugin)
     this.registerPlugin(plugin)
     apply()(pluginCtx, opts)
@@ -202,7 +202,7 @@ export default class Kernel extends EventEmitter {
   }
 
   // TODO: 看到这里了
-  initPluginCtx ({ id, path, ctx }: { id: string, path: string, ctx: Kernel }) {
+  initPluginCtx ({ id, path }: { id: string, path: string }) {
     const kernelMemberVariablesAndFunctions = [
       'appPath',
       'plugins',
@@ -216,7 +216,7 @@ export default class Kernel extends EventEmitter {
       'applyCliCommandPlugin'
     ]
     // TODO: 看到这里了
-    const pluginCtx = new Plugin({ id, path, ctx })
+    const pluginCtx = new Plugin({ id, path, ctx: this })
     const internalMethods = ['onReady', 'onStart']
     internalMethods.forEach(name => {
       if (!this.methods.has(name)) {

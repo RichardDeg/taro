@@ -226,7 +226,7 @@ export default class CLI {
     }
   }
 
-  setKernelOptsPlugins(kernel: typeof Kernel, args: minimist.ParsedArgs, presetsPlatformsPath: string) {
+  setKernelOptsPlugins(kernel: Kernel, args: minimist.ParsedArgs, presetsPlatformsPath: string) {
     /*****************【根据平台 platform，写入 kernel 插件 optsPlugins】************/
     const platform = args.type
     switch (platform) {
