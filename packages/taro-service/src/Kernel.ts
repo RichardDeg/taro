@@ -215,7 +215,6 @@ export default class Kernel extends EventEmitter {
       'applyPlugins',
       'applyCliCommandPlugin'
     ]
-    // TODO: 看到这里了
     const pluginCtx = new Plugin({ id, path, ctx: this })
     const internalMethods = ['onReady', 'onStart']
     internalMethods.forEach(name => {
@@ -223,6 +222,7 @@ export default class Kernel extends EventEmitter {
         pluginCtx.registerMethod(name)
       }
     })
+    // TODO: 看到这里了
     return new Proxy(pluginCtx, {
       get: (target, name: string) => {
         if (this.methods.has(name)) {

@@ -1,9 +1,10 @@
 import { addPlatforms } from '@tarojs/helper'
+import { processRegisterMethodArgs } from './utils'
 
 import type { Func } from '@tarojs/taro/types/compile'
 import type Kernel from './Kernel'
-import { processRegisterMethodArgs } from './utils'
 import type { ICommand, IHook, IPlatform } from './utils/types'
+
 
 type PluginConstructorParams = { id: string, path: string, ctx: Kernel }
 
@@ -20,15 +21,17 @@ export default class Plugin {
   }
 
   register (hook: IHook) {
-    if (typeof hook.name !== 'string') {
-      throw new Error(`插件 ${this.id} 中注册 hook 失败， hook.name 必须是 string 类型`)
+    const targetHookId = this.id
+    const { name: targetHookName, fn: targetHookFn } = hook
+    if (typeof targetHookName !== 'string') {
+      throw new Error(`插件 ${targetHookId} 中注册 hook 失败， hook.name 必须是 string 类型`)
+    } else if (typeof targetHookFn !== 'function') {
+      throw new Error(`插件 ${targetHookId} 中注册 hook 失败， hook.fn 必须是 function 类型`)
     }
-    if (typeof hook.fn !== 'function') {
-      throw new Error(`插件 ${this.id} 中注册 hook 失败， hook.fn 必须是 function 类型`)
-    }
-    const hooks = this.ctx.hooks.get(hook.name) || []
-    hook.plugin = this.id
-    this.ctx.hooks.set(hook.name, hooks.concat(hook))
+
+    const originHookValue = this.ctx.hooks.get(targetHookName) || []
+    const targetHookValue = originHookValue.concat({ ...hook, plugin: targetHookId })
+    this.ctx.hooks.set(targetHookName, targetHookValue)
   }
 
   registerCommand (command: ICommand) {
@@ -48,16 +51,17 @@ export default class Plugin {
     this.register(platform)
   }
 
-  registerMethod (...args) {
-    const { name, fn } = processRegisterMethodArgs(args)
-    const methods = this.ctx.methods.get(name) || []
-    methods.push(fn || function (fn: Func) {
+  registerMethod (...args: any[]) {
+    const { name: targetMethodName, fn } = processRegisterMethodArgs(args)
+    const originMethodValue = this.ctx.methods.get(targetMethodName) || []
+    // TODO: ?? 此处 bind this 是否可优化为 箭头函数 => 再看下 this 指向问题
+    const targetMethodValue = originMethodValue.concat(fn || function (fn: Func) {
       this.register({
         name,
         fn
       })
     }.bind(this))
-    this.ctx.methods.set(name, methods)
+    this.ctx.methods.set(targetMethodName, targetMethodValue)
   }
 
   addPluginOptsSchema (schema) {
