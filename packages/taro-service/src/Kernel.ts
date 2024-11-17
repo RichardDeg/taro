@@ -175,8 +175,8 @@ export default class Kernel extends EventEmitter {
   initPreset (preset: IPreset, isGlobalConfigPreset?: boolean) {
     this.debugger('initPreset', preset)
     const { id, path, opts, apply } = preset
-    // TODO: 看到这里了
     const pluginCtx = this.initPluginCtx({ id, path })
+    // TODO: 看到这里了
     const { presets, plugins } = apply()(pluginCtx, opts) || {}
     this.registerPlugin(preset)
     if (Array.isArray(presets)) {
@@ -201,7 +201,6 @@ export default class Kernel extends EventEmitter {
     this.checkPluginOpts(pluginCtx, opts)
   }
 
-  // TODO: 看到这里了
   initPluginCtx ({ id, path }: { id: string, path: string }) {
     const kernelMemberVariablesAndFunctions = [
       'appPath',
@@ -222,11 +221,10 @@ export default class Kernel extends EventEmitter {
         pluginCtx.registerMethod(name)
       }
     })
-    // TODO: 看到这里了
     return new Proxy(pluginCtx, {
-      get: (target, name: string) => {
-        if (this.methods.has(name)) {
-          const method = this.methods.get(name)
+      get: (pluginCtxProxy, prop: string) => {
+        if (this.methods.has(prop)) {
+          const method = this.methods.get(prop)
           if (Array.isArray(method)) {
             return (...arg) => {
               method.forEach(item => {
@@ -236,10 +234,10 @@ export default class Kernel extends EventEmitter {
           }
           return method
         }
-        if (kernelMemberVariablesAndFunctions.includes(name)) {
-          return typeof this[name] === 'function' ? this[name].bind(this) : this[name]
+        if (kernelMemberVariablesAndFunctions.includes(prop)) {
+          return typeof this[prop] === 'function' ? this[prop].bind(this) : this[prop]
         }
-        return target[name]
+        return pluginCtxProxy[prop]
       }
     })
   }
