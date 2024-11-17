@@ -2,6 +2,7 @@ import * as os from 'node:os'
 
 import { chalk } from './terminal'
 
+// global 为全局对象，类似 wx，window
 // eslint-disable-next-line dot-notation
 export const PLATFORMS = (global['PLATFORMS'] = global['PLATFORMS'] || {})
 

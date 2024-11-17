@@ -35,19 +35,21 @@ export default class Plugin {
   }
 
   registerCommand (command: ICommand) {
-    if (this.ctx.commands.has(command.name)) {
-      throw new Error(`命令 ${command.name} 已存在`)
+    const targetCommandName = command.name
+    if (this.ctx.commands.has(targetCommandName)) {
+      throw new Error(`命令 ${targetCommandName} 已存在`)
     }
-    this.ctx.commands.set(command.name, command)
+    this.ctx.commands.set(targetCommandName, command)
     this.register(command)
   }
 
   registerPlatform (platform: IPlatform) {
-    if (this.ctx.platforms.has(platform.name)) {
-      throw new Error(`适配平台 ${platform.name} 已存在`)
+    const targetPlatformName = platform.name
+    if (this.ctx.platforms.has(targetPlatformName)) {
+      throw new Error(`适配平台 ${targetPlatformName} 已存在`)
     }
-    addPlatforms(platform.name)
-    this.ctx.platforms.set(platform.name, platform)
+    addPlatforms(targetPlatformName)
+    this.ctx.platforms.set(targetPlatformName, platform)
     this.register(platform)
   }
 
