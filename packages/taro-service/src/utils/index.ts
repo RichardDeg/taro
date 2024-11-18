@@ -47,9 +47,9 @@ export function resolvePresetsOrPlugins (root: string, args: IPluginsObject, typ
   for (let i = 0; i < presetsOrPluginsNames.length; i++) {
     const item = presetsOrPluginsNames[i]
     const itemValue = args[item] || {}
-    let fPath
+    let filePath
     try {
-      fPath = resolve.sync(item, {
+      filePath = resolve.sync(item, {
         basedir: root,
         extensions: ['.js', '.ts']
       })
@@ -58,7 +58,7 @@ export function resolvePresetsOrPlugins (root: string, args: IPluginsObject, typ
 
       if (itemValue.backup) {
         // 如果项目中没有，可以使用 CLI 中的插件
-        fPath = itemValue.backup
+        filePath = itemValue.backup
       } else if (skipError) {
         // 如果跳过报错，那么 log 提醒，并且不使用该插件
         console.log(chalk.yellow(customErrorInfo))
@@ -69,13 +69,13 @@ export function resolvePresetsOrPlugins (root: string, args: IPluginsObject, typ
       }
     }
     const resolvedItem = {
-      id: fPath,
-      path: fPath,
+      id: filePath,
+      path: filePath,
       type,
       opts: itemValue,
       apply () {
         try {
-          return getModuleDefaultExport(require(fPath))
+          return getModuleDefaultExport(require(filePath))
         } catch (error) {
           console.error(error)
           const customErrorInfo = `插件依赖 "${item}" 加载失败，请检查插件配置`

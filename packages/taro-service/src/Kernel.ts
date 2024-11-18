@@ -115,9 +115,9 @@ export default class Kernel extends EventEmitter {
     this.debugger('initPresetsAndPlugins', cliAndProjectConfigPresets, cliAndProjectPlugins)
 
     const initialGlobalConfig = this.initialGlobalConfig
-    const globalPlugins = convertPluginsToObject(initialGlobalConfig.plugins || [])
     const globalPresets = convertPluginsToObject(initialGlobalConfig.presets || [])
-    this.debugger('globalPresetsAndPlugins', globalPlugins, globalPresets)
+    const globalPlugins = convertPluginsToObject(initialGlobalConfig.plugins || [])
+    this.debugger('globalPresetsAndPlugins', globalPresets, globalPlugins)
 
     if(process.env.NODE_ENV !== 'test') {
       helper.createSwcRegister({
@@ -176,8 +176,9 @@ export default class Kernel extends EventEmitter {
     this.debugger('initPreset', preset)
     const { id, path, opts, apply } = preset
     const pluginCtx = this.initPluginCtx({ id, path })
-    // TODO: 看到这里了
+    //【我的理解】pluginCtx, opts 等参数用于对外向自定义 plugin 钩子暴露相关参数
     const { presets, plugins } = apply()(pluginCtx, opts) || {}
+    // TODO: 看到这里了
     this.registerPlugin(preset)
     if (Array.isArray(presets)) {
       const _presets = resolvePresetsOrPlugins(this.appPath, convertPluginsToObject(presets), PluginType.Preset, isGlobalConfigPreset)
