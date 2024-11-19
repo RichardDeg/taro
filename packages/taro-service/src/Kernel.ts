@@ -134,15 +134,14 @@ export default class Kernel extends EventEmitter {
     this.extraPlugins = {}
     this.globalExtraPlugins = {}
 
-    // TODO: 看到这里了
     this.resolvePresets(cliAndProjectConfigPresets, globalPresets)
+    // TODO: 看到这里了
     this.resolvePlugins(cliAndProjectPlugins, globalPlugins)
   }
 
   resolvePresets (cliAndProjectPresets: IPluginsObject, globalPresets: IPluginsObject) {
     const resolvedCliAndProjectPresets = resolvePresetsOrPlugins(this.appPath, cliAndProjectPresets, PluginType.Preset)
     while (resolvedCliAndProjectPresets.length) {
-      // TODO: 看到这里了
       this.initPreset(resolvedCliAndProjectPresets.shift()!)
     }
 
@@ -153,6 +152,7 @@ export default class Kernel extends EventEmitter {
     }
   }
 
+  // TODO: 看到这里了
   resolvePlugins (cliAndProjectPlugins: IPluginsObject, globalPlugins: IPluginsObject) {
     cliAndProjectPlugins = merge(this.extraPlugins, cliAndProjectPlugins)
     const resolvedCliAndProjectPlugins = resolvePresetsOrPlugins(this.appPath, cliAndProjectPlugins, PluginType.Plugin)
@@ -171,14 +171,12 @@ export default class Kernel extends EventEmitter {
     this.globalExtraPlugins = {}
   }
 
-  // TODO: 看到这里了
   initPreset (preset: IPreset, isGlobalConfigPreset?: boolean) {
     this.debugger('initPreset', preset)
     const { id, path, opts, apply } = preset
     const pluginCtx = this.initPluginCtx({ id, path })
     //【我的理解】pluginCtx, opts 等参数用于对外向自定义 plugin 钩子暴露相关参数
     const { presets, plugins } = apply()(pluginCtx, opts) || {}
-    // TODO: 看到这里了
     this.registerPlugin(preset)
     if (Array.isArray(presets)) {
       const _presets = resolvePresetsOrPlugins(this.appPath, convertPluginsToObject(presets), PluginType.Preset, isGlobalConfigPreset)
