@@ -135,7 +135,6 @@ export default class Kernel extends EventEmitter {
     this.globalExtraPlugins = {}
 
     this.resolvePresets(cliAndProjectConfigPresets, globalPresets)
-    // TODO: 看到这里了
     this.resolvePlugins(cliAndProjectPlugins, globalPlugins)
   }
 
@@ -152,17 +151,15 @@ export default class Kernel extends EventEmitter {
     }
   }
 
-  // TODO: 看到这里了
   resolvePlugins (cliAndProjectPlugins: IPluginsObject, globalPlugins: IPluginsObject) {
-    cliAndProjectPlugins = merge(this.extraPlugins, cliAndProjectPlugins)
-    const resolvedCliAndProjectPlugins = resolvePresetsOrPlugins(this.appPath, cliAndProjectPlugins, PluginType.Plugin)
+    const mergedCliAndProjectPlugins = merge(this.extraPlugins, cliAndProjectPlugins)
+    const resolvedCliAndProjectPlugins = resolvePresetsOrPlugins(this.appPath, mergedCliAndProjectPlugins, PluginType.Plugin)
 
-    globalPlugins = merge(this.globalExtraPlugins, globalPlugins)
+    const mergedGlobalPlugins = merge(this.globalExtraPlugins, globalPlugins)
     const globalConfigRootPath = path.join(helper.getUserHomeDir(), helper.TARO_GLOBAL_CONFIG_DIR)
-    const resolvedGlobalPlugins = resolvePresetsOrPlugins(globalConfigRootPath, globalPlugins, PluginType.Plugin, true)
+    const resolvedGlobalPlugins = resolvePresetsOrPlugins(globalConfigRootPath, mergedGlobalPlugins, PluginType.Plugin, true)
 
     const resolvedPlugins = resolvedCliAndProjectPlugins.concat(resolvedGlobalPlugins)
-
     while (resolvedPlugins.length) {
       this.initPlugin(resolvedPlugins.shift()!)
     }
@@ -281,6 +278,7 @@ export default class Kernel extends EventEmitter {
     }
   }
 
+  // TODO: 看到这里了
   async applyPlugins (args: string | { name: string, initialVal?: any, opts?: any }) {
     let name
     let initialVal
@@ -303,6 +301,7 @@ export default class Kernel extends EventEmitter {
     if (!hooks.length) {
       return await initialVal
     }
+    // TODO: 看到这里了
     const waterfall = new AsyncSeriesWaterfallHook(['arg'])
     if (hooks.length) {
       const resArr: any[] = []
@@ -369,10 +368,10 @@ export default class Kernel extends EventEmitter {
     this.debugger(`command:runOpts:${JSON.stringify(opts, null, 2)}`)
     this.setRunOpts(opts)
 
-    // TODO: 看到这里了
     this.debugger('initPresetsAndPlugins')
     this.initPresetsAndPlugins()
 
+    // TODO: 看到这里了
     await this.applyPlugins('onReady')
 
     this.debugger('command:onStart')
