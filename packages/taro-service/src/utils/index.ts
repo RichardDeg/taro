@@ -125,6 +125,7 @@ function supplementBlank (length) {
   return Array(length).map(() => '').join(' ')
 }
 
+// TODO: 看到这里了
 export function printHelpLog (command, optionsList: Map<string, string>, synopsisList?: Set<string>) {
   console.log(`Usage: taro ${command} [options]`)
   console.log('Options:')

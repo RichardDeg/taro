@@ -278,7 +278,6 @@ export default class Kernel extends EventEmitter {
     }
   }
 
-  // TODO: 看到这里了
   async applyPlugins (args: string | { name: string, initialVal?: any, opts?: any }) {
     let name
     let initialVal
@@ -301,7 +300,6 @@ export default class Kernel extends EventEmitter {
     if (!hooks.length) {
       return await initialVal
     }
-    // TODO: 看到这里了
     const waterfall = new AsyncSeriesWaterfallHook(['arg'])
     if (hooks.length) {
       const resArr: any[] = []
@@ -309,7 +307,6 @@ export default class Kernel extends EventEmitter {
         waterfall.tapPromise({
           name: hook.plugin!,
           stage: hook.stage || 0,
-          // @ts-ignore
           before: hook.before
         }, async arg => {
           const res = await hook.fn(opts, arg)
@@ -331,16 +328,17 @@ export default class Kernel extends EventEmitter {
     this.runOpts = opts
   }
 
+
+  // TODO: 看到这里了
   runHelp (name: string) {
     const command = this.commands.get(name)
-    const defaultOptionsMap = new Map()
-    defaultOptionsMap.set('-h, --help', 'output usage information')
-    let customOptionsMap = new Map()
-    if (command?.optionsMap) {
-      customOptionsMap = new Map(Object.entries(command?.optionsMap))
-    }
+    const defaultOptionsMap = new Map(Object.entries({
+      '-h, --help': 'output usage information'
+    }))
+    const customOptionsMap = new Map(Object.entries(command?.optionsMap || {}))
     const optionsMap = new Map([...customOptionsMap, ...defaultOptionsMap])
-    printHelpLog(name, optionsMap, command?.synopsisList ? new Set(command?.synopsisList) : new Set())
+    // TODO: 看到这里了
+    printHelpLog(name, optionsMap, new Set(command?.synopsisList || []))
   }
 
   runWithPlatform (platform) {
@@ -371,7 +369,6 @@ export default class Kernel extends EventEmitter {
     this.debugger('initPresetsAndPlugins')
     this.initPresetsAndPlugins()
 
-    // TODO: 看到这里了
     await this.applyPlugins('onReady')
 
     this.debugger('command:onStart')
@@ -381,6 +378,7 @@ export default class Kernel extends EventEmitter {
       throw new Error(`${name} 命令不存在`)
     }
 
+    // TODO: 看到这里了
     if (opts?.isHelp) {
       return this.runHelp(name)
     }
