@@ -202,11 +202,10 @@ export function getComponentsAlias (origin: typeof internalComponents) {
 }
 
 export function getPlatformType (platform = 'weapp', configNameOrType: string = PLATFORM_TYPE.MINI): PLATFORM_TYPE {
-  if (Object.keys(PLATFORM_CONFIG_MAP).includes(platform)) {
-    configNameOrType = platform
-  }
-  const param = PLATFORM_CONFIG_MAP[configNameOrType] || {}
-  return param.type || configNameOrType
+  const mergedCinfigNameOrType = Object.keys(PLATFORM_CONFIG_MAP).includes(platform)
+    ? platform
+    : configNameOrType
+  return PLATFORM_CONFIG_MAP[mergedCinfigNameOrType]?.type || mergedCinfigNameOrType
 }
 
 export function mergeReconciler (hostConfig, hooksForTest?) {

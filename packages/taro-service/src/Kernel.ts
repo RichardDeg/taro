@@ -338,14 +338,16 @@ export default class Kernel extends EventEmitter {
     printHelpLog(name, optionsMap, new Set(command?.synopsisList || []))
   }
 
+  // TODO: 看到这里了
   runWithPlatform (platform) {
     if (!this.platforms.has(platform)) {
       throw new Error(`不存在编译平台 ${platform}`)
     }
-    const config = this.platforms.get(platform)!
-    const withNameConfig = this.config.getConfigWithNamed(config.name, config.useConfigName)
-    process.env.TARO_PLATFORM = getPlatformType(config.name, config.useConfigName)
-    return withNameConfig
+    const { name, useConfigName } = this.platforms.get(platform)!
+    // TODO: 看到这里了
+    const configWithNamed = this.config.getConfigWithNamed(name, useConfigName)
+    process.env.TARO_PLATFORM = getPlatformType(name, useConfigName)
+    return configWithNamed
   }
 
   async run (args: string | { name: string, opts?: any }) {
