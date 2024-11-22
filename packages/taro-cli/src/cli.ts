@@ -142,7 +142,6 @@ export default class CLI {
       switch (command) {
         case 'inspect': {
           this.setKernelOptsPlugins(kernel, args, presetsPlatformsPath)
-          // TODO: 看到 customCommand 方法实现了
           customCommand(command, kernel, args)
           break
         }

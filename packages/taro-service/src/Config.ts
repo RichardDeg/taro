@@ -86,9 +86,9 @@ export default class Config {
     const sourceDirName = initialConfig.sourceRoot || SOURCE_DIR
     const outputDirName = initialConfig.outputRoot || OUTPUT_DIR
     const sourceDir = path.join(this.appPath, sourceDirName)
+
     const entryName = ENTRY
     const entryFilePath = resolveScriptPath(path.join(sourceDir, entryName))
-
     const entry = {
       [entryName]: [entryFilePath]
     }
