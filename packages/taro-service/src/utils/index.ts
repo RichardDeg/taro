@@ -120,24 +120,18 @@ export function processRegisterMethodArgs (args: any[]) {
   return { name, fn }
 }
 
-
-function supplementBlank (length) {
-  return Array(length).map(() => '').join(' ')
-}
-
-// TODO: 看到这里了
-export function printHelpLog (command, optionsList: Map<string, string>, synopsisList?: Set<string>) {
-  console.log(`Usage: taro ${command} [options]`)
+export function printHelpLog (commandName: string, optionsList: Map<string, string>, synopsisList?: Set<string>) {
+  console.log(`Usage: taro ${commandName} [options]`)
   console.log('Options:')
   const keys = Array.from(optionsList.keys())
-  const maxLength = keys.reduce((v1, v2) => {
+  const maxLengthOfKey = keys.reduce((v1, v2) => {
     return v1.length > v2.length ? v1 : v2
-  }).length + 3
+  }).length
   optionsList.forEach((v, k) => {
-    const supplementBlankLength = maxLength - k.length
-    console.log(`  ${k}${supplementBlank(supplementBlankLength)}${v}`)
+    const blankSpace = ' '.repeat((maxLengthOfKey + 2 - k.length) || 0)
+    console.log(`  ${k}${blankSpace}${v}`)
   })
-  if (synopsisList && synopsisList.size) {
+  if (synopsisList?.size) {
     console.log('Synopsis:')
     synopsisList.forEach(item => {
       console.log(`  $ ${item}`)

@@ -328,8 +328,6 @@ export default class Kernel extends EventEmitter {
     this.runOpts = opts
   }
 
-
-  // TODO: 看到这里了
   runHelp (name: string) {
     const command = this.commands.get(name)
     const defaultOptionsMap = new Map(Object.entries({
@@ -337,7 +335,6 @@ export default class Kernel extends EventEmitter {
     }))
     const customOptionsMap = new Map(Object.entries(command?.optionsMap || {}))
     const optionsMap = new Map([...customOptionsMap, ...defaultOptionsMap])
-    // TODO: 看到这里了
     printHelpLog(name, optionsMap, new Set(command?.synopsisList || []))
   }
 
@@ -378,11 +375,11 @@ export default class Kernel extends EventEmitter {
       throw new Error(`${name} 命令不存在`)
     }
 
-    // TODO: 看到这里了
     if (opts?.isHelp) {
       return this.runHelp(name)
     }
 
+    // TODO: 看到这里了
     if (opts?.options?.platform) {
       opts.config = this.runWithPlatform(opts.options.platform)
       await this.applyPlugins({
