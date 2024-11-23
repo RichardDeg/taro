@@ -11,8 +11,9 @@ import type { IPluginContext } from '@tarojs/service'
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'build',
-    async fn(opts) {
-      const { options, config, _ } = opts
+    // 执行 fn 函数时，config 参数值是 kernel 文件 389 行动态传入的
+    async fn({ _, options, config }) {
+      // TODO: 看到这里了
       const { platform, isWatch, blended, newBlended, withoutBuild, noInjectGlobalStyle, noCheck } = options
       const { fs, chalk, PROJECT_CONFIG } = ctx.helper
       const { outputPath, configPath } = ctx.paths

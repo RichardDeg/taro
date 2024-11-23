@@ -3,8 +3,7 @@ import type { IPluginContext } from '@tarojs/service'
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'init',
-    async fn (opts) {
-      // init project
+    async fn ({ options }) {
       const { appPath } = ctx.paths
       const {
         projectName,
@@ -20,7 +19,7 @@ export default (ctx: IPluginContext) => {
         hideDefaultTemplate,
         sourceRoot,
         autoInstall,
-      } = opts.options
+      } = options
 
       const Project = require('../../create/project').default
       const project = new Project({
