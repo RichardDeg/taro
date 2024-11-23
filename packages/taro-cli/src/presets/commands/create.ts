@@ -25,18 +25,6 @@ declare const enum createTemplateTypeEnum {
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'create',
-    optionsMap: {
-      '--name [name]': '名称',
-      '--dir [dir]': '路径',
-      '--subpkg [subpkg]': '分包路径',
-      '--description [description]': '介绍',
-      '--type [type]': '模版类型(page(默认)|plugin-command|plugin-build|plugin-template)'
-    },
-    synopsisList: [
-      'taro create page',
-      'taro create --name=page --description=desc',
-      'taro create my-plugin --type=plugin-command',
-    ],
     fn ({ _, options }) {
       const type = options.type || createTemplateTypeEnum.PAGE
       const name = _[1] || options.name
@@ -100,6 +88,18 @@ export default (ctx: IPluginContext) => {
         default:
           break
       }
-    }
+    },
+    optionsMap: {
+      '--name [name]': '名称',
+      '--dir [dir]': '路径',
+      '--subpkg [subpkg]': '分包路径',
+      '--description [description]': '介绍',
+      '--type [type]': '模版类型(page(默认)|plugin-command|plugin-build|plugin-template)'
+    },
+    synopsisList: [
+      'taro create page',
+      'taro create --name=page --description=desc',
+      'taro create my-plugin --type=plugin-command',
+    ]
   })
 }

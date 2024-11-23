@@ -27,17 +27,6 @@ const PLUGIN_TYPE_TO_CONFIG_KEY = {
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'global-config',
-    synopsisList: [
-      'taro global-config add-plugin [pluginName]',
-      'taro global-config remove-plugin [pluginName]',
-      'taro global-config add-preset [presetName]',
-      'taro global-config remove-preset [presetName]',
-      'taro global-config reset',
-    ],
-    optionsMap: {
-      '-r --registry [url]': '指定 npm registry',
-      '-h, --help': 'output usage information'
-    },
     fn ({ _, options }) {
       const [, action, pluginName] = _
       const { getUserHomeDir, TARO_GLOBAL_CONFIG_DIR, fs, TARO_GLOBAL_CONFIG_FILE } = ctx.helper
@@ -135,6 +124,17 @@ export default (ctx: IPluginContext) => {
         default:
           console.error('请输出正确的参数')
       }
-    }
+    },
+    optionsMap: {
+      '-r --registry [url]': '指定 npm registry',
+      '-h, --help': 'output usage information'
+    },
+    synopsisList: [
+      'taro global-config add-plugin [pluginName]',
+      'taro global-config remove-plugin [pluginName]',
+      'taro global-config add-preset [presetName]',
+      'taro global-config remove-preset [presetName]',
+      'taro global-config reset',
+    ]
   })
 }

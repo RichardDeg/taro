@@ -5,15 +5,6 @@ import type { IPluginContext } from '@tarojs/service'
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'config',
-    optionsMap: {
-      '--json': '以 JSON 形式输出'
-    },
-    synopsisList: [
-      'taro config set <key> <value>',
-      'taro config get <key>',
-      'taro config delete <key>',
-      'taro config list [--json]'
-    ],
     fn ({ _, options }) {
       const [, cmd, key, value] = _
       const json = !!options.json
@@ -81,6 +72,15 @@ export default (ctx: IPluginContext) => {
         default:
           break
       }
-    }
+    },
+    optionsMap: {
+      '--json': '以 JSON 形式输出'
+    },
+    synopsisList: [
+      'taro config set <key> <value>',
+      'taro config get <key>',
+      'taro config delete <key>',
+      'taro config list [--json]'
+    ],
   })
 }

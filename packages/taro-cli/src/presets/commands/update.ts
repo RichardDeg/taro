@@ -13,14 +13,6 @@ import type { IPluginContext } from '@tarojs/service'
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'update',
-    synopsisList: [
-      'taro update self [version]',
-      'taro update project [version]'
-    ],
-    optionsMap: {
-      '--npm [npm]': '包管理工具',
-      '-h, --help': 'output usage information'
-    },
     async fn ({ _, options }) {
       const { npm } = options
       const [, updateType, version] = _ as [string, ('self' | 'project')?, string?]
@@ -174,6 +166,14 @@ export default (ctx: IPluginContext) => {
         'taro update self [version]')} 更新 Taro 开发工具 taro-cli 到指定版本或 Taro3 的最新版本`)
       console.log(`${chalk.green(
         'taro update project [version]')} 更新项目所有 Taro 相关依赖到指定版本或 Taro3 的最新版本`)
-    }
+    },
+    optionsMap: {
+      '--npm [npm]': '包管理工具',
+      '-h, --help': 'output usage information'
+    },
+    synopsisList: [
+      'taro update self [version]',
+      'taro update project [version]'
+    ]
   })
 }

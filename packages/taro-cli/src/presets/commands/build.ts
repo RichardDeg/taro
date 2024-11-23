@@ -7,44 +7,10 @@ import * as hooks from '../constant'
 
 import type { IPluginContext } from '@tarojs/service'
 
+// TODO: 看到这里了
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'build',
-    optionsMap: {
-      '--type [typeName]': 'Build type, weapp/swan/alipay/tt/qq/jd/h5/rn',
-      '--watch': 'Watch mode',
-      '--env [env]': 'Value for process.env.NODE_ENV',
-      '--mode [mode]': 'Value of dotenv extname',
-      '-p, --port [port]': 'Specified port',
-      '--no-build': 'Do not build project',
-      '--platform': '[rn] Specific React-Native build target: android / ios, android is default value',
-      '--reset-cache': '[rn] Clear transform cache',
-      '--public-path': '[rn] Assets public path',
-      '--bundle-output': '[rn] File name where to store the resulting bundle',
-      '--sourcemap-output': '[rn] File name where to store the sourcemap file for resulting bundle',
-      '--sourcemap-use-absolute-path': '[rn]  Report SourceMapURL using its full path',
-      '--sourcemap-sources-root': '[rn] Path to make sourcemaps sources entries relative to',
-      '--assets-dest': '[rn] Directory name where to store assets referenced in the bundle',
-      '--qr': '[rn] Print qrcode of React-Native bundle server',
-      '--blended': 'Blended Taro project in an original MiniApp project',
-      '--new-blended': 'Blended Taro project in an original MiniApp project while supporting building components independently',
-      '--plugin [typeName]': 'Build Taro plugin project, weapp',
-      '--env-prefix [envPrefix]': "Provide the dotEnv varables's prefix",
-      '--no-inject-global-style': '[H5] Do not inject global style',
-      '--no-check': 'Do not check config is valid or not',
-    },
-    synopsisList: [
-      'taro build --type weapp',
-      'taro build --type weapp --watch',
-      'taro build --type weapp --env production',
-      'taro build --type weapp --blended',
-      'taro build --type weapp --no-build',
-      'taro build native-components --type weapp',
-      'taro build --type weapp --new-blended',
-      'taro build --plugin weapp --watch',
-      'taro build --plugin weapp',
-      'taro build --type weapp --mode prepare --env-prefix TARO_APP_',
-    ],
     async fn(opts) {
       const { options, config, _ } = opts
       const { platform, isWatch, blended, newBlended, withoutBuild, noInjectGlobalStyle, noCheck } = options
@@ -210,6 +176,43 @@ export default (ctx: IPluginContext) => {
       })
       await ctx.applyPlugins(hooks.ON_BUILD_COMPLETE)
     },
+    // 仅用于 cmd 控制台打印 help 提示的
+    optionsMap: {
+      '--type [typeName]': 'Build type, weapp/swan/alipay/tt/qq/jd/h5/rn',
+      '--watch': 'Watch mode',
+      '--env [env]': 'Value for process.env.NODE_ENV',
+      '--mode [mode]': 'Value of dotenv extname',
+      '-p, --port [port]': 'Specified port',
+      '--no-build': 'Do not build project',
+      '--platform': '[rn] Specific React-Native build target: android / ios, android is default value',
+      '--reset-cache': '[rn] Clear transform cache',
+      '--public-path': '[rn] Assets public path',
+      '--bundle-output': '[rn] File name where to store the resulting bundle',
+      '--sourcemap-output': '[rn] File name where to store the sourcemap file for resulting bundle',
+      '--sourcemap-use-absolute-path': '[rn]  Report SourceMapURL using its full path',
+      '--sourcemap-sources-root': '[rn] Path to make sourcemaps sources entries relative to',
+      '--assets-dest': '[rn] Directory name where to store assets referenced in the bundle',
+      '--qr': '[rn] Print qrcode of React-Native bundle server',
+      '--blended': 'Blended Taro project in an original MiniApp project',
+      '--new-blended': 'Blended Taro project in an original MiniApp project while supporting building components independently',
+      '--plugin [typeName]': 'Build Taro plugin project, weapp',
+      '--env-prefix [envPrefix]': "Provide the dotEnv varables's prefix",
+      '--no-inject-global-style': '[H5] Do not inject global style',
+      '--no-check': 'Do not check config is valid or not',
+    },
+    // 用于 cmd 控制台打印 help 提示的
+    synopsisList: [
+      'taro build --type weapp',
+      'taro build --type weapp --watch',
+      'taro build --type weapp --env production',
+      'taro build --type weapp --blended',
+      'taro build --type weapp --no-build',
+      'taro build native-components --type weapp',
+      'taro build --type weapp --new-blended',
+      'taro build --plugin weapp --watch',
+      'taro build --plugin weapp',
+      'taro build --type weapp --mode prepare --env-prefix TARO_APP_',
+    ]
   })
 }
 

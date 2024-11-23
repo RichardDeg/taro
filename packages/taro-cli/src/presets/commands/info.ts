@@ -9,10 +9,6 @@ import type { IPluginContext } from '@tarojs/service'
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'info',
-    synopsisList: [
-      'taro info',
-      'taro info rn'
-    ],
     async fn ({ _ }) {
       const rn = _[1] === 'rn'
       const { fs, chalk, PROJECT_CONFIG } = ctx.helper
@@ -31,7 +27,11 @@ export default (ctx: IPluginContext) => {
       }
 
       await info({}, ctx)
-    }
+    },
+    synopsisList: [
+      'taro info',
+      'taro info rn'
+    ]
   })
 }
 

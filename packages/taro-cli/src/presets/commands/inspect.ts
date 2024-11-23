@@ -15,16 +15,6 @@ import type { IPluginContext } from '@tarojs/service'
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'inspect',
-    optionsMap: {
-      '-t, --type [typeName]': 'Build type, weapp/swan/alipay/tt/h5/quickapp/rn/qq/jd',
-      '-o, --output [outputPath]': 'output config to outputPath'
-    },
-    synopsisList: [
-      'taro inspect --type weapp',
-      'taro inspect --type weapp --output inspect.config.js',
-      'taro inspect --type weapp plugins',
-      'taro inspect --type weapp module.rules.0'
-    ],
     async fn ({ _, options }) {
       const { fs, chalk } = ctx.helper
       const platform = options.type || options.t
@@ -85,7 +75,17 @@ export default (ctx: IPluginContext) => {
           }
         }
       })
-    }
+    },
+    optionsMap: {
+      '-t, --type [typeName]': 'Build type, weapp/swan/alipay/tt/h5/quickapp/rn/qq/jd',
+      '-o, --output [outputPath]': 'output config to outputPath'
+    },
+    synopsisList: [
+      'taro inspect --type weapp',
+      'taro inspect --type weapp --output inspect.config.js',
+      'taro inspect --type weapp plugins',
+      'taro inspect --type weapp module.rules.0'
+    ]
   })
 }
 
