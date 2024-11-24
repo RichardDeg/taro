@@ -348,7 +348,6 @@ export default class Kernel extends EventEmitter {
     return configWithNamed
   }
 
-  // 好坑的设计理念！！！动态编译??? 参数值是动态写入的???那所有涉及到有副作用的函数，不能优化成非副作用的么??? 要利用引用类型以便拿到动态/实时变更后的最新值，就像 console.log(obj) 拿到的是最新的 obj 值而不是快照
   // FIXME: 此函数为带有副作用函数，对象类型的 args 参数， 在执行期间会被改写
   // 相关联文件，注册 build 命令：packages/taro-cli/src/presets/commands/build.ts
   // 相关联文件，执行 build 命令：packages/taro-cli/src/cli.ts

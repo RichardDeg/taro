@@ -13,7 +13,6 @@ export default (ctx: IPluginContext) => {
     name: 'build',
     // 执行 fn 函数时，config 参数值是 kernel 文件 389 行动态传入的
     async fn({ _, options, config }) {
-      // TODO: 看到这里了
       const { platform, isWatch, blended, newBlended, withoutBuild, noInjectGlobalStyle, noCheck } = options
       const { fs, chalk, PROJECT_CONFIG } = ctx.helper
       const { outputPath, configPath } = ctx.paths
@@ -28,7 +27,6 @@ export default (ctx: IPluginContext) => {
         process.exit(0)
       }
 
-      // 校验 Taro 项目配置
       if (!noCheck) {
         const checkResult = await checkConfig({
           projectConfig: ctx.initialConfig,
@@ -38,23 +36,23 @@ export default (ctx: IPluginContext) => {
           const ERROR = chalk.red('[✗] ')
           const WARNING = chalk.yellow('[!] ')
           const SUCCESS = chalk.green('[✓] ')
-
           const lineChalk = chalk.hex('#fff')
           const errorChalk = chalk.hex('#f00')
+
           console.log(errorChalk(`Taro 配置有误，请检查！ (${configPath})`))
-          checkResult.messages.forEach((message) => {
-            switch (message.kind) {
+          checkResult.messages.forEach(({ kind, content }) => {
+            switch (kind) {
               case MessageKind.Error:
-                console.log('  ' + ERROR + lineChalk(message.content))
-                break
-              case MessageKind.Success:
-                console.log('  ' + SUCCESS + lineChalk(message.content))
+                console.log(`  ${ERROR}${lineChalk(content)}`)
                 break
               case MessageKind.Warning:
-                console.log('  ' + WARNING + lineChalk(message.content))
+                console.log(`  ${WARNING}${lineChalk(content)}`)
+                break
+              case MessageKind.Success:
+                console.log(`  ${SUCCESS}${lineChalk(content)}`)
                 break
               case MessageKind.Manual:
-                console.log('  ' + lineChalk(message.content))
+                console.log(`  ${lineChalk(content)}`)
                 break
               default:
                 break
@@ -67,12 +65,9 @@ export default (ctx: IPluginContext) => {
 
       const isProduction = process.env.NODE_ENV === 'production' || !isWatch
 
-      // dist folder
       fs.ensureDirSync(outputPath)
 
-      // is build native components mode?
-      const isBuildNativeComp = _[1] === 'native-components'
-
+      // TODO: 看到这里了, 待确定如何注册执行 onBuiltStart 这个 hook 的
       await ctx.applyPlugins(hooks.ON_BUILD_START)
       await ctx.applyPlugins({
         name: platform,
@@ -82,7 +77,7 @@ export default (ctx: IPluginContext) => {
             isWatch,
             mode: isProduction ? 'production' : 'development',
             blended,
-            isBuildNativeComp,
+            isBuildNativeComp: _[1] === 'native-components',
             withoutBuild,
             newBlended,
             noInjectGlobalStyle,

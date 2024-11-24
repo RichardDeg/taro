@@ -58,7 +58,6 @@ export default class Config {
 
     try {
       const userExport = getModuleDefaultExport(require(this.configPath))
-      // TODO: 怎样查看 this.configPath 模块的 default 导出内容是什么，如何进行与 configEnv 的配置项进行 webpack-merge 合并的
       this.initialConfig = typeof userExport === 'function' ? await userExport(merge, configEnv) : userExport
       this.isInitSuccess = true
     } catch (err) {
