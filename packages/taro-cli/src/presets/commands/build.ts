@@ -67,8 +67,9 @@ export default (ctx: IPluginContext) => {
 
       fs.ensureDirSync(outputPath)
 
-      // TODO: 看到这里了, 待确定如何注册执行 onBuiltStart 这个 hook 的
       await ctx.applyPlugins(hooks.ON_BUILD_START)
+      // TODO: 看到这里了
+      // 关联 kernel 的 optsPlugins 变更，注册 build.js 文件进来。 => kernel.run => initPlugin => 该文件的被执行/调用时机
       await ctx.applyPlugins({
         name: platform,
         opts: {
