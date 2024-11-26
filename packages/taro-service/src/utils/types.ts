@@ -60,13 +60,6 @@ export interface ICommand extends IHook {
   synopsisList?: string[]
 }
 
-export interface IFileType {
-  templ: string
-  style: string
-  script: string
-  config: string
-}
-
 export interface IPlatform extends IHook {
   useConfigName?: string
 }
@@ -180,4 +173,11 @@ export interface IConfigEnv {
 export interface IConfigOptions {
   appPath: string
   disableGlobalConfig?: boolean
+}
+
+export interface IFileType {
+  templ: string
+  style: string
+  script: string
+  config: string
 }

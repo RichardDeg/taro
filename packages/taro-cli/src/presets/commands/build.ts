@@ -68,8 +68,6 @@ export default (ctx: IPluginContext) => {
       fs.ensureDirSync(outputPath)
 
       await ctx.applyPlugins(hooks.ON_BUILD_START)
-      // TODO: 看到这里了
-      // 关联 kernel 的 optsPlugins 变更，注册 build.js 文件进来。 => kernel.run => initPlugin => 该文件的被执行/调用时机
       await ctx.applyPlugins({
         name: platform,
         opts: {
@@ -82,6 +80,7 @@ export default (ctx: IPluginContext) => {
             withoutBuild,
             newBlended,
             noInjectGlobalStyle,
+            // TODO: 看到这里了, 待确定以下函数的执行时机
             async modifyAppConfig (appConfig) {
               await ctx.applyPlugins({
                 name: hooks.MODIFY_APP_CONFIG,
