@@ -80,7 +80,6 @@ export default (ctx: IPluginContext) => {
             withoutBuild,
             newBlended,
             noInjectGlobalStyle,
-            // TODO: 看到这里了, 待确定以下函数的执行时机
             async modifyAppConfig (appConfig) {
               await ctx.applyPlugins({
                 name: hooks.MODIFY_APP_CONFIG,
@@ -120,6 +119,7 @@ export default (ctx: IPluginContext) => {
                 },
               })
             },
+            // TODO: 看到这里了, 待确定以下函数的执行时机
             async modifyMiniConfigs(configMap) {
               await ctx.applyPlugins({
                 name: hooks.MODIFY_MINI_CONFIGS,
