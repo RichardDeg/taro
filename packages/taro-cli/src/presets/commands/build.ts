@@ -7,7 +7,6 @@ import * as hooks from '../constant'
 
 import type { IPluginContext } from '@tarojs/service'
 
-// TODO: 看到这里了
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'build',
@@ -119,7 +118,6 @@ export default (ctx: IPluginContext) => {
                 },
               })
             },
-            // TODO: 看到这里了, 待确定以下函数的执行时机
             async modifyMiniConfigs(configMap) {
               await ctx.applyPlugins({
                 name: hooks.MODIFY_MINI_CONFIGS,
