@@ -110,10 +110,10 @@ function verifyPlatform (platform, chalk) {
 
 /** 整理 config */
 function getConfig (ctx: IPluginContext, platform: string) {
-  const { initialConfig } = ctx
+  const { initialConfig, appPath } = ctx
   const sourceDirName = initialConfig.sourceRoot || SOURCE_DIR
   const outputDirName = initialConfig.outputRoot || OUTPUT_DIR
-  const sourceDir = path.join(ctx.appPath, sourceDirName)
+  const sourceDir = path.join(appPath, sourceDirName)
   const entryFilePath = resolveScriptPath(path.join(sourceDir, ENTRY))
 
   const entry = {
