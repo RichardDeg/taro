@@ -24,6 +24,8 @@ import fetchTemplate from './fetchTemplate'
 
 import type { ITemplates } from './fetchTemplate'
 
+const NONE_AVAILABLE_TEMPLATE = '无可用模板'
+
 export interface IProjectConf {
   projectName: string
   projectDir: string
@@ -43,16 +45,11 @@ export interface IProjectConf {
   framework: FrameworkType
   compiler?: CompilerType
 }
-
 type CustomPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-
 type IProjectConfOptions = CustomPartial<IProjectConf, 'projectName' | 'projectDir' | 'template' | 'css' | 'npm' | 'framework' | 'templateSource'>
-
 interface AskMethods {
   (conf: IProjectConfOptions, prompts: Record<string, unknown>[], choices?: ITemplates[]): void
 }
-
-const NONE_AVAILABLE_TEMPLATE = '无可用模板'
 
 export default class Project extends Creator {
   public rootPath: string
