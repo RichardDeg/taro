@@ -104,6 +104,8 @@ export default class Project extends Creator {
     this.askTypescript(conf, prompts)
     this.askCSS(conf, prompts)
     this.askNpm(conf, prompts)
+
+    // TODO: 读到这里了
     const answers = await inquirer.prompt<IProjectConf>(prompts)
 
     // Note: 由于 Solid 框架适配 Vite 还存在某些问题，所以在选择 Solid 框架时，不再询问编译工具
@@ -128,13 +130,13 @@ export default class Project extends Creator {
     }
   }
 
-  askProjectName: AskMethods = function (conf, prompts) {
-    if ((typeof conf.projectName) !== 'string') {
+  askProjectName: AskMethods = function ({ projectName }, prompts) {
+    if ((typeof projectName) !== 'string') {
       prompts.push({
         type: 'input',
         name: 'projectName',
         message: '请输入项目名称！',
-        validate (input) {
+        validate (input: string) {
           if (!input) {
             return '项目名不能为空！'
           }
@@ -144,12 +146,12 @@ export default class Project extends Creator {
           return true
         }
       })
-    } else if (fs.existsSync(conf.projectName!)) {
+    } else if (fs.existsSync(projectName!)) {
       prompts.push({
         type: 'input',
         name: 'projectName',
         message: '当前目录已经存在同名项目，请换一个项目名！',
-        validate (input) {
+        validate (input: string) {
           if (!input) {
             return '项目名不能为空！'
           }
@@ -235,7 +237,7 @@ export default class Project extends Creator {
   }
 
   askFramework: AskMethods = function (conf, prompts) {
-    const frameworks = [
+    const frameworkChoices = [
       {
         name: 'React',
         value: FrameworkType.React
@@ -259,12 +261,12 @@ export default class Project extends Creator {
         type: 'list',
         name: 'framework',
         message: '请选择框架',
-        choices: frameworks
+        choices: frameworkChoices
       })
     }
   }
 
-  askTemplateSource: AskMethods = async function (conf, prompts) {
+  async askTemplateSource(conf, prompts): Promise<AskMethods|undefined> {
     if (conf.template === 'default' || conf.templateSource) return
 
     const homedir = getUserHomeDir()
@@ -367,7 +369,7 @@ export default class Project extends Creator {
   }
 
   askNpm: AskMethods = function (conf, prompts) {
-    const packages = [
+    const packageChoices = [
       {
         name: 'yarn',
         value: NpmType.Yarn
@@ -386,12 +388,12 @@ export default class Project extends Creator {
       }
     ]
 
-    if ((typeof conf.npm as string | undefined) !== 'string') {
+    if (typeof conf.npm !== 'string') {
       prompts.push({
         type: 'list',
         name: 'npm',
         message: '请选择包管理工具',
-        choices: packages
+        choices: packageChoices
       })
     }
   }
@@ -464,7 +466,7 @@ export default class Project extends Creator {
       compiler: this.conf.compiler,
       period: PeriodType.CreateAPP,
     }, handler).then(() => {
-      cb && cb()
+      cb?.()
     })
   }
 }
