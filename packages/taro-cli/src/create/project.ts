@@ -25,6 +25,7 @@ import fetchTemplate from './fetchTemplate'
 import type { ITemplates } from './fetchTemplate'
 
 const NONE_AVAILABLE_TEMPLATE = '无可用模板'
+const LOWEST_SUPPORTED_VERSION = 'v18.0.0'
 
 export interface IProjectConf {
   projectName: string
@@ -57,12 +58,12 @@ export default class Project extends Creator {
 
   constructor (options: IProjectConfOptions) {
     super(options.sourceRoot)
-    const unSupportedVer = semver.lt(process.version, 'v18.0.0')
-    if (unSupportedVer) {
-      throw new Error('Node.js 版本过低，推荐升级 Node.js 至 v18.0.0+')
+    const isUnsupprotedVersion = semver.lt(process.version, LOWEST_SUPPORTED_VERSION)
+    if (isUnsupprotedVersion) {
+      throw new Error(`Node.js 版本过低，推荐升级 Node.js 至 ${LOWEST_SUPPORTED_VERSION}+`)
     }
-    this.rootPath = this._rootPath
 
+    this.rootPath = this._rootPath
     this.conf = Object.assign(
       {
         projectName: '',
@@ -105,7 +106,6 @@ export default class Project extends Creator {
     this.askCSS(conf, prompts)
     this.askNpm(conf, prompts)
 
-    // TODO: 读到这里了
     const answers = await inquirer.prompt<IProjectConf>(prompts)
 
     // Note: 由于 Solid 框架适配 Vite 还存在某些问题，所以在选择 Solid 框架时，不再询问编译工具
@@ -115,6 +115,7 @@ export default class Project extends Creator {
     } else {
       this.askCompiler(conf, prompts)
     }
+    // TODO: 读到这里了
     await this.askTemplateSource(conf, prompts)
     const compilerAndTemplateSourceAnswer = await inquirer.prompt<IProjectConf>(prompts)
 
@@ -266,6 +267,7 @@ export default class Project extends Creator {
     }
   }
 
+  // TODO: 读到这里了
   async askTemplateSource(conf, prompts): Promise<AskMethods|undefined> {
     if (conf.template === 'default' || conf.templateSource) return
 
