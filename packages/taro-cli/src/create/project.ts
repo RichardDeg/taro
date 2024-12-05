@@ -96,38 +96,40 @@ export default class Project extends Creator {
   }
 
   async ask () {
-    let prompts: Record<string, unknown>[] = []
     const conf = this.conf
 
-    this.askProjectName(conf, prompts)
-    this.askDescription(conf, prompts)
-    this.askFramework(conf, prompts)
-    this.askTypescript(conf, prompts)
-    this.askCSS(conf, prompts)
-    this.askNpm(conf, prompts)
+    /************************ 询问基本信息 *************************/
+    const basicPrompts: Record<string, unknown>[] = []
+    this.askProjectName(conf, basicPrompts)
+    this.askDescription(conf, basicPrompts)
+    this.askFramework(conf, basicPrompts)
+    this.askTypescript(conf, basicPrompts)
+    this.askCSS(conf, basicPrompts)
+    this.askNpm(conf, basicPrompts)
+    const basicAnswers = await inquirer.prompt<IProjectConf>(basicPrompts)
 
-    const answers = await inquirer.prompt<IProjectConf>(prompts)
-
-    // Note: 由于 Solid 框架适配 Vite 还存在某些问题，所以在选择 Solid 框架时，不再询问编译工具
-    prompts = []
-    if (answers.framework === FrameworkType.Solid || conf.framework === FrameworkType.Solid) {
-      answers.compiler = CompilerType.Webpack5
+    /************************ 询问编译工具和模版来源 *****************/
+    const compilerAndTemplateSourcePrompts: Record<string, unknown>[] = []
+    const isSolidFrameWork = basicAnswers.framework === FrameworkType.Solid || conf.framework === FrameworkType.Solid
+    if (/** FIXME: Solid 框架的编译工具未适配 Vite，暂硬编码为 Webpack5 */isSolidFrameWork) {
+      basicAnswers.compiler = CompilerType.Webpack5
     } else {
-      this.askCompiler(conf, prompts)
+      this.askCompiler(conf, compilerAndTemplateSourcePrompts)
     }
     // TODO: 读到这里了
-    await this.askTemplateSource(conf, prompts)
-    const compilerAndTemplateSourceAnswer = await inquirer.prompt<IProjectConf>(prompts)
+    await this.askTemplateSource(conf, compilerAndTemplateSourcePrompts)
+    const compilerAndTemplateSourceAnswers = await inquirer.prompt<IProjectConf>(compilerAndTemplateSourcePrompts)
 
-    prompts = []
-    const templates = await this.fetchTemplates(Object.assign({}, answers, compilerAndTemplateSourceAnswer))
-    await this.askTemplate(conf, prompts, templates)
-    const templateChoiceAnswer = await inquirer.prompt<IProjectConf>(prompts)
+    /************************ 询问模版类型 *************************/
+    const templateChoicePrompts: Record<string, unknown>[] = []
+    const templates = await this.fetchTemplates(Object.assign({}, basicAnswers, compilerAndTemplateSourceAnswers))
+    this.askTemplate(conf, templateChoicePrompts, templates)
+    const templateChoiceAnswers = await inquirer.prompt<IProjectConf>(templateChoicePrompts)
 
     return {
-      ...answers,
-      ...compilerAndTemplateSourceAnswer,
-      ...templateChoiceAnswer
+      ...basicAnswers,
+      ...compilerAndTemplateSourceAnswers,
+      ...templateChoiceAnswers
     }
   }
 
