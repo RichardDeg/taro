@@ -48,9 +48,12 @@ export interface IProjectConf {
 }
 type CustomPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 type IProjectConfOptions = CustomPartial<IProjectConf, 'projectName' | 'projectDir' | 'template' | 'css' | 'npm' | 'framework' | 'templateSource'>
-interface AskMethods {
-  (conf: IProjectConfOptions, prompts: Record<string, unknown>[], choices?: ITemplates[]): void
-}
+type CustomInquirerPrompts = Record<string, unknown>[]
+type AskMethodsFunction = (conf: IProjectConfOptions, choices?: ITemplates[]) => CustomInquirerPrompts
+type BasicAnswers = Pick<IProjectConf, 'projectName' | 'description' | 'framework' | 'typescript' | 'css' | 'npm'>
+type CompilerAndTemplateSourceAnswers = Pick<IProjectConf, 'compiler' | 'templateSource'>
+type TemplateAnswers = Pick<IProjectConf,'template'>
+type FetchTemplatesParameter = BasicAnswers & CompilerAndTemplateSourceAnswers
 
 export default class Project extends Creator {
   public rootPath: string
@@ -95,50 +98,63 @@ export default class Project extends Creator {
     }
   }
 
-  async ask () {
+  async ask (): Promise<Partial<IProjectConf>> {
     const conf = this.conf
 
     /************************ 询问基本信息 *************************/
-    const basicPrompts: Record<string, unknown>[] = []
-    this.askProjectName(conf, basicPrompts)
-    this.askDescription(conf, basicPrompts)
-    this.askFramework(conf, basicPrompts)
-    this.askTypescript(conf, basicPrompts)
-    this.askCSS(conf, basicPrompts)
-    this.askNpm(conf, basicPrompts)
-    const basicAnswers = await inquirer.prompt<IProjectConf>(basicPrompts)
+    const projectNamePrompts = this.askProjectName(conf)
+    const descriptionPrompts = this.askDescription(conf)
+    const frameworkPrompts = this.askFramework(conf)
+    const typescriptPrompts = this.askTypescript(conf)
+    const cssPrompts = this.askCSS(conf)
+    const npmPrompts = this.askNpm(conf)
+    const basicPrompts = [
+      ...projectNamePrompts,
+      ...descriptionPrompts,
+      ...frameworkPrompts,
+      ...typescriptPrompts,
+      ...cssPrompts,
+      ...npmPrompts,
+    ]
+    const basicAnswers = await inquirer.prompt<BasicAnswers>(basicPrompts)
 
     /************************ 询问编译工具和模版来源 *****************/
-    const compilerAndTemplateSourcePrompts: Record<string, unknown>[] = []
-    const isSolidFrameWork = basicAnswers.framework === FrameworkType.Solid || conf.framework === FrameworkType.Solid
-    if (/** FIXME: Solid 框架的编译工具未适配 Vite，暂硬编码为 Webpack5 */isSolidFrameWork) {
-      basicAnswers.compiler = CompilerType.Webpack5
-    } else {
-      this.askCompiler(conf, compilerAndTemplateSourcePrompts)
-    }
+    const isSolidFramework = [basicAnswers.framework, conf.framework].includes(FrameworkType.Solid)
     // TODO: 读到这里了
-    await this.askTemplateSource(conf, compilerAndTemplateSourcePrompts)
-    const compilerAndTemplateSourceAnswers = await inquirer.prompt<IProjectConf>(compilerAndTemplateSourcePrompts)
+    const templateSourcePrompts = await this.askTemplateSource(conf)
+    const compilerPrompts = !isSolidFramework ?this.askCompiler(conf) :[]
+    const compilerAndTemplateSourcePrompts = [
+      ...compilerPrompts,
+      ...templateSourcePrompts,
+    ]
+    const compilerAndTemplateSourceAnswers = await inquirer.prompt<CompilerAndTemplateSourceAnswers>(compilerAndTemplateSourcePrompts)
+    const mergedCompiler = isSolidFramework ?CompilerType.Webpack5:  compilerAndTemplateSourceAnswers.compiler
+    const mergedCompilerAndTemplateSourceAnswers = {
+      ...compilerAndTemplateSourceAnswers,
+      compiler: mergedCompiler,
+    }
 
     /************************ 询问模版类型 *************************/
-    const templateChoicePrompts: Record<string, unknown>[] = []
-    const templates = await this.fetchTemplates(Object.assign({}, basicAnswers, compilerAndTemplateSourceAnswers))
-    this.askTemplate(conf, templateChoicePrompts, templates)
-    const templateChoiceAnswers = await inquirer.prompt<IProjectConf>(templateChoicePrompts)
+    const templateChoices = await this.fetchTemplates({
+      ...basicAnswers,
+      ...mergedCompilerAndTemplateSourceAnswers,
+    })
+    const templatePrompts = this.askTemplate(conf, templateChoices)
+    const templateAnswers = await inquirer.prompt<TemplateAnswers>(templatePrompts)
 
     return {
       ...basicAnswers,
-      ...compilerAndTemplateSourceAnswers,
-      ...templateChoiceAnswers
+      ...mergedCompilerAndTemplateSourceAnswers,
+      ...templateAnswers,
     }
   }
 
-  askProjectName: AskMethods = function ({ projectName }, prompts) {
-    if ((typeof projectName) !== 'string') {
-      prompts.push({
-        type: 'input',
-        name: 'projectName',
+  askProjectName: AskMethodsFunction = function ({ projectName }) {
+    if (typeof projectName !== 'string') {
+      return [{
         message: '请输入项目名称！',
+        name: 'projectName',
+        type: 'input',
         validate (input: string) {
           if (!input) {
             return '项目名不能为空！'
@@ -148,12 +164,13 @@ export default class Project extends Creator {
           }
           return true
         }
-      })
-    } else if (fs.existsSync(projectName!)) {
-      prompts.push({
-        type: 'input',
-        name: 'projectName',
+      }]
+    }
+    if (fs.existsSync(projectName!)) {
+      return [{
         message: '当前目录已经存在同名项目，请换一个项目名！',
+        name: 'projectName',
+        type: 'input',
         validate (input: string) {
           if (!input) {
             return '项目名不能为空！'
@@ -163,31 +180,34 @@ export default class Project extends Creator {
           }
           return true
         }
-      })
+      }]
     }
+    return []
   }
 
-  askDescription: AskMethods = function (conf, prompts) {
-    if (typeof conf.description !== 'string') {
-      prompts.push({
-        type: 'input',
-        name: 'description',
-        message: '请输入项目介绍'
-      })
-    }
+  askDescription: AskMethodsFunction = function ({ description }) {
+    if (typeof description === 'string') return []
+
+    return [{
+      message: '请输入项目介绍',
+      name: 'description',
+      type: 'input',
+    }]
   }
 
-  askTypescript: AskMethods = function (conf, prompts) {
-    if (typeof conf.typescript !== 'boolean') {
-      prompts.push({
-        type: 'confirm',
-        name: 'typescript',
-        message: '是否需要使用 TypeScript ？'
-      })
-    }
+  askTypescript: AskMethodsFunction = function ({ typescript }) {
+    if (typeof typescript === 'boolean') return []
+
+    return [{
+      message: '是否需要使用 TypeScript ？',
+      name: 'typescript',
+      type: 'confirm',
+    }]
   }
 
-  askCSS: AskMethods = function (conf, prompts) {
+  askCSS: AskMethodsFunction = function ({ css }) {
+    if (typeof css === 'string') return []
+
     const cssChoices = [
       {
         name: 'Sass',
@@ -206,18 +226,17 @@ export default class Project extends Creator {
         value: CSSType.None
       }
     ]
-
-    if (typeof conf.css !== 'string') {
-      prompts.push({
-        type: 'list',
-        name: 'css',
-        message: '请选择 CSS 预处理器（Sass/Less/Stylus）',
-        choices: cssChoices
-      })
-    }
+    return [{
+      message: '请选择 CSS 预处理器（Sass/Less/Stylus）',
+      name: 'css',
+      type: 'list',
+      choices: cssChoices
+    }]
   }
 
-  askCompiler: AskMethods = function (conf, prompts) {
+  askCompiler: AskMethodsFunction = function ({ compiler }) {
+    if (typeof compiler === 'string') return []
+
     const compilerChoices = [
       {
         name: 'Webpack5',
@@ -228,18 +247,17 @@ export default class Project extends Creator {
         value: CompilerType.Vite
       }
     ]
-
-    if (typeof conf.compiler !== 'string') {
-      prompts.push({
-        type: 'list',
-        name: 'compiler',
-        message: '请选择编译工具',
-        choices: compilerChoices
-      })
-    }
+    return [{
+      message: '请选择编译工具',
+      name: 'compiler',
+      type: 'list',
+      choices: compilerChoices
+    }]
   }
 
-  askFramework: AskMethods = function (conf, prompts) {
+  askFramework: AskMethodsFunction = function ({ framework }) {
+    if (typeof framework === 'string') return []
+
     const frameworkChoices = [
       {
         name: 'React',
@@ -258,20 +276,46 @@ export default class Project extends Creator {
         value: FrameworkType.Solid
       }
     ]
-
-    if (typeof conf.framework !== 'string') {
-      prompts.push({
-        type: 'list',
-        name: 'framework',
-        message: '请选择框架',
-        choices: frameworkChoices
-      })
-    }
+    return [{
+      message: '请选择框架',
+      name: 'framework',
+      type: 'list',
+      choices: frameworkChoices
+    }]
   }
 
-  // TODO: 读到这里了
-  async askTemplateSource(conf, prompts): Promise<AskMethods|undefined> {
-    if (conf.template === 'default' || conf.templateSource) return
+  askNpm: AskMethodsFunction = function ({ npm }) {
+    if (typeof npm === 'string') return []
+
+    const packageChoices = [
+      {
+        name: 'yarn',
+        value: NpmType.Yarn
+      },
+      {
+        name: 'pnpm',
+        value: NpmType.Pnpm
+      },
+      {
+        name: 'npm',
+        value: NpmType.Npm
+      },
+      {
+        name: 'cnpm',
+        value: NpmType.Cnpm
+      }
+    ]
+    return [{
+      message: '请选择包管理工具',
+      name: 'npm',
+      type: 'list',
+      choices: packageChoices
+    }]
+  }
+
+  // TODO: 看到这里了
+  async askTemplateSource({ template, templateSource }: IProjectConfOptions): Promise<CustomInquirerPrompts> {
+    if (template === 'default' || templateSource) return []
 
     const homedir = getUserHomeDir()
     const taroConfigPath = path.join(homedir, TARO_CONFIG_FOLDER)
@@ -291,7 +335,7 @@ export default class Project extends Creator {
       localTemplateSource = DEFAULT_TEMPLATE_SRC
     }
 
-    const choices = [
+    const templateSourceChoices = [
       {
         name: 'Gitee（最快）',
         value: DEFAULT_TEMPLATE_SRC_GITEE
@@ -315,29 +359,29 @@ export default class Project extends Creator {
     ]
 
     if (localTemplateSource && localTemplateSource !== DEFAULT_TEMPLATE_SRC && localTemplateSource !== DEFAULT_TEMPLATE_SRC_GITEE) {
-      choices.unshift({
+      templateSourceChoices.unshift({
         name: `本地模板源：${localTemplateSource}`,
         value: localTemplateSource
       })
     }
 
-    prompts.push({
-      type: 'list',
-      name: 'templateSource',
+    return [{
       message: '请选择模板源',
-      choices
-    }, {
-      type: 'input',
       name: 'templateSource',
+      type: 'list',
+      choices: templateSourceChoices,
+    }, {
       message: '请输入模板源！',
+      name: 'templateSource',
+      type: 'input',
       askAnswered: true,
       when (answers) {
         return answers.templateSource === 'self-input'
       }
     }, {
-      type: 'list',
-      name: 'templateSource',
       message: '请选择社区模板源',
+      name: 'templateSource',
+      type: 'list',
       async choices (answers) {
         const choices = await getOpenSourceTemplates(answers.framework)
         return choices
@@ -346,63 +390,32 @@ export default class Project extends Creator {
       when (answers) {
         return answers.templateSource === 'open-source'
       }
-    })
+    }]
   }
 
-  askTemplate: AskMethods = function (conf, prompts, list = []) {
-    const choices = list.map(item => ({
-      name: item.desc ? `${item.name}（${item.desc}）` : item.name,
-      value: item.value || item.name
-    }))
+  askTemplate: AskMethodsFunction = function ({ template, hideDefaultTemplate }, initialTemplateChoices = []) {
+    if (typeof template === 'string') return []
 
-    if (!conf.hideDefaultTemplate) {
-      choices.unshift({
+    const templateChioces = initialTemplateChoices.map(({ desc, name, value }) => ({
+      name: String(name) + (!!desc? ` （${desc}）` :''),
+      value: value || name
+    }))
+    if (!hideDefaultTemplate) {
+      templateChioces.unshift({
         name: '默认模板',
         value: 'default'
       })
     }
-
-    if ((typeof conf.template as 'string' | undefined) !== 'string') {
-      prompts.push({
-        type: 'list',
-        name: 'template',
-        message: '请选择模板',
-        choices
-      })
-    }
+    return [{
+      message: '请选择模板',
+      name: 'template',
+      type: 'list',
+      choices: templateChioces,
+    }]
   }
 
-  askNpm: AskMethods = function (conf, prompts) {
-    const packageChoices = [
-      {
-        name: 'yarn',
-        value: NpmType.Yarn
-      },
-      {
-        name: 'pnpm',
-        value: NpmType.Pnpm
-      },
-      {
-        name: 'npm',
-        value: NpmType.Npm
-      },
-      {
-        name: 'cnpm',
-        value: NpmType.Cnpm
-      }
-    ]
-
-    if (typeof conf.npm !== 'string') {
-      prompts.push({
-        type: 'list',
-        name: 'npm',
-        message: '请选择包管理工具',
-        choices: packageChoices
-      })
-    }
-  }
-
-  async fetchTemplates (answers: IProjectConf): Promise<ITemplates[]> {
+  // TODO: 待优化 fetchTemplates 是否是放在 askTemplate 里面获取 choices 函数的，不是作为参数传入，保持和其他 ask 一致的代码风格，在函数内获取 choices
+  async fetchTemplates (answers: FetchTemplatesParameter): Promise<ITemplates[]> {
     const { templateSource, framework, compiler } = answers
     this.conf.framework = this.conf.framework || framework || ''
     this.conf.templateSource = this.conf.templateSource || templateSource
