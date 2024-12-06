@@ -53,6 +53,7 @@ type AskMethodsFunction = (conf: IProjectConfOptions, choices?: ITemplates[]) =>
 type BasicAnswers = Pick<IProjectConf, 'projectName' | 'description' | 'framework' | 'typescript' | 'css' | 'npm'>
 type CompilerAndTemplateSourceAnswers = Pick<IProjectConf, 'compiler' | 'templateSource'>
 type TemplateAnswers = Pick<IProjectConf,'template'>
+type TemplateSourceAnswers = Pick<IProjectConf, 'templateSource'>
 type FetchTemplatesParameter = BasicAnswers & CompilerAndTemplateSourceAnswers
 
 export default class Project extends Creator {
@@ -313,7 +314,7 @@ export default class Project extends Creator {
     }]
   }
 
-  // TODO: 看到这里了
+  // TODO: 看到这里了，怎样确定 answers 的类型
   async askTemplateSource({ template, templateSource }: IProjectConfOptions): Promise<CustomInquirerPrompts> {
     if (template === 'default' || templateSource) return []
 
@@ -322,7 +323,6 @@ export default class Project extends Creator {
     const taroConfig = path.join(taroConfigPath, TARO_BASE_CONFIG)
 
     let localTemplateSource: string
-
     // 检查本地配置
     if (fs.existsSync(taroConfig)) {
       // 存在则把模板源读出来
@@ -375,19 +375,22 @@ export default class Project extends Creator {
       name: 'templateSource',
       type: 'input',
       askAnswered: true,
-      when (answers) {
+      // TODO: 看到这里了，怎样确定 answers 的类型
+      when (answers: TemplateSourceAnswers) {
         return answers.templateSource === 'self-input'
       }
     }, {
       message: '请选择社区模板源',
       name: 'templateSource',
       type: 'list',
-      async choices (answers) {
-        const choices = await getOpenSourceTemplates(answers.framework)
-        return choices
+      // TODO: 看到这里了，怎样确定 answers 的类型
+      async choices (answers: TemplateSourceAnswers & BasicAnswers) {
+        // TODO: 看到这里了
+        return await getOpenSourceTemplates(answers.framework)
       },
       askAnswered: true,
-      when (answers) {
+      // TODO: 看到这里了，怎样确定 answers 的类型
+      when (answers: TemplateSourceAnswers) {
         return answers.templateSource === 'open-source'
       }
     }]
