@@ -385,7 +385,7 @@ export default class Project extends Creator {
       type: 'list',
       // TODO: 看到这里了，怎样确定 answers 的类型
       async choices (answers: TemplateSourceAnswers & BasicAnswers) {
-        // TODO: 看到这里了
+        // TODO: 看到这里了, 怎样获取到 framework 这个属性值的
         return await getOpenSourceTemplates(answers.framework)
       },
       askAnswered: true,
@@ -495,12 +495,11 @@ function getOpenSourceTemplates (platform: string) {
   return new Promise((resolve, reject) => {
     const spinner = ora({ text: '正在拉取开源模板列表...', discardStdin: false }).start()
     axios.get('https://gitee.com/NervJS/awesome-taro/raw/next/index.json')
-      .then(response => {
+      .then(({ data }) => {
         spinner.succeed(`${chalk.grey('拉取开源模板列表成功！')}`)
-        const collection = response.data
         switch (platform.toLowerCase()) {
           case 'react':
-            return resolve(collection.react)
+            return resolve(data.react)
           default:
             return resolve([NONE_AVAILABLE_TEMPLATE])
         }
