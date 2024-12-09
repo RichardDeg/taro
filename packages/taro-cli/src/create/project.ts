@@ -121,8 +121,8 @@ export default class Project extends Creator {
 
     /************************ 询问编译工具和模版来源 *****************/
     const isSolidFramework = [basicAnswers.framework, conf.framework].includes(FrameworkType.Solid)
-    // TODO: 读到这里了
     const templateSourcePrompts = await this.askTemplateSource(conf)
+    // TODO: 读到这里了
     const compilerPrompts = !isSolidFramework ?this.askCompiler(conf) :[]
     const compilerAndTemplateSourcePrompts = [
       ...compilerPrompts,
@@ -314,7 +314,6 @@ export default class Project extends Creator {
     }]
   }
 
-  // TODO: 看到这里了，怎样确定 answers 的类型
   async askTemplateSource({ template, templateSource }: IProjectConfOptions): Promise<CustomInquirerPrompts> {
     if (template === 'default' || templateSource) return []
 
@@ -375,7 +374,6 @@ export default class Project extends Creator {
       name: 'templateSource',
       type: 'input',
       askAnswered: true,
-      // TODO: 看到这里了，怎样确定 answers 的类型
       when (answers: TemplateSourceAnswers) {
         return answers.templateSource === 'self-input'
       }
@@ -383,13 +381,10 @@ export default class Project extends Creator {
       message: '请选择社区模板源',
       name: 'templateSource',
       type: 'list',
-      // TODO: 看到这里了，怎样确定 answers 的类型
       async choices (answers: TemplateSourceAnswers & BasicAnswers) {
-        // TODO: 看到这里了, 怎样获取到 framework 这个属性值的
         return await getOpenSourceTemplates(answers.framework)
       },
       askAnswered: true,
-      // TODO: 看到这里了，怎样确定 answers 的类型
       when (answers: TemplateSourceAnswers) {
         return answers.templateSource === 'open-source'
       }
