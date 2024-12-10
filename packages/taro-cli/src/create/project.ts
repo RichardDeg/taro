@@ -122,19 +122,20 @@ export default class Project extends Creator {
     /************************ 询问编译工具和模版来源 *****************/
     const isSolidFramework = [basicAnswers.framework, conf.framework].includes(FrameworkType.Solid)
     const templateSourcePrompts = await this.askTemplateSource(conf)
-    // TODO: 读到这里了
     const compilerPrompts = !isSolidFramework ?this.askCompiler(conf) :[]
     const compilerAndTemplateSourcePrompts = [
       ...compilerPrompts,
       ...templateSourcePrompts,
     ]
-    const compilerAndTemplateSourceAnswers = await inquirer.prompt<CompilerAndTemplateSourceAnswers>(compilerAndTemplateSourcePrompts)
-    const mergedCompiler = isSolidFramework ?CompilerType.Webpack5:  compilerAndTemplateSourceAnswers.compiler
+    const { templateSource, compiler } = await inquirer.prompt<CompilerAndTemplateSourceAnswers>(compilerAndTemplateSourcePrompts)
+    const mergedCompiler = isSolidFramework ?CompilerType.Webpack5 :compiler
+    const mergedTemplateSource = templateSource === 'default-template' ?DEFAULT_TEMPLATE_SRC_GITEE :templateSource
     const mergedCompilerAndTemplateSourceAnswers = {
-      ...compilerAndTemplateSourceAnswers,
       compiler: mergedCompiler,
+      templateSource: mergedTemplateSource,
     }
 
+    // TODO: 读到这里了
     /************************ 询问模版类型 *************************/
     const templateChoices = await this.fetchTemplates({
       ...basicAnswers,
@@ -145,6 +146,7 @@ export default class Project extends Creator {
 
     return {
       ...basicAnswers,
+      // TODO: 待确定源代码中 返回的 templateSource 是 default-template 还是 DEFAULT_TEMPLATE_SRC_GITEE
       ...mergedCompilerAndTemplateSourceAnswers,
       ...templateAnswers,
     }
@@ -412,18 +414,20 @@ export default class Project extends Creator {
     }]
   }
 
+  // TODO: 读到这里了, 这个代码需要多花些时间看看
   // TODO: 待优化 fetchTemplates 是否是放在 askTemplate 里面获取 choices 函数的，不是作为参数传入，保持和其他 ask 一致的代码风格，在函数内获取 choices
-  async fetchTemplates (answers: FetchTemplatesParameter): Promise<ITemplates[]> {
-    const { templateSource, framework, compiler } = answers
+  async fetchTemplates ({ templateSource, framework, compiler }: FetchTemplatesParameter): Promise<ITemplates[]> {
     this.conf.framework = this.conf.framework || framework || ''
     this.conf.templateSource = this.conf.templateSource || templateSource
 
     // 使用默认模版
-    if (answers.templateSource === 'default-template') {
+    if (templateSource === DEFAULT_TEMPLATE_SRC_GITEE) {
       this.conf.template = 'default'
-      answers.templateSource = DEFAULT_TEMPLATE_SRC_GITEE
     }
-    if (this.conf.template === 'default' || answers.templateSource === NONE_AVAILABLE_TEMPLATE) return Promise.resolve([])
+    // TODO: 待确定为什么要返回 Promise.resolve 对象???
+    if (templateSource === NONE_AVAILABLE_TEMPLATE || this.conf.template === 'default') {
+      return Promise.resolve([])
+    }
 
     // 从模板源下载模板
     const isClone = /gitee/.test(this.conf.templateSource) || this.conf.clone
