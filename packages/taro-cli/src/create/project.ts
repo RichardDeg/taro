@@ -11,7 +11,7 @@ import {
   TARO_BASE_CONFIG,
   TARO_CONFIG_FOLDER
 } from '@tarojs/helper'
-import { isArray } from '@tarojs/shared'
+import { isArray, isSameStr } from '@tarojs/shared'
 import axios from 'axios'
 import * as inquirer from 'inquirer'
 import * as ora from 'ora'
@@ -414,52 +414,38 @@ export default class Project extends Creator {
     }]
   }
 
-  // TODO: 读到这里了, 这个代码需要多花些时间看看
   // TODO: 待优化 fetchTemplates 是否是放在 askTemplate 里面获取 choices 函数的，不是作为参数传入，保持和其他 ask 一致的代码风格，在函数内获取 choices
   async fetchTemplates ({ templateSource, framework, compiler }: FetchTemplatesParameter): Promise<ITemplates[]> {
+    /** 写入 this.conf 的 framework、templateSource、template 属性 */
     this.conf.framework = this.conf.framework || framework || ''
     this.conf.templateSource = this.conf.templateSource || templateSource
-
-    // 使用默认模版
     if (templateSource === DEFAULT_TEMPLATE_SRC_GITEE) {
       this.conf.template = 'default'
     }
-    // TODO: 待确定为什么要返回 Promise.resolve 对象???
-    if (templateSource === NONE_AVAILABLE_TEMPLATE || this.conf.template === 'default') {
-      return Promise.resolve([])
-    }
+    /** 读取 this.conf 的 framework、templateSource、template 属性 */
+    const { framework: confFramework, templateSource: confTemplateSource, template: confTemplate, clone: confClone } = this.conf
 
-    // 从模板源下载模板
-    const isClone = /gitee/.test(this.conf.templateSource) || this.conf.clone
-    const templateChoices = await fetchTemplate(this.conf.templateSource, this.templatePath(''), isClone)
+    // 返回默认空模版
+    const isEmptyTemplate = templateSource === NONE_AVAILABLE_TEMPLATE || confTemplate === 'default'
+    if (isEmptyTemplate) return []
 
-    const filterFramework = (_framework) => {
-      const current = this.conf.framework?.toLowerCase()
-
-      if (typeof _framework === 'string' && _framework) {
-        return current === _framework.toLowerCase()
-      } else if (isArray(_framework)) {
-        return _framework?.map(name => name.toLowerCase()).includes(current)
-      } else {
-        return true
-      }
-    }
-
-    const filterCompiler = (_compiler) => {
-      if (_compiler && isArray(_compiler)) {
-        return _compiler?.includes(compiler)
-      }
+    const filterFrameworkFn = (value?: string | string[] | undefined) => {
+      const isNotEmpty = !!value && !!confFramework
+      if (isNotEmpty && typeof value === 'string') return isSameStr(value, confFramework)
+      if (isNotEmpty && isArray(value)) return value.findIndex(item => isSameStr(item, confFramework)) > -1
       return true
     }
+    const filterCompilerFn = (value?: string[]) => {
+      if (!compiler || !isArray(value)) return true
+      return value.includes(compiler)
+    }
 
-    // 根据用户选择的框架筛选模板
-    const newTemplateChoices: ITemplates[] = templateChoices
-      .filter(templateChoice => {
-        const { platforms, compiler } = templateChoice
-        return filterFramework(platforms) && filterCompiler(compiler)
-      })
-
-    return newTemplateChoices
+    // 下载模板列表
+    const isClone = /gitee/.test(confTemplateSource) || confClone
+    // TODO: 读到这里了
+    const templateArr = await fetchTemplate(confTemplateSource, this.templatePath(''), isClone)
+    // 过滤模板列表
+    return templateArr.filter(({ platforms, compiler }) => filterFrameworkFn(platforms) && filterCompilerFn(compiler))
   }
 
   write (cb?: () => void) {
