@@ -48,14 +48,8 @@ export const getAllFilesInFolder = async (
   return files
 }
 
-export type TemplateSourceType = 'git' | 'url'
-
-export function getTemplateSourceType (url: string): TemplateSourceType {
-  if (/^github:/.test(url) || /^gitlab:/.test(url) || /^direct:/.test(url)) {
-    return 'git'
-  } else {
-    return 'url'
-  }
+export function getTemplateSourceType (url: string) {
+  return /^(github|gitlab|direct):/.test(url) ?'git' :'url'
 }
 
 interface FileStat {

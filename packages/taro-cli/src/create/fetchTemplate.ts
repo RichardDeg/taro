@@ -9,6 +9,8 @@ import * as ora from 'ora'
 import { getTemplateSourceType, readDirWithFileTypes } from '../util'
 import { TEMPLATE_CREATOR } from './constants'
 
+const TEMP_DOWNLOAD_FOLDER = 'taro-temp'
+
 export interface ITemplates {
   name: string
   value: string
@@ -17,22 +19,25 @@ export interface ITemplates {
   compiler?: string[]
 }
 
-const TEMP_DOWNLOAD_FOLDER = 'taro-temp'
+// TODO: 看到这里了
+export default async function fetchTemplate (templateSource: string, templateRootPath: string, clone?: boolean): Promise<ITemplates[]> {
+  const templateSourceType = getTemplateSourceType(templateSource)
+  const isGitTemplate = templateSourceType === 'git'
+  const isUrlTemplate = templateSourceType === 'url'
 
-export default function fetchTemplate (templateSource: string, templateRootPath: string, clone?: boolean): Promise<ITemplates[]> {
-  const type = getTemplateSourceType(templateSource)
   const tempPath = path.join(templateRootPath, TEMP_DOWNLOAD_FOLDER)
   let name: string
+
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async (resolve) => {
     // 下载文件的缓存目录
     if (fs.existsSync(tempPath)) await fs.remove(tempPath)
-    await fs.mkdirp(templateRootPath)
+    await fs.ensureDir(templateRootPath)
     await fs.mkdir(tempPath)
 
     const spinner = ora(`正在从 ${templateSource} 拉取远程模板...`).start()
 
-    if (type === 'git') {
+    if (isGitTemplate) {
       name = path.basename(templateSource)
       download(templateSource, path.join(tempPath, name), { clone }, async error => {
         if (error) {
@@ -46,7 +51,8 @@ export default function fetchTemplate (templateSource: string, templateRootPath:
         spinner.succeed(`${chalk.grey('拉取远程模板仓库成功！')}`)
         resolve()
       })
-    } else if (type === 'url') {
+    } else if (isUrlTemplate) {
+      // TODO: 看到这里了
       // url 模板源，因为不知道来源名称，临时取名方便后续开发者从列表中选择
       name = 'from-remote-url'
       const zipPath = path.join(tempPath, name + '.zip')
@@ -130,7 +136,7 @@ export default function fetchTemplate (templateSource: string, templateRootPath:
       await fs.move(templateFolder, path.join(templateRootPath, name), { overwrite: true })
       await fs.remove(tempPath)
 
-      let res: ITemplates = { name, value: name, desc: type === 'url' ? templateSource : '' }
+      let res: ITemplates = { name, value: name, desc: isUrlTemplate ? templateSource : '' }
 
       const creatorFile = path.join(templateRootPath, name, TEMPLATE_CREATOR)
 
