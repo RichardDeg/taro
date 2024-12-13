@@ -52,20 +52,21 @@ export default async function fetchTemplate (templateSource: string, templateRoo
         resolve()
       })
     } else if (isUrlTemplate) {
-      // TODO: 看到这里了
       // url 模板源，因为不知道来源名称，临时取名方便后续开发者从列表中选择
       name = 'from-remote-url'
-      const zipPath = path.join(tempPath, name + '.zip')
-      const unZipPath = path.join(tempPath, name)
+      const zipPath = path.join(tempPath, `${name}.zip`)
+      const unzipDir = path.join(tempPath, name)
       axios.get<fs.ReadStream>(templateSource, { responseType: 'stream' })
         .then(response => {
           const ws = fs.createWriteStream(zipPath)
           response.data.pipe(ws)
           ws.on('finish', () => {
-            // unzip
+            /* 解压 zip 包 到 unzipDir 目录下 */
             const zip = new AdmZip(zipPath)
-            zip.extractAllTo(unZipPath, true)
-            const files = readDirWithFileTypes(unZipPath).filter(
+            zip.extractAllTo(unzipDir, true)
+
+            // TODO: 看到这里了
+            const files = readDirWithFileTypes(unzipDir).filter(
               file => !file.name.startsWith('.') && file.isDirectory && file.name !== '__MACOSX'
             )
 
