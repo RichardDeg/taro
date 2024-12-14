@@ -59,16 +59,13 @@ interface FileStat {
 }
 
 export function readDirWithFileTypes (folder: string): FileStat[] {
-  const list = fs.readdirSync(folder)
-  const res = list.map(name => {
-    const stat = fs.statSync(path.join(folder, name))
-    return {
-      name,
-      isDirectory: stat.isDirectory(),
-      isFile: stat.isFile()
-    }
-  })
-  return res
+  const fileList = fs.readdirSync(folder, { withFileTypes: true })
+  const mergedFileList = fileList.map(file => ({
+    name: file.name,
+    isDirectory: file.isDirectory(),
+    isFile: file.isFile()
+  }))
+  return mergedFileList
 }
 
 export function printDevelopmentTip (platform: string) {

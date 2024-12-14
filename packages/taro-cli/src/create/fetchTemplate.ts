@@ -65,11 +65,11 @@ export default async function fetchTemplate (templateSource: string, templateRoo
             const zip = new AdmZip(zipPath)
             zip.extractAllTo(unzipDir, true)
 
-            // TODO: 看到这里了
             const files = readDirWithFileTypes(unzipDir).filter(
               file => !file.name.startsWith('.') && file.isDirectory && file.name !== '__MACOSX'
             )
 
+            // TODO: 看到这里了
             if (files.length !== 1) {
               spinner.color = 'red'
               spinner.fail(chalk.red(`拉取远程模板仓库失败！\n${new Error('远程模板源组织格式错误')}`))
