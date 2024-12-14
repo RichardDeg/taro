@@ -19,14 +19,12 @@ export default class Creator {
     if (typeof rootPath === 'string') {
       this._rootPath = path.resolve(rootPath)
     }
-    if (!fs.existsSync(this._rootPath)) {
-      fs.ensureDirSync(this._rootPath)
-    }
+    fs.ensureDirSync(this._rootPath)
     return this._rootPath
   }
 
   templatePath (...args: string[]): string {
-    let filepath = path.join.apply(path, args)
+    let filepath = path.join(...args)
     if (!path.isAbsolute(filepath)) {
       filepath = path.join(this._rootPath, 'templates', filepath)
     }
