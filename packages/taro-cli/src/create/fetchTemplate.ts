@@ -28,6 +28,7 @@ export default async function fetchTemplate (templateSource: string, templateRoo
   const tempPath = path.join(templateRootPath, TEMP_DOWNLOAD_FOLDER)
   let name: string
 
+  // TODO: 尝试将最外层 promise 转为 async... await... 写法，是否可行
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async (resolve) => {
     // 下载文件的缓存目录
@@ -36,61 +37,61 @@ export default async function fetchTemplate (templateSource: string, templateRoo
     await fs.mkdir(tempPath)
 
     const spinner = ora(`正在从 ${templateSource} 拉取远程模板...`).start()
-
     if (isGitTemplate) {
       name = path.basename(templateSource)
       download(templateSource, path.join(tempPath, name), { clone }, async error => {
         if (error) {
-          console.log(error)
           spinner.color = 'red'
           spinner.fail(chalk.red('拉取远程模板仓库失败！'))
+          console.log(error)
           await fs.remove(tempPath)
-          return resolve()
+        } else {
+          spinner.color = 'green'
+          spinner.succeed(`${chalk.grey('拉取远程模板仓库成功！')}`)
         }
-        spinner.color = 'green'
-        spinner.succeed(`${chalk.grey('拉取远程模板仓库成功！')}`)
-        resolve()
+        return resolve()
       })
-    } else if (isUrlTemplate) {
-      // url 模板源，因为不知道来源名称，临时取名方便后续开发者从列表中选择
-      name = 'from-remote-url'
-      const zipPath = path.join(tempPath, `${name}.zip`)
-      const unzipDir = path.join(tempPath, name)
-      axios.get<fs.ReadStream>(templateSource, { responseType: 'stream' })
-        .then(response => {
-          const ws = fs.createWriteStream(zipPath)
-          response.data.pipe(ws)
-          ws.on('finish', () => {
-            /* 解压 zip 包 到 unzipDir 目录下 */
-            const zip = new AdmZip(zipPath)
-            zip.extractAllTo(unzipDir, true)
+    }
+    if (isUrlTemplate) {
+      try {
+        // url 模板源，因为不知道来源名称，临时取名方便后续开发者从列表中选择
+        name = 'from-remote-url'
+        const zipPath = path.join(tempPath, `${name}.zip`)
+        const unzipDir = path.join(tempPath, name)
+        const response = await axios.get<fs.ReadStream>(templateSource, { responseType: 'stream' })
+        const ws = fs.createWriteStream(zipPath)
+        response.data.pipe(ws)
 
-            const files = readDirWithFileTypes(unzipDir).filter(
-              file => !file.name.startsWith('.') && file.isDirectory && file.name !== '__MACOSX'
-            )
+        ws.on('finish', () => {
+          /* 解压 zip 包 到 unzipDir 目录下 */
+          const zip = new AdmZip(zipPath)
+          zip.extractAllTo(unzipDir, true)
 
-            // TODO: 看到这里了
-            if (files.length !== 1) {
-              spinner.color = 'red'
-              spinner.fail(chalk.red(`拉取远程模板仓库失败！\n${new Error('远程模板源组织格式错误')}`))
-              return resolve()
-            }
-            name = path.join(name, files[0].name)
-
+          const files = readDirWithFileTypes(unzipDir).filter(
+            file => !file.name.startsWith('.') && file.isDirectory && file.name !== '__MACOSX'
+          )
+          if (files.length !== 1) {
+            spinner.color = 'red'
+            spinner.fail(chalk.red(`拉取远程模板仓库失败！\n${new Error('远程模板源组织格式错误')}`))
+          } else {
             spinner.color = 'green'
             spinner.succeed(`${chalk.grey('拉取远程模板仓库成功！')}`)
-            resolve()
-          })
-          ws.on('error', error => { throw error })
-        })
-        .catch(async error => {
-          spinner.color = 'red'
-          spinner.fail(chalk.red(`拉取远程模板仓库失败！\n${error}`))
-          await fs.remove(tempPath)
+            name = path.join(name, files[0].name)
+          }
           return resolve()
         })
+        ws.on('error', error => {
+          throw error
+        })
+      } catch (error) {
+        spinner.color = 'red'
+        spinner.fail(chalk.red(`拉取远程模板仓库失败！\n${error}`))
+        await fs.remove(tempPath)
+        return resolve()
+      }
     }
   }).then(async () => {
+    // TODO: 看到这里了
     const templateFolder = name ? path.join(tempPath, name) : ''
 
     // 下载失败，只显示默认模板
