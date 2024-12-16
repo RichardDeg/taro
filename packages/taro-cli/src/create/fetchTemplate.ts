@@ -25,26 +25,26 @@ export default async function fetchTemplate (templateSource: string, templateRoo
   const isGitTemplate = templateSourceType === 'git'
   const isUrlTemplate = templateSourceType === 'url'
 
-  const tempPath = path.join(templateRootPath, TEMP_DOWNLOAD_FOLDER)
+  const templateDownloadDir = path.join(templateRootPath, TEMP_DOWNLOAD_FOLDER)
   let name: string
 
   // TODO: 尝试将最外层 promise 转为 async... await... 写法，是否可行
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async (resolve) => {
     // 下载文件的缓存目录
-    if (fs.existsSync(tempPath)) await fs.remove(tempPath)
+    if (fs.existsSync(templateDownloadDir)) await fs.remove(templateDownloadDir)
     await fs.ensureDir(templateRootPath)
-    await fs.mkdir(tempPath)
+    await fs.mkdir(templateDownloadDir)
 
     const spinner = ora(`正在从 ${templateSource} 拉取远程模板...`).start()
     if (isGitTemplate) {
       name = path.basename(templateSource)
-      download(templateSource, path.join(tempPath, name), { clone }, async error => {
+      download(templateSource, path.join(templateDownloadDir, name), { clone }, async error => {
         if (error) {
           spinner.color = 'red'
           spinner.fail(chalk.red('拉取远程模板仓库失败！'))
           console.log(error)
-          await fs.remove(tempPath)
+          await fs.remove(templateDownloadDir)
         } else {
           spinner.color = 'green'
           spinner.succeed(`${chalk.grey('拉取远程模板仓库成功！')}`)
@@ -56,8 +56,8 @@ export default async function fetchTemplate (templateSource: string, templateRoo
       try {
         // url 模板源，因为不知道来源名称，临时取名方便后续开发者从列表中选择
         name = 'from-remote-url'
-        const zipPath = path.join(tempPath, `${name}.zip`)
-        const unzipDir = path.join(tempPath, name)
+        const zipPath = path.join(templateDownloadDir, `${name}.zip`)
+        const unzipDir = path.join(templateDownloadDir, name)
         const response = await axios.get<fs.ReadStream>(templateSource, { responseType: 'stream' })
         const ws = fs.createWriteStream(zipPath)
         response.data.pipe(ws)
@@ -86,35 +86,33 @@ export default async function fetchTemplate (templateSource: string, templateRoo
       } catch (error) {
         spinner.color = 'red'
         spinner.fail(chalk.red(`拉取远程模板仓库失败！\n${error}`))
-        await fs.remove(tempPath)
+        await fs.remove(templateDownloadDir)
         return resolve()
       }
     }
   }).then(async () => {
-    // TODO: 看到这里了
-    const templateFolder = name ? path.join(tempPath, name) : ''
-
     // 下载失败，只显示默认模板
-    if (!fs.existsSync(templateFolder)) return Promise.resolve([])
+    const templateDir = name ? path.join(templateDownloadDir, name) : ''
+    if (!fs.existsSync(templateDir)) return []
 
-    const isTemplateGroup = !(
-      fs.existsSync(path.join(templateFolder, 'package.json')) ||
-      fs.existsSync(path.join(templateFolder, 'package.json.tmpl'))
-    )
+    const packageJsonPath = path.join(templateDir, 'package.json')
+    const packageJsonTmplPath = path.join(templateDir, 'package.json.tmpl')
+    const isTemplateGroup = !fs.existsSync(packageJsonPath) && !fs.existsSync(packageJsonTmplPath)
 
+    // TODO: 看到这里了
     if (isTemplateGroup) {
       // 模板组
-      const files = readDirWithFileTypes(templateFolder)
+      const files = readDirWithFileTypes(templateDir)
         .filter(file => !file.name.startsWith('.') && file.isDirectory && file.name !== '__MACOSX')
         .map(file => file.name)
       await Promise.all(
         files.map(file => {
-          const src = path.join(templateFolder, file)
+          const src = path.join(templateDir, file)
           const dest = path.join(templateRootPath, file)
           return fs.move(src, dest, { overwrite: true })
         })
       )
-      await fs.remove(tempPath)
+      await fs.remove(templateDownloadDir)
 
       const res: ITemplates[] = files.map(name => {
         const creatorFile = path.join(templateRootPath, name, TEMPLATE_CREATOR)
@@ -132,11 +130,11 @@ export default async function fetchTemplate (templateSource: string, templateRoo
         }
       }).filter(Boolean) as ITemplates[]
 
-      return Promise.resolve(res)
+      return res
     } else {
       // 单模板
-      await fs.move(templateFolder, path.join(templateRootPath, name), { overwrite: true })
-      await fs.remove(tempPath)
+      await fs.move(templateDir, path.join(templateRootPath, name), { overwrite: true })
+      await fs.remove(templateDownloadDir)
 
       let res: ITemplates = { name, value: name, desc: isUrlTemplate ? templateSource : '' }
 
@@ -154,7 +152,7 @@ export default async function fetchTemplate (templateSource: string, templateRoo
         }
       }
 
-      return Promise.resolve([res])
+      return [res]
     }
   })
 }
