@@ -19,6 +19,8 @@ export interface ITemplates {
   compiler?: string[]
 }
 
+// TODO: 拆分代码结构，尝试改善下可读性。一个函数的代码量，最好限制在 80 行以内
+// TODO: 尝试将返回值的最外层 promise 转为 async... await... 写法，是否可行
 // TODO: 看到这里了
 export default async function fetchTemplate (templateSource: string, templateRootPath: string, clone?: boolean): Promise<ITemplates[]> {
   const templateSourceType = getTemplateSourceType(templateSource)
@@ -99,7 +101,6 @@ export default async function fetchTemplate (templateSource: string, templateRoo
     const packageJsonTmplPath = path.join(templateDir, 'package.json.tmpl')
     const isTemplateGroup = !fs.existsSync(packageJsonPath) && !fs.existsSync(packageJsonTmplPath)
 
-    // TODO: 看到这里了
     if (isTemplateGroup) {
       // 模板组
       const files = readDirWithFileTypes(templateDir)
@@ -114,24 +115,25 @@ export default async function fetchTemplate (templateSource: string, templateRoo
       )
       await fs.remove(templateDownloadDir)
 
-      const res: ITemplates[] = files.map(name => {
-        const creatorFile = path.join(templateRootPath, name, TEMPLATE_CREATOR)
+      const mergedTemplateList: ITemplates[] = []
+      for(const file of files) {
+        const creatorFile = path.join(templateRootPath, file, TEMPLATE_CREATOR)
 
-        if (!fs.existsSync(creatorFile)) return { name, value: name }
-        const { name: displayName, platforms = '', desc = '', isPrivate = false, compiler } = require(creatorFile)
-        if (isPrivate) return null
-
-        return {
-          name: displayName || name,
-          value: name,
-          platforms,
-          compiler,
-          desc
+        const mergedTemplateItem: ITemplates = { name: file, value: file }
+        if (fs.existsSync(creatorFile)) {
+          const { name: nameFromCreatorFile, platforms = '', desc = '', isPrivate = false, compiler } = require(creatorFile)
+          if (!isPrivate) {
+            mergedTemplateItem.name = nameFromCreatorFile || file
+            mergedTemplateItem.platforms = platforms
+            mergedTemplateItem.compiler = compiler
+            mergedTemplateItem.desc = desc
+          }
         }
-      }).filter(Boolean) as ITemplates[]
-
-      return res
+        mergedTemplateList.push(mergedTemplateItem)
+      }
+      return mergedTemplateList
     } else {
+      // TODO: 看到这里了
       // 单模板
       await fs.move(templateDir, path.join(templateRootPath, name), { overwrite: true })
       await fs.remove(templateDownloadDir)
