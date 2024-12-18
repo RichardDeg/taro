@@ -19,8 +19,7 @@ export interface ITemplates {
   compiler?: string[]
 }
 
-// TODO: 拆分代码结构，尝试改善下可读性。一个函数的代码量，最好限制在 80 行以内
-// TODO: 尝试将返回值的最外层 promise 转为 async... await... 写法，是否可行
+// TODO: 尝试将返回值的最外层 promise 和 then 函数 => 转为 async... await... 写法，是否可行
 // TODO: 看到这里了
 export default async function fetchTemplate (templateSource: string, templateRootPath: string, clone?: boolean): Promise<ITemplates[]> {
   const templateSourceType = getTemplateSourceType(templateSource)
@@ -93,68 +92,59 @@ export default async function fetchTemplate (templateSource: string, templateRoo
       }
     }
   }).then(async () => {
-    // 下载失败，只显示默认模板
     const templateDir = name ? path.join(templateDownloadDir, name) : ''
+
+    /*************************** 默认空模板 **********************************/
     if (!fs.existsSync(templateDir)) return []
 
     const packageJsonPath = path.join(templateDir, 'package.json')
     const packageJsonTmplPath = path.join(templateDir, 'package.json.tmpl')
-    const isTemplateGroup = !fs.existsSync(packageJsonPath) && !fs.existsSync(packageJsonTmplPath)
+    const hasSingleTemplate = fs.existsSync(packageJsonPath) || fs.existsSync(packageJsonTmplPath)
 
-    if (isTemplateGroup) {
-      // 模板组
-      const files = readDirWithFileTypes(templateDir)
-        .filter(file => !file.name.startsWith('.') && file.isDirectory && file.name !== '__MACOSX')
-        .map(file => file.name)
-      await Promise.all(
-        files.map(file => {
-          const src = path.join(templateDir, file)
-          const dest = path.join(templateRootPath, file)
-          return fs.move(src, dest, { overwrite: true })
-        })
-      )
-      await fs.remove(templateDownloadDir)
-
-      const mergedTemplateList: ITemplates[] = []
-      for(const file of files) {
-        const creatorFile = path.join(templateRootPath, file, TEMPLATE_CREATOR)
-
-        const mergedTemplateItem: ITemplates = { name: file, value: file }
-        if (fs.existsSync(creatorFile)) {
-          const { name: nameFromCreatorFile, platforms = '', desc = '', isPrivate = false, compiler } = require(creatorFile)
-          if (!isPrivate) {
-            mergedTemplateItem.name = nameFromCreatorFile || file
-            mergedTemplateItem.platforms = platforms
-            mergedTemplateItem.compiler = compiler
-            mergedTemplateItem.desc = desc
-          }
-        }
-        mergedTemplateList.push(mergedTemplateItem)
-      }
-      return mergedTemplateList
-    } else {
-      // TODO: 看到这里了
-      // 单模板
+    /*************************** 单模板 *************************************/
+    if (hasSingleTemplate) {
       await fs.move(templateDir, path.join(templateRootPath, name), { overwrite: true })
       await fs.remove(templateDownloadDir)
 
-      let res: ITemplates = { name, value: name, desc: isUrlTemplate ? templateSource : '' }
-
-      const creatorFile = path.join(templateRootPath, name, TEMPLATE_CREATOR)
-
-      if (fs.existsSync(creatorFile)) {
-        const { name: displayName, platforms = '', desc = '', compiler } = require(creatorFile)
-
-        res = {
-          name: displayName || name,
-          value: name,
-          platforms,
-          compiler,
-          desc: desc || templateSource
-        }
-      }
-
-      return [res]
+      const defaultTemplateDesc = isUrlTemplate ? templateSource : ''
+      const mergedTemplateItem = transformFile2Template(templateRootPath, name, defaultTemplateDesc)
+      return [mergedTemplateItem]
     }
+
+    /*************************** 模板组 *************************************/
+    const files = readDirWithFileTypes(templateDir)
+    const mergedFiles = files.filter(({ name: filename, isDirectory }) => isDirectory && !filename.startsWith('.') && filename !== '__MACOSX')
+
+    await Promise.all(mergedFiles.map(file => {
+      const src = path.join(templateDir, file.name)
+      const dest = path.join(templateRootPath, file.name)
+      return fs.move(src, dest, { overwrite: true })
+    }))
+    await fs.remove(templateDownloadDir)
+
+    const mergedTemplateList: ITemplates[] = []
+    for(const file of mergedFiles) {
+      const mergedTemplateItem = transformFile2Template(templateRootPath, file.name)
+      mergedTemplateList.push(mergedTemplateItem)
+    }
+    return mergedTemplateList
   })
+}
+
+const transformFile2Template = (templateRootPath: string, filename: string, defaultDesc?: string):ITemplates => {
+  const mergedTemplate: ITemplates = { name: filename, value: filename, desc: defaultDesc }
+  const creatorFile = path.join(templateRootPath, filename, TEMPLATE_CREATOR)
+
+  if (fs.existsSync(creatorFile)) {
+    const { name, platforms, desc, isPrivate, compiler } = require(creatorFile)
+    // 私有化模版不展示
+    if (!isPrivate) {
+      mergedTemplate.name = name || filename || ''
+      mergedTemplate.desc = desc || defaultDesc || ''
+      mergedTemplate.platforms = platforms || ''
+      mergedTemplate.compiler = compiler
+    }
+  }
+
+  return mergedTemplate
 }
