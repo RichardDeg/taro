@@ -135,13 +135,8 @@ export default class Project extends Creator {
       templateSource: mergedTemplateSource,
     }
 
-    // TODO: 读到这里了
     /************************ 询问模版类型 *************************/
-    const templateChoices = await this.fetchTemplates({
-      ...basicAnswers,
-      ...mergedCompilerAndTemplateSourceAnswers,
-    })
-    const templatePrompts = this.askTemplate(conf, templateChoices)
+    const templatePrompts = await this.askTemplate(conf, { ...basicAnswers, ...mergedCompilerAndTemplateSourceAnswers })
     const templateAnswers = await inquirer.prompt<TemplateAnswers>(templatePrompts)
 
     return {
@@ -393,11 +388,12 @@ export default class Project extends Creator {
     }]
   }
 
-  askTemplate: AskMethodsFunction = function ({ template, hideDefaultTemplate }, initialTemplateChoices = []) {
+  async askTemplate({ template, hideDefaultTemplate }: IProjectConfOptions, answeredPromptAnswers: FetchTemplatesParameter): Promise<CustomInquirerPrompts> {
     if (typeof template === 'string') return []
 
-    const templateChioces = initialTemplateChoices.map(({ desc, name, value }) => ({
-      name: String(name) + (!!desc? ` （${desc}）` :''),
+    const templates = await this.fetchTemplates(answeredPromptAnswers)
+    const templateChioces = templates.map(({ desc, name, value }) => ({
+      name: String(name) + (!!desc ? ` （${desc}）` :''),
       value: value || name
     }))
     if (!hideDefaultTemplate) {
@@ -414,7 +410,6 @@ export default class Project extends Creator {
     }]
   }
 
-  // TODO: 待优化 fetchTemplates 是否是放在 askTemplate 里面获取 choices 函数的，不是作为参数传入，保持和其他 ask 一致的代码风格，在函数内获取 choices
   async fetchTemplates ({ templateSource, framework, compiler }: FetchTemplatesParameter): Promise<ITemplates[]> {
     /** 写入 this.conf 的 framework、templateSource、template 属性 */
     this.conf.framework = this.conf.framework || framework || ''
@@ -442,7 +437,6 @@ export default class Project extends Creator {
 
     // 下载模板列表
     const isClone = /gitee/.test(confTemplateSource) || confClone
-    // TODO: 读到这里了
     const templateArr = await fetchTemplate(confTemplateSource, this.templatePath(''), isClone)
     // 过滤模板列表
     return templateArr.filter(({ platforms, compiler }) => filterFrameworkFn(platforms) && filterCompilerFn(compiler))
@@ -461,18 +455,16 @@ export default class Project extends Creator {
       template,
       npm,
       framework,
+      autoInstall,
+      period: PeriodType.CreateAPP,
       css: this.conf.css || CSSType.None,
-      autoInstall: autoInstall,
       templateRoot: getRootPath(),
       version: getPkgVersion(),
       typescript: this.conf.typescript,
       date: this.conf.date,
       description: this.conf.description,
       compiler: this.conf.compiler,
-      period: PeriodType.CreateAPP,
-    }, handler).then(() => {
-      cb?.()
-    })
+    }, handler).then(cb)
   }
 }
 
