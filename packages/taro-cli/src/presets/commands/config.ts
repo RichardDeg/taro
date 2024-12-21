@@ -6,61 +6,47 @@ export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'config',
     fn ({ _, options }) {
-      const [, cmd, key, value] = _
-      const json = !!options.json
       const { fs, getUserHomeDir, TARO_CONFIG_FOLDER, TARO_BASE_CONFIG } = ctx.helper
       const homedir = getUserHomeDir()
-      const configPath = path.join(homedir, `${TARO_CONFIG_FOLDER}/${TARO_BASE_CONFIG}`)
       if (!homedir) return console.log('找不到用户根目录')
 
-      function displayConfigPath (configPath) {
-        console.log(`Config path: ${configPath}`)
-        console.log()
-      }
+      const [, cmd, key, value] = _
+      const configPath = path.join(homedir, `${TARO_CONFIG_FOLDER}/${TARO_BASE_CONFIG}`)
 
       switch (cmd) {
-        case 'get':
+        case 'get': {
           if (!key) return console.log('Usage: taro config get <key>')
-          if (fs.existsSync(configPath)) {
-            displayConfigPath(configPath)
-            const config = fs.readJSONSync(configPath)
-            console.log(`key: ${key}, value: ${config[key]}`)
-          }
+          const config = readConfigContentJson(fs, configPath)
+          if (config) console.log(`key: ${key}, value: ${config[key]}`)
           break
-        case 'set':
+        }
+        case 'set': {
           if (!key || !value) return console.log('Usage: taro config set <key> <value>')
-
-          if (fs.existsSync(configPath)) {
-            displayConfigPath(configPath)
-            const config = fs.readJSONSync(configPath)
-            config[key] = value
-            fs.writeJSONSync(configPath, config)
-          } else {
-            fs.ensureFileSync(configPath)
-            fs.writeJSONSync(configPath, {
-              [key]: value
-            })
-          }
+          const config = readConfigContentJson(fs, configPath) || {}
+          if (!config) fs.ensureFileSync(configPath)
+          fs.writeJSONSync(configPath, {
+            ...config,
+            [key]: value
+          })
           console.log(`set key: ${key}, value: ${value}`)
           break
-        case 'delete':
+        }
+        case 'delete': {
           if (!key) return console.log('Usage: taro config delete <key>')
-
-          if (fs.existsSync(configPath)) {
-            displayConfigPath(configPath)
-            const config = fs.readJSONSync(configPath)
+          const config = readConfigContentJson(fs, configPath)
+          if (config) {
             delete config[key]
             fs.writeJSONSync(configPath, config)
           }
           console.log(`deleted: ${key}`)
           break
+        }
         case 'list':
-        case 'ls':
-          if (fs.existsSync(configPath)) {
-            displayConfigPath(configPath)
+        case 'ls': {
+          const config = readConfigContentJson(fs, configPath)
+          if (config) {
             console.log('Config info:')
-            const config = fs.readJSONSync(configPath)
-            if (json) {
+            if (!!options.json) {
               console.log(JSON.stringify(config, null, 2))
             } else {
               for (const key in config) {
@@ -69,8 +55,7 @@ export default (ctx: IPluginContext) => {
             }
           }
           break
-        default:
-          break
+        }
       }
     },
     optionsMap: {
@@ -83,4 +68,15 @@ export default (ctx: IPluginContext) => {
       'taro config list [--json]'
     ],
   })
+}
+
+function displayConfigPath (configPath: string) {
+  console.log(`Config path: ${configPath}`)
+  console.log()
+}
+
+function readConfigContentJson (fs: any, configPath: string): Object | undefined {
+  if (!fs.existsSync(configPath)) return undefined
+  displayConfigPath(configPath)
+  return fs.readJSONSync(configPath)
 }

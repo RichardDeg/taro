@@ -3,6 +3,7 @@ import * as hooks from '../constant'
 import type { IPluginContext } from '@tarojs/service'
 import type { TSetCustomTemplateConfig } from '../../create/page'
 
+// TODO: 看到这里了
 declare const enum createTemplateTypeEnum {
   /**
    * taro页面，taro使用者使用
