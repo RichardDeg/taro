@@ -28,23 +28,23 @@ const NONE_AVAILABLE_TEMPLATE = '无可用模板'
 const LOWEST_SUPPORTED_VERSION = 'v18.0.0'
 
 export interface IProjectConf {
-  projectName: string
   projectDir: string
-  npm: NpmType
-  templateSource: string
-  clone?: boolean
+  projectName: string
   template: string
-  description?: string
-  typescript?: boolean
+  templateSource: string
+  npm: NpmType
+  framework: FrameworkType
   css: CSSType
-  date?: string
+  compiler?: CompilerType
+  typescript?: boolean
+  clone?: boolean
+  autoInstall?: boolean
+  hideDefaultTemplate?: boolean
   src?: string
   sourceRoot?: string
   env?: string
-  autoInstall?: boolean
-  hideDefaultTemplate?: boolean
-  framework: FrameworkType
-  compiler?: CompilerType
+  date?: string
+  description?: string
 }
 type CustomPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 type IProjectConfOptions = CustomPartial<IProjectConf, 'projectName' | 'projectDir' | 'template' | 'css' | 'npm' | 'framework' | 'templateSource'>

@@ -7,15 +7,16 @@ import { getRootPath } from '../util'
 import Creator from './creator'
 
 export interface IPluginConf {
+  projectName: string
+  projectDir: string
+  template: string
   pluginName: string
   type: string
+  version: string
   description?: string
-  projectDir: string
-  projectName: string
-  template: string
-  version:string
 }
 
+// TODO: 看到这里了
 export default class Plugin extends Creator {
   public conf: IPluginConf
 

@@ -9,24 +9,32 @@ import { TEMPLATE_CREATOR } from './constants'
 import Creator from './creator'
 import fetchTemplate from './fetchTemplate'
 
+const DEFAULT_TEMPLATE_INFO = {
+  name: 'default',
+  framework: FrameworkType.React,
+  css: CSSType.None,
+  compiler: CompilerType.Webpack5,
+  typescript: false,
+}
+
 export interface IPageConf {
-  projectDir: string
   projectName: string
-  npm: NpmType
+  projectDir: string
   template: string
-  clone?: boolean
-  templateSource?: string
-  description?: string
   pageName: string
-  date?: string
+  npm: NpmType
   framework: FrameworkType
   css: CSSType
-  typescript?: boolean
   compiler?: CompilerType
+  typescript?: boolean
+  clone?: boolean
   isCustomTemplate?: boolean
+  templateSource?: string
   customTemplatePath?: string
   pageDir?: string
   subPkg?: string
+  date?: string
+  description?: string
 }
 interface IPageArgs extends IPageConf {
   modifyCustomTemplateConfig : TGetCustomTemplate
@@ -40,24 +48,13 @@ interface ITemplateInfo {
   templateSource?: string
   clone?: boolean
 }
-
 type TCustomTemplateInfo = Omit<ITemplateInfo & {
   isCustomTemplate?: boolean
   customTemplatePath?: string
 }, 'template'>
-
 export type TSetCustomTemplateConfig = (customTemplateConfig: TCustomTemplateInfo) => void
-
 type TGetCustomTemplate = (cb: TSetCustomTemplateConfig) => Promise<void>
 type TAfterCreate = (state: boolean) => void
-
-const DEFAULT_TEMPLATE_INFO = {
-  name: 'default',
-  css: CSSType.None,
-  typescript: false,
-  compiler: CompilerType.Webpack5,
-  framework: FrameworkType.React
-}
 
 export enum ConfigModificationState {
   Success,
@@ -67,6 +64,7 @@ export enum ConfigModificationState {
 
 export type ModifyCallback = (state: ConfigModificationState) => void
 
+// TODO: 看到这里了
 export default class Page extends Creator {
   public rootPath: string
   public conf: IPageConf
