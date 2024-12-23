@@ -40,9 +40,9 @@ export default class Plugin extends Creator {
     const templatePath = this.templatePath(template)
 
     if (!fs.existsSync(templatePath)) {
-      console.log(chalk.red(`创建插件失败：找不到模板${templatePath}`))
-      return
+      return console.log(chalk.red(`创建插件失败：找不到模板${templatePath}`))
     }
+
     createPlugin({
       projectRoot: projectDir,
       projectName: pluginName,

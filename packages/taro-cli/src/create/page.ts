@@ -16,7 +16,6 @@ const DEFAULT_TEMPLATE_INFO = {
   compiler: CompilerType.Webpack5,
   typescript: false,
 }
-
 export interface IPageConf {
   projectName: string
   projectDir: string
@@ -55,13 +54,11 @@ type TCustomTemplateInfo = Omit<ITemplateInfo & {
 export type TSetCustomTemplateConfig = (customTemplateConfig: TCustomTemplateInfo) => void
 type TGetCustomTemplate = (cb: TSetCustomTemplateConfig) => Promise<void>
 type TAfterCreate = (state: boolean) => void
-
 export enum ConfigModificationState {
   Success,
   Fail,
   NeedLess
 }
-
 export type ModifyCallback = (state: ConfigModificationState) => void
 
 // TODO: 看到这里了
@@ -76,16 +73,13 @@ export default class Page extends Creator {
     super()
     this.rootPath = this._rootPath
     const { modifyCustomTemplateConfig, afterCreate, ...otherOptions } = args
-    this.conf = Object.assign(
-      {
-        projectDir: '',
-        projectName: '',
-        template: '',
-        description: '',
-        pageDir: ''
-      },
-      otherOptions
-    )
+    this.conf = Object.assign({
+      projectDir: '',
+      projectName: '',
+      template: '',
+      description: '',
+      pageDir: ''
+    }, otherOptions)
 
     this.conf.projectName = path.basename(this.conf.projectDir)
     this.modifyCustomTemplateConfig = modifyCustomTemplateConfig
