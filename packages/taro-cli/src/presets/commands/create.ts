@@ -37,7 +37,6 @@ export default (ctx: IPluginContext) => {
         case createTemplateTypeEnum.PAGE: {
           if (typeof name !== 'string') return console.log(chalk.red('请输入需要创建的页面名称'))
 
-          // TODO: 看到这里了
           const Page = require('../../create/page').default as typeof PageCreator
           const page = new Page({
             projectDir: appPath,
@@ -48,8 +47,7 @@ export default (ctx: IPluginContext) => {
             typescript,
             clone,
             templateSource,
-            // TODO: ??? 为什么有两种命名传参数，是否可统一
-            subPkg: subpkg,
+            subpkg,
             description,
             afterCreate,
             async modifyCustomTemplateConfig (cb: TSetCustomTemplateConfig) {

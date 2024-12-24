@@ -27,7 +27,7 @@ export interface CreateOptions {
   pageName?: string
   compiler?: CompilerType
   setPageName?: string
-  subPkg?: string
+  subpkg?: string
   pageDir?: string
   setSubPkgPageName?: string
   changeExt?: boolean
@@ -80,7 +80,7 @@ export interface Page {
   customTemplatePath?: string
   basePageFiles: Array<string>
   period: PeriodType
-  subPkg?: string
+  subpkg?: string
   pageDir?: string
 }
 

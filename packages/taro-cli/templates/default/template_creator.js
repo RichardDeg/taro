@@ -20,28 +20,28 @@ const handler = {
   '/types/solid.d.ts' (err, { framework, typescript }) {
     return ['Solid'].includes(framework) && !!typescript
   },
-  '/src/pages/index/index.jsx' (err, { pageDir = '', pageName = '', subPkg = '' }) {
+  '/src/pages/index/index.jsx' (err, { pageDir = '', pageName = '', subpkg = '' }) {
     return {
       setPageName: normalizePath(path.join(PAGES_ENTRY, pageDir, pageName, 'index.jsx')),
-      setSubPkgName: normalizePath(path.join(SOURCE_ENTRY, subPkg, pageDir, pageName, 'index.jsx'))
+      setSubPkgName: normalizePath(path.join(SOURCE_ENTRY, subpkg, pageDir, pageName, 'index.jsx'))
     }
   },
-  '/src/pages/index/index.css' (err, { pageDir = '', pageName = '', subPkg = '' }) {
+  '/src/pages/index/index.css' (err, { pageDir = '', pageName = '', subpkg = '' }) {
     return {
       setPageName: normalizePath(path.join(PAGES_ENTRY, pageDir, pageName, 'index.css')),
-      setSubPkgName: normalizePath(path.join(SOURCE_ENTRY, subPkg, pageDir, pageName, 'index.css'))
+      setSubPkgName: normalizePath(path.join(SOURCE_ENTRY, subpkg, pageDir, pageName, 'index.css'))
     }
   },
-  '/src/pages/index/index.vue' (err, { pageDir = '', pageName = '', subPkg = '' }) {
+  '/src/pages/index/index.vue' (err, { pageDir = '', pageName = '', subpkg = '' }) {
     return {
       setPageName: normalizePath(path.join(PAGES_ENTRY, pageDir, pageName, 'index.vue')),
-      setSubPkgName: normalizePath(path.join(SOURCE_ENTRY, subPkg, pageDir, pageName, 'index.vue'))
+      setSubPkgName: normalizePath(path.join(SOURCE_ENTRY, subpkg, pageDir, pageName, 'index.vue'))
     }
   },
-  '/src/pages/index/index.config.js' (err, { pageDir = '', pageName = '', subPkg = '' }) {
+  '/src/pages/index/index.config.js' (err, { pageDir = '', pageName = '', subpkg = '' }) {
     return {
       setPageName: normalizePath(path.join(PAGES_ENTRY, pageDir, pageName, 'index.config.js')),
-      setSubPkgName: normalizePath(path.join(SOURCE_ENTRY, subPkg, pageDir, pageName, 'index.config.js'))
+      setSubPkgName: normalizePath(path.join(SOURCE_ENTRY, subpkg, pageDir, pageName, 'index.config.js'))
     }
   },
   '/_editorconfig' () {

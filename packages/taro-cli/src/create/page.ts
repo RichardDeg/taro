@@ -39,7 +39,7 @@ export interface IPageConf {
   templateSource?: string
   customTemplatePath?: string
   pageDir?: string
-  subPkg?: string
+  subpkg?: string
   date?: string
   description?: string
 }
@@ -91,7 +91,7 @@ export default class Page extends Creator {
 
   processPageName () {
     const { pageName } = this.conf
-    // todo 目前还没有对 subPkg 和 pageName 这两个字段做 格式验证或者处理
+    // todo 目前还没有对 subpkg 和 pageName 这两个字段做 格式验证或者处理
     const lastDirSplitSymbolIndex = pageName.lastIndexOf('/')
     if (lastDirSplitSymbolIndex !== -1) {
       this.conf.pageDir = pageName.substring(0, lastDirSplitSymbolIndex)
@@ -127,7 +127,7 @@ export default class Page extends Creator {
     if (!configFileName) return
     const getPageFn = handler[configFileName]
     const { setPageName = '', setSubPkgName = '' } = getPageFn?.(() => {}, this.conf) || {}
-    if (this.conf.subPkg) {
+    if (this.conf.subpkg) {
       this.pageEntryPath = setSubPkgName.replace(/\.config\.(js|ts)$/, '')
     } else {
       this.pageEntryPath = setPageName.replace(/\.config\.(js|ts)$/, '')
@@ -194,7 +194,7 @@ export default class Page extends Creator {
     const { parse, generate, traverse } = babelKit
 
     let modifyState: ConfigModificationState = ConfigModificationState.Fail
-    const { subPkg, projectDir, typescript } = this.conf
+    const { subpkg, projectDir, typescript } = this.conf
     const [sourceString, pageString] = this.pageEntryPath.split('/src/')
     const appConfigPath = resolveScriptPath(path.join(projectDir, sourceString, 'src', 'app.config'))
     if (!fs.existsSync(appConfigPath)) {
@@ -217,7 +217,7 @@ export default class Page extends Creator {
         modifyPagesOrSubPackages({
           path,
           fullPagePath: pageString,
-          subPkgRootPath: subPkg,
+          subPkgRootPath: subpkg,
           callback
         })
       },
@@ -241,7 +241,7 @@ export default class Page extends Creator {
   }
 
   write () {
-    const { projectName, projectDir, template, pageName, isCustomTemplate, customTemplatePath, subPkg, pageDir } = this.conf
+    const { projectName, projectDir, template, pageName, isCustomTemplate, customTemplatePath, subpkg, pageDir } = this.conf
     let templatePath
 
     if (isCustomTemplate) {
@@ -262,7 +262,7 @@ export default class Page extends Creator {
 
     createPageBinding({
       pageDir,
-      subPkg,
+      subpkg,
       projectDir,
       projectName,
       template,
