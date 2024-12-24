@@ -16,14 +16,22 @@ const DEFAULT_TEMPLATE_INFO = {
   compiler: CompilerType.Webpack5,
   typescript: false,
 }
+const initialPageConf = {
+  projectDir: '',
+  projectName: '',
+  pageDir: '',
+  template: '',
+  description: '',
+}
+
 export interface IPageConf {
   projectName: string
   projectDir: string
   template: string
   pageName: string
-  npm: NpmType
   framework: FrameworkType
   css: CSSType
+  npm?: NpmType
   compiler?: CompilerType
   typescript?: boolean
   clone?: boolean
@@ -35,7 +43,8 @@ export interface IPageConf {
   date?: string
   description?: string
 }
-interface IPageArgs extends IPageConf {
+type InitialConf = typeof initialPageConf
+type IPageArgs = Omit<IPageConf, keyof InitialConf> & Partial<InitialConf> & {
   modifyCustomTemplateConfig : TGetCustomTemplate
   afterCreate?: TAfterCreate
 }
@@ -72,15 +81,8 @@ export default class Page extends Creator {
   constructor (args: IPageArgs) {
     super()
     this.rootPath = this._rootPath
-    const { modifyCustomTemplateConfig, afterCreate, ...otherOptions } = args
-    this.conf = Object.assign({
-      projectDir: '',
-      projectName: '',
-      template: '',
-      description: '',
-      pageDir: ''
-    }, otherOptions)
-
+    const { modifyCustomTemplateConfig, afterCreate, ...restArgs } = args
+    this.conf = { ...initialPageConf, ...restArgs }
     this.conf.projectName = path.basename(this.conf.projectDir)
     this.modifyCustomTemplateConfig = modifyCustomTemplateConfig
     this.afterCreate = afterCreate
@@ -239,7 +241,7 @@ export default class Page extends Creator {
   }
 
   write () {
-    const { projectName, projectDir, template, pageName, isCustomTemplate, customTemplatePath, subPkg, pageDir } = this.conf as IPageConf
+    const { projectName, projectDir, template, pageName, isCustomTemplate, customTemplatePath, subPkg, pageDir } = this.conf
     let templatePath
 
     if (isCustomTemplate) {

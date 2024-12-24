@@ -1,7 +1,7 @@
 import * as hooks from '../constant'
 
 import type { IPluginContext } from '@tarojs/service'
-import type { TSetCustomTemplateConfig } from '../../create/page'
+import type { PageCreator, TSetCustomTemplateConfig } from '../../create/page'
 
 // TODO: 看到这里了
 declare const enum createTemplateTypeEnum {
@@ -38,7 +38,7 @@ export default (ctx: IPluginContext) => {
           if (typeof name !== 'string') return console.log(chalk.red('请输入需要创建的页面名称'))
 
           // TODO: 看到这里了
-          const Page = require('../../create/page').default
+          const Page = require('../../create/page').default as typeof PageCreator
           const page = new Page({
             projectDir: appPath,
             pageName: name,
@@ -47,7 +47,6 @@ export default (ctx: IPluginContext) => {
             css,
             typescript,
             clone,
-            // TODO: ??? 为什么不传 template ，ts 必传参数，
             templateSource,
             // TODO: ??? 为什么有两种命名传参数，是否可统一
             subPkg: subpkg,
