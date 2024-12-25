@@ -46,6 +46,7 @@ export interface IProjectConf {
   date?: string
   description?: string
 }
+// TODO: 待统一 plugin & page & project 的  ts 定义代码风格
 type CustomPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 type IProjectConfOptions = CustomPartial<IProjectConf, 'projectName' | 'projectDir' | 'template' | 'css' | 'npm' | 'framework' | 'templateSource'>
 type CustomInquirerPrompts = Record<string, unknown>[]
@@ -56,6 +57,7 @@ type TemplateAnswers = Pick<IProjectConf,'template'>
 type TemplateSourceAnswers = Pick<IProjectConf, 'templateSource'>
 type FetchTemplatesParameter = BasicAnswers & CompilerAndTemplateSourceAnswers
 
+// TODO: 待统一 plugin & page & project 的 代码风格
 export default class Project extends Creator {
   public rootPath: string
   public conf: IProjectConfOptions

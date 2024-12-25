@@ -43,8 +43,8 @@ export interface IPageConf {
   date?: string
   description?: string
 }
-type InitialConf = typeof initialPageConf
-type IPageArgs = Omit<IPageConf, keyof InitialConf> & Partial<InitialConf> & {
+type InitialPageConf = typeof initialPageConf
+type IPageOptions = Omit<IPageConf, keyof InitialPageConf> & Partial<InitialPageConf> & {
   modifyCustomTemplateConfig : TGetCustomTemplate
   afterCreate?: TAfterCreate
 }
@@ -78,19 +78,32 @@ export default class Page extends Creator {
   private afterCreate: TAfterCreate | undefined
   private pageEntryPath: string
 
-  constructor (args: IPageArgs) {
+  constructor (options: IPageOptions) {
     super()
+    const { modifyCustomTemplateConfig, afterCreate, ...restOptions } = options
+    const mergedProjecctDir = restOptions.projectDir || initialPageConf.projectDir
+
     this.rootPath = this._rootPath
-    const { modifyCustomTemplateConfig, afterCreate, ...restArgs } = args
-    this.conf = { ...initialPageConf, ...restArgs }
-    this.conf.projectName = path.basename(this.conf.projectDir)
+    this.conf = {
+      ...initialPageConf,
+      ...restOptions,
+      projectName: path.basename(mergedProjecctDir)
+    }
     this.modifyCustomTemplateConfig = modifyCustomTemplateConfig
     this.afterCreate = afterCreate
+    // TODO: 看到这里了
     this.processPageName()
   }
 
+  // TODO: 看到这里了
   processPageName () {
     const { pageName } = this.conf
+    /** TODO: 待优化 3 点：
+     * 1. 分隔符 没有兼容多系统，找一下，有现成的方法
+     * 2. 方法有 path.dirname, path.basename，不需要手动按照字符串截取
+     * 3. pageDir 的写入逻辑用冲突，如果 options 传入了 pageDir，pageName 也传入了, 此段代码会导致 options.pageDir 的配置不生效
+     *
+     * */
     // todo 目前还没有对 subpkg 和 pageName 这两个字段做 格式验证或者处理
     const lastDirSplitSymbolIndex = pageName.lastIndexOf('/')
     if (lastDirSplitSymbolIndex !== -1) {

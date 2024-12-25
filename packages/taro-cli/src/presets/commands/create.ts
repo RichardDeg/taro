@@ -2,6 +2,7 @@ import * as hooks from '../constant'
 
 import type { IPluginContext } from '@tarojs/service'
 import type { PageCreator, TSetCustomTemplateConfig } from '../../create/page'
+import type { PluginCreator } from '../../create/plugin'
 
 // TODO: 看到这里了
 declare const enum createTemplateTypeEnum {
@@ -54,6 +55,7 @@ export default (ctx: IPluginContext) => {
               await ctx.applyPlugins({ name: hooks.MODIFY_CREATE_TEMPLATE, opts: cb })
             }
           })
+          // TODO: 看到这里了
           page.create()
           break
         }
@@ -63,15 +65,15 @@ export default (ctx: IPluginContext) => {
         {
           if (typeof name !== 'string') return console.log(chalk.red('请输入需要创建的插件名称'))
 
-          // TODO: 看到这里了
-          const Plugin = require('../../create/plugin').default
+          const Plugin = require('../../create/plugin').default as typeof PluginCreator
           const plugin = new Plugin({
-            type,
-            description,
-            pluginName: name,
             projectDir: appPath,
-            template: 'plugin-compile'
+            pluginName: name,
+            type,
+            template: 'plugin-compile',
+            description,
           })
+          // TODO: 看到这里了
           plugin.create()
           break
         }

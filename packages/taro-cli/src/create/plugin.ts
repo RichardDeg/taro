@@ -15,12 +15,16 @@ export interface IPluginConf {
   version: string
   description?: string
 }
+type IPluginOptions = Omit<IPluginConf, 'projectName' | 'version'> & {
+  projectName?: string
+  version?: string
+}
 
 // TODO: 看到这里了
 export default class Plugin extends Creator {
   public conf: IPluginConf
 
-  constructor (options: IPluginConf) {
+  constructor (options: IPluginOptions) {
     super()
     this.conf = {
       ...options,
@@ -36,7 +40,7 @@ export default class Plugin extends Creator {
   }
 
   async create () {
-    const { projectDir, template, pluginName } = this.conf
+    const { projectDir, template, pluginName, version, description, type } = this.conf
     const templatePath = this.templatePath(template)
 
     if (!fs.existsSync(templatePath)) {
@@ -44,13 +48,16 @@ export default class Plugin extends Creator {
     }
 
     createPlugin({
-      projectRoot: projectDir,
-      projectName: pluginName,
-      templateRoot: getRootPath(),
+      version,
       template,
-      version: this.conf.version,
-      description: this.conf.description,
-      pluginType: this.conf.type,
+      description,
+      pluginType: type,
+      projectName: pluginName,
+      projectRoot: projectDir,
+      templateRoot: getRootPath(),
     })
   }
 }
+
+export type { Plugin as PluginCreator }
+
