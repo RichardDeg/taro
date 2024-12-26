@@ -16,13 +16,6 @@ const DEFAULT_TEMPLATE_INFO = {
   compiler: CompilerType.Webpack5,
   typescript: false,
 }
-const initialPageConf = {
-  projectDir: '',
-  projectName: '',
-  pageDir: '',
-  template: '',
-  description: '',
-}
 
 export interface IPageConf {
   projectName: string
@@ -43,8 +36,10 @@ export interface IPageConf {
   date?: string
   description?: string
 }
-type InitialPageConf = typeof initialPageConf
-type IPageOptions = Omit<IPageConf, keyof InitialPageConf> & Partial<InitialPageConf> & {
+
+// TODO: CustomPartial 与 Project 的类型定义重复了
+type CustomPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+type IPageOptions = CustomPartial<IPageConf, 'projectDir' | 'projectName' | 'pageDir' | 'template'> & {
   modifyCustomTemplateConfig : TGetCustomTemplate
   afterCreate?: TAfterCreate
 }
@@ -80,31 +75,37 @@ export default class Page extends Creator {
 
   constructor (options: IPageOptions) {
     super()
-    const { modifyCustomTemplateConfig, afterCreate, ...restOptions } = options
-    const mergedProjecctDir = restOptions.projectDir || initialPageConf.projectDir
 
     this.rootPath = this._rootPath
-    this.conf = {
-      ...initialPageConf,
-      ...restOptions,
-      projectName: path.basename(mergedProjecctDir)
+    const initialRequiredConfig = {
+      projectDir: '',
+      projectName: '',
+      pageDir: '',
+      template: '',
+      description: '',
     }
-    this.modifyCustomTemplateConfig = modifyCustomTemplateConfig
-    this.afterCreate = afterCreate
+    this.conf = { ...initialRequiredConfig, ...options }
+    this.setProjectConfig(options)
     // TODO: 看到这里了
-    this.processPageName()
+    this.setPageConfig(options)
+  }
+
+  setProjectConfig({ projectDir }: IPageOptions) {
+    const mergedProjectDir = projectDir || this.conf.projectDir
+    const mergedProjectName = path.basename(mergedProjectDir) || this.conf.projectName
+    this.conf.projectDir = mergedProjectDir
+    this.conf.projectName = mergedProjectName
   }
 
   // TODO: 看到这里了
-  processPageName () {
-    const { pageName } = this.conf
+  setPageConfig({ pageName }: IPageOptions) {
     /** TODO: 待优化 3 点：
      * 1. 分隔符 没有兼容多系统，找一下，有现成的方法
      * 2. 方法有 path.dirname, path.basename，不需要手动按照字符串截取
      * 3. pageDir 的写入逻辑用冲突，如果 options 传入了 pageDir，pageName 也传入了, 此段代码会导致 options.pageDir 的配置不生效
      *
      * */
-    // todo 目前还没有对 subpkg 和 pageName 这两个字段做 格式验证或者处理
+    // TODO: 目前还没有对 subpkg 和 pageName 这两个字段做 格式验证或者处理
     const lastDirSplitSymbolIndex = pageName.lastIndexOf('/')
     if (lastDirSplitSymbolIndex !== -1) {
       this.conf.pageDir = pageName.substring(0, lastDirSplitSymbolIndex)
