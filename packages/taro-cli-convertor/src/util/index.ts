@@ -419,6 +419,7 @@ function normalizePath (path) {
   if (typeof path === 'undefined') {
     return ''
   }
+  // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
   return path.replace(/\\/g, '/')
 }
 
@@ -509,6 +510,8 @@ export function generateDir (dirPath) {
  * @returns { string } 换行符
  */
 export function getLineBreak () {
+  // TODO: 待统一方法 os.platform() 与 process.platform 与 path.win32.sep
+  // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
   if (process.platform === 'win32') {
     return '\r\n'
   }

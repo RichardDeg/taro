@@ -17,6 +17,7 @@ export default function componentLoader ({ sourceCode, filename, projectRoot, so
       const code: string[] = []
       commonStyle.forEach((item) => {
         let importStr = ''
+        // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
         const relativePath = path.relative(path.dirname(filePath), item.path).replace(/\\/g, '/')
         const realPath = path.dirname(filePath) === path.dirname(item.path) ? `./${item.fileName}` : `${relativePath}`
         if (item.name) {

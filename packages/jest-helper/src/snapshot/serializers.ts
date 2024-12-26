@@ -3,6 +3,7 @@ import * as os from 'node:os'
 
 export const print = (val: string) => {
   // Note: 对齐各平台的路径分隔符
+  // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
   return val.replace(/\\*\*\sfilePath:\s(.*)\s\*\*\//g, (replaceValue) => replaceValue.replace(/\\/g, '/'))
 }
 
@@ -12,6 +13,7 @@ export const parseSnapshotByFilePath = (val: string) => {
   let key = mockFilePath
   return arr.reduce((acc, cur) => {
     if (cur.startsWith('/** filePath:')) {
+      // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
       key = cur.replace(/\\/g, '/')
       acc[key] = ''
     } else {

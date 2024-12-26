@@ -30,6 +30,7 @@ import type TResolve from 'resolve'
 const execSync = child_process.execSync
 
 export function normalizePath(path: string) {
+  // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
   return path.replace(/\\/g, '/').replace(/\/{2,}/g, '/')
 }
 
@@ -147,6 +148,8 @@ export function getUserHomeDir(): string {
     const home = env.HOME || ''
     const user = env.LOGNAME || env.USER || env.LNAME || env.USERNAME
 
+    // TODO: 待统一方法 os.platform() 与 process.platform 与 path.win32.sep
+    // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
     if (process.platform === 'win32') {
       return `${env.USERPROFILE || ''}${env.HOMEDRIVE}${env.HOMEPATH || home}`
     }
@@ -362,6 +365,8 @@ export function cssImports(content: string): string[] {
   return results
 }
 
+// TODO: 待统一方法 os.platform() 与 process.platform 与 path.win32.sep
+// TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
 /*eslint-disable*/
 const retries = process.platform === 'win32' ? 100 : 1
 export function emptyDirectory(dirPath: string, opts: { excludes: Array<string | RegExp> | string | RegExp } = { excludes: [] }) {

@@ -51,6 +51,8 @@ export default class WeappCI extends BaseCI {
       printLog(ProcessTypeEnum.ERROR, '微信开发者工具安装路径不存在', this.devToolsInstallPath)
       return
     }
+    // TODO: 待统一方法 os.platform() 与 process.platform 与 path.win32.sep
+    // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
     /** 命令行工具所在路径 */
     const cliPath = path.join(this.devToolsInstallPath, os.platform() === 'win32' ? '/cli.bat' : '/Contents/MacOS/cli')
     const isWindows = os.platform() === 'win32'

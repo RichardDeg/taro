@@ -116,6 +116,7 @@ interface GetDirFilesResult {
 }
 
 function convertFilePathToUri (filePath: string): string {
+  // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
   let uri = filePath.replace(/\/+/g, '/').replace(rootDataPath, 'internal:').replace('internal:/files', 'internal:/app')
   uri = /\/$/.test(uri) ? uri : `${uri}/`
   return uri.replace(/\//g, '//')

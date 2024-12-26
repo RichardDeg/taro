@@ -1084,6 +1084,7 @@ export default class TaroMiniPlugin {
   }
 
   getShowPath (filePath: string) {
+    // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
     return filePath.replace(this.context, '').replace(/\\/g, '/').replace(/^\//, '')
   }
 
@@ -1373,9 +1374,11 @@ export default class TaroMiniPlugin {
     if (REG_NODE_MODULES.test(componentPath)) {
       const nodeModulesRegx = new RegExp(REG_NODE_MODULES, 'gi')
 
+      // TODO: normalizePath
       componentName = componentPath.replace(this.context, '').replace(/\\/g, '/').replace(path.extname(componentPath), '')
       componentName = componentName.replace(nodeModulesRegx, 'npm')
     } else {
+      // TODO: normalizePath
       componentName = componentPath.replace(this.options.sourceDir, '').replace(/\\/g, '/').replace(path.extname(componentPath), '')
       if (this.options.isBuildPlugin) {
         componentName = componentName.replace(/plugin\//, '')

@@ -152,6 +152,7 @@ export function resolveStyle (id: string, opts: ResolveStyleOptions) {
 const IS_NATIVE_WIN32_PATH = /^[a-z]:[/\\]|^\\\\/i
 const ABSOLUTE_SCHEME = /^[a-z0-9+\-.]+:/i
 
+// TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
 export function normalizePath (file) {
   return path.sep === '\\' ? file.replace(/\\/g, '/') : file
 }

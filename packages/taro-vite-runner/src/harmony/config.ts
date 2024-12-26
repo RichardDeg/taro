@@ -197,6 +197,7 @@ export default function (viteCompilerContext: ViteHarmonyCompilerContext): Plugi
             name = chunkInfo.name
           }
 
+          // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
           name = name.replace(/[\\/]+/g, '/')
 
           const appId = viteCompilerContext.app.config.appId || 'app'

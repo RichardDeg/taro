@@ -20,6 +20,7 @@ function joinMock (...pathSegments) {
   for (let segment of pathSegments) {
     // 将路劲中的 `\\` 替换为 `/` (示例："E:\\code\\taro-16\\packages\\taro-cli")
     if (segment.includes(`\\`)) {
+      // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
       segment = segment.replace(/\\/g, '/')
     }
 

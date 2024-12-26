@@ -21,6 +21,8 @@ export interface DocEntry {
 export function pathsAreEqual (path1: string, path2: string) {
   path1 = path.resolve(path1)
   path2 = path.resolve(path2)
+  // TODO: 待统一方法 os.platform() 与 process.platform 与 path.win32.sep
+  // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
   if (process.platform === 'win32') {
     return path1.toLowerCase() === path2.toLowerCase()
   }

@@ -367,6 +367,7 @@ export function parseModule (element: Element, dirPath: string, imports: VueImpo
       throw new Error(`import/include 的 src 请填入相对路径再进行转换：src="${srcValue}"`)
     }
     let relativePath = relative(dirPath, vpath)
+    // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
     relativePath = relativePath.replace(/\\/g, '/')
     if (relativePath.indexOf('.') !== 0) {
       srcValue = './' + relativePath
