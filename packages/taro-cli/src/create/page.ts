@@ -3,7 +3,7 @@ import * as path from 'node:path'
 import { CompilerType, createPage as createPageBinding, CSSType, FrameworkType, NpmType, PeriodType } from '@tarojs/binding'
 import { babelKit, chalk, DEFAULT_TEMPLATE_SRC, fs, getUserHomeDir, resolveScriptPath, TARO_BASE_CONFIG, TARO_CONFIG_FOLDER } from '@tarojs/helper'
 
-import { getPkgVersion, getRootPath, isNil } from '../util'
+import { getPkgVersion, getRootPath } from '../util'
 import { modifyPagesOrSubPackages } from '../util/createPage'
 import { TEMPLATE_CREATOR } from './constants'
 import Creator from './creator'
@@ -28,8 +28,8 @@ export interface IPageConf {
   compiler?: CompilerType
   typescript?: boolean
   clone?: boolean
-  isCustomTemplate?: boolean
   templateSource?: string
+  isCustomTemplate?: boolean
   customTemplatePath?: string
   pageDir?: string
   subpkg?: string
@@ -40,24 +40,13 @@ export interface IPageConf {
 // TODO: CustomPartial 与 Project 的类型定义重复了
 type CustomPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 type IPageOptions = CustomPartial<IPageConf, 'projectDir' | 'projectName' | 'pageDir' | 'template'> & {
-  modifyCustomTemplateConfig : TGetCustomTemplate
-  afterCreate?: TAfterCreate
+  modifyTemplateConfig : ModifyTemplateConfigFn
+  afterCreate?: AfterCreateFn
 }
-interface ITemplateInfo {
-  css: CSSType
-  typescript?: boolean
-  compiler?: CompilerType
-  template?: string
-  templateSource?: string
-  clone?: boolean
-}
-type TCustomTemplateInfo = Omit<ITemplateInfo & {
-  isCustomTemplate?: boolean
-  customTemplatePath?: string
-}, 'template'>
-export type TSetCustomTemplateConfig = (customTemplateConfig: TCustomTemplateInfo) => void
-type TGetCustomTemplate = (cb: TSetCustomTemplateConfig) => Promise<void>
-type TAfterCreate = (state: boolean) => void
+type ITemplateInfo = CustomPartial<Pick<IPageConf, 'css' | 'compiler' | 'typescript' | 'template' | 'templateSource' | 'clone' | 'isCustomTemplate' | 'customTemplatePath'>, 'template'>
+export type ModifyTemplateConfigCb = (templateInfo: ITemplateInfo) => void
+type ModifyTemplateConfigFn = (cb: ModifyTemplateConfigCb) => Promise<void>
+type AfterCreateFn = (state: boolean) => void
 export enum ConfigModificationState {
   Success,
   Fail,
@@ -69,48 +58,24 @@ export type ModifyCallback = (state: ConfigModificationState) => void
 export default class Page extends Creator {
   public rootPath: string
   public conf: IPageConf
-  private modifyCustomTemplateConfig: TGetCustomTemplate
-  private afterCreate: TAfterCreate | undefined
+  private modifyTemplateConfig: ModifyTemplateConfigFn
+  private afterCreate: AfterCreateFn | undefined
   private pageEntryPath: string
 
   constructor (options: IPageOptions) {
     super()
 
     this.rootPath = this._rootPath
-    const initialRequiredConfig = {
+    const defaultConfig = {
       projectDir: '',
       projectName: '',
       pageDir: '',
       template: '',
       description: '',
     }
-    this.conf = { ...initialRequiredConfig, ...options }
+    this.conf = { ...defaultConfig, ...options }
     this.setProjectConfig(options)
-    // TODO: 看到这里了
     this.setPageConfig(options)
-  }
-
-  setProjectConfig({ projectDir }: IPageOptions) {
-    const mergedProjectDir = projectDir || this.conf.projectDir
-    const mergedProjectName = path.basename(mergedProjectDir) || this.conf.projectName
-    this.conf.projectDir = mergedProjectDir
-    this.conf.projectName = mergedProjectName
-  }
-
-  // TODO: 看到这里了
-  setPageConfig({ pageName }: IPageOptions) {
-    /** TODO: 待优化 3 点：
-     * 1. 分隔符 没有兼容多系统，找一下，有现成的方法
-     * 2. 方法有 path.dirname, path.basename，不需要手动按照字符串截取
-     * 3. pageDir 的写入逻辑用冲突，如果 options 传入了 pageDir，pageName 也传入了, 此段代码会导致 options.pageDir 的配置不生效
-     *
-     * */
-    // TODO: 目前还没有对 subpkg 和 pageName 这两个字段做 格式验证或者处理
-    const lastDirSplitSymbolIndex = pageName.lastIndexOf('/')
-    if (lastDirSplitSymbolIndex !== -1) {
-      this.conf.pageDir = pageName.substring(0, lastDirSplitSymbolIndex)
-      this.conf.pageName = pageName.substring(lastDirSplitSymbolIndex + 1)
-    }
   }
 
   getPkgPath () {
@@ -136,6 +101,34 @@ export default class Page extends Creator {
     return templateInfo
   }
 
+  setProjectConfig({ projectDir }: IPageOptions) {
+    const mergedProjectDir = projectDir || this.conf.projectDir
+    const mergedProjectName = path.basename(mergedProjectDir) || this.conf.projectName
+    this.conf.projectDir = mergedProjectDir
+    this.conf.projectName = mergedProjectName
+  }
+
+  setPageConfig({ pageName }: IPageOptions) {
+    /** TODO: 待优化 3 点：
+     * 1. 分隔符 没有兼容多系统，找一下，有现成的方法
+     * 2. 方法有 path.dirname, path.basename，不需要手动按照字符串截取
+     * 3. pageDir 的写入逻辑用冲突，如果 options 传入了 pageDir，pageName 也传入了, 此段代码会导致 options.pageDir 的配置不生效
+     *
+     * */
+    // TODO: 目前还没有对 subpkg 和 pageName 这两个字段做 格式验证或者处理
+    const lastDirSplitSymbolIndex = pageName.lastIndexOf('/')
+    if (lastDirSplitSymbolIndex !== -1) {
+      this.conf.pageDir = pageName.substring(0, lastDirSplitSymbolIndex)
+      this.conf.pageName = pageName.substring(lastDirSplitSymbolIndex + 1)
+    }
+  }
+
+  setTemplateConfig (templateInfo?: ITemplateInfo) {
+    const pkgTemplateInfo = this.getPkgTemplateInfo()
+    const mergedTemplateInfo = templateInfo ?{ ...pkgTemplateInfo, ...templateInfo } :pkgTemplateInfo
+    this.conf = { ...this.conf, ...mergedTemplateInfo }
+  }
+
   setPageEntryPath (files: string[], handler) {
     const configFileName = files.find((filename) => /\.config\.(js|ts)$/.test(filename))
     if (!configFileName) return
@@ -146,23 +139,6 @@ export default class Page extends Creator {
     } else {
       this.pageEntryPath = setPageName.replace(/\.config\.(js|ts)$/, '')
     }
-  }
-
-  setCustomTemplateConfig (customTemplateConfig: TCustomTemplateInfo) {
-    const pkgTemplateInfo = this.getPkgTemplateInfo()
-    const { compiler, css, customTemplatePath, typescript } = customTemplateConfig
-    const conf = {
-      compiler: compiler || pkgTemplateInfo.compiler,
-      css: css || pkgTemplateInfo.css,
-      typescript: !isNil(typescript) ? typescript : pkgTemplateInfo.typescript,
-      customTemplatePath,
-      isCustomTemplate: true,
-    }
-    this.setTemplateConfig(conf)
-  }
-
-  setTemplateConfig (templateInfo: ITemplateInfo) {
-    this.conf = Object.assign(this.conf, templateInfo)
   }
 
   async fetchTemplates () {
@@ -189,14 +165,19 @@ export default class Page extends Creator {
     await fetchTemplate(templateSource, this.templatePath(''), this.conf.clone)
   }
 
+  // TODO: 关联参考：packages/taro-cli/templates/plugin-compile/src/index.ts
+  modifyTemplateConfigCb (templateInfo: ITemplateInfo) {
+    this.setTemplateConfig({ ...templateInfo, isCustomTemplate: true })
+  }
+
   async create () {
     const date = new Date()
     this.conf.date = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
     // apply 插件，由插件设置自定义模版 config
-    await this.modifyCustomTemplateConfig(this.setCustomTemplateConfig.bind(this))
+    // TODO: 看到这里了
+    await this.modifyTemplateConfig(this.modifyTemplateConfigCb.bind(this))
     if (!this.conf.isCustomTemplate) {
-      const pkgTemplateInfo = this.getPkgTemplateInfo()
-      this.setTemplateConfig(pkgTemplateInfo)
+      this.setTemplateConfig()
       if (!fs.existsSync(this.templatePath(this.conf.template))) {
         await this.fetchTemplates()
       }
@@ -296,10 +277,10 @@ export default class Page extends Creator {
     }, handler).then(() => {
       console.log(`${chalk.green('✔ ')}${chalk.grey(`创建页面 ${this.conf.pageName} 成功！`)}`)
       this.updateAppConfig()
-      this.afterCreate && this.afterCreate(true)
+      this.afterCreate?.(true)
     }).catch(err => {
       console.log(err)
-      this.afterCreate && this.afterCreate(false)
+      this.afterCreate?.(false)
     })
   }
 }

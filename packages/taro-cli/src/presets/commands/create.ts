@@ -1,7 +1,7 @@
 import * as hooks from '../constant'
 
 import type { IPluginContext } from '@tarojs/service'
-import type { PageCreator, TSetCustomTemplateConfig } from '../../create/page'
+import type { ModifyTemplateConfigCb, PageCreator } from '../../create/page'
 import type { PluginCreator } from '../../create/plugin'
 
 // TODO: 看到这里了
@@ -51,7 +51,8 @@ export default (ctx: IPluginContext) => {
             subpkg,
             description,
             afterCreate,
-            async modifyCustomTemplateConfig (cb: TSetCustomTemplateConfig) {
+            // TODO: 这个函数名的定义 可以 和 hooks.MODIFY_CREATE_TEMPLATE 保持统一么：=> 改为 modifyCreateTemplate！！！
+            async modifyTemplateConfig (cb: ModifyTemplateConfigCb) {
               await ctx.applyPlugins({ name: hooks.MODIFY_CREATE_TEMPLATE, opts: cb })
             }
           })
