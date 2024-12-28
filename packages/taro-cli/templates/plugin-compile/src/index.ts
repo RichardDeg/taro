@@ -1,10 +1,11 @@
+
 import type { IPluginContext } from '@tarojs/service'
-{{#if (eq pluginType "plugin-build") }}
-import webpackChain from 'webpack-chain'
 
 /**
  * 编译过程扩展
  */
+{{#if (eq pluginType "plugin-build") }}
+import webpackChain from 'webpack-chain'
 export default (ctx: IPluginContext, pluginOpts) => {
   ctx.onBuildStart(() => {
     console.log('插件入参：', pluginOpts)
@@ -45,11 +46,11 @@ export default (ctx: IPluginContext, pluginOpts) => {
   })
 }
 {{/if}}
-{{#if (eq pluginType "plugin-command") }}
 
 /**
  * 命令行扩展
  */
+{{#if (eq pluginType "plugin-command") }}
 export default (ctx: IPluginContext, pluginOpts) => {
   ctx.registerCommand({
     // 命令名
@@ -69,36 +70,33 @@ export default (ctx: IPluginContext, pluginOpts) => {
   })
 }
 {{/if}}
+
+/**
+ * 创建 page 模版扩展
+ */
 {{#if (eq pluginType "plugin-template") }}
 import * as fs from 'fs-extra'
 const path = require('path')
 const download = require('download')
 const unzip = require("unzip")
-/**
- * 创建 page 自定义模版
- */
-
 interface ITemplateInfo {
   css: 'none' | 'sass' | 'stylus' | 'less'
   typescript?: boolean
   compiler?: 'webpack5' | 'vite'
   template?: string
 }
-
 type TCustomTemplateInfo = Omit<ITemplateInfo & {
   isCustomTemplate?: boolean
   customTemplatePath?: string
 }, 'template'>
-
 type ModifyCreateTemplateCb = (customTemplateConfig: TCustomTemplateInfo) => void
-
 interface IPluginOpts extends ITemplateInfo {
   installPath: string
 }
 
 // TODO: 关联参考：packages/taro-cli/src/create/page.ts 的 modifyCustomTemplateConfigCb
 // TODO: 这段代码，待确认梳理逻辑
-export default (ctx: IPluginContext, pluginOpts:IPluginOpts) => {
+export default (ctx: IPluginContext, pluginOpts: IPluginOpts) => {
   ctx.modifyCreateTemplate(async (cb: ModifyCreateTemplateCb)=> {
     const { installPath, css, typescript, compiler } = pluginOpts
     const templateName = 'mobx'
@@ -128,8 +126,6 @@ export default (ctx: IPluginContext, pluginOpts:IPluginOpts) => {
     }
   })
 }
-
-
 const downloadTemplate = async (customTemplateConfig) => {
   return new Promise<void>(async (resolve, reject)=>{
     const url = 'https://storage.360buyimg.com/olympic-models-test/mobx.zip'
