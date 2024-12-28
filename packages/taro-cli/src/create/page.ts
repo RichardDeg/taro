@@ -40,12 +40,12 @@ export interface IPageConf {
 // TODO: CustomPartial 与 Project 的类型定义重复了
 type CustomPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 type IPageOptions = CustomPartial<IPageConf, 'projectDir' | 'projectName' | 'pageDir' | 'template'> & {
-  modifyTemplateConfig : ModifyTemplateConfigFn
+  modifyCreateTemplate : ModifyCreateTemplateFn
   afterCreate?: AfterCreateFn
 }
 type ITemplateInfo = CustomPartial<Pick<IPageConf, 'css' | 'compiler' | 'typescript' | 'template' | 'templateSource' | 'clone' | 'isCustomTemplate' | 'customTemplatePath'>, 'template'>
-export type ModifyTemplateConfigCb = (templateInfo: ITemplateInfo) => void
-type ModifyTemplateConfigFn = (cb: ModifyTemplateConfigCb) => Promise<void>
+export type ModifyCreateTemplateCb = (templateInfo: ITemplateInfo) => void
+type ModifyCreateTemplateFn = (cb: ModifyCreateTemplateCb) => Promise<void>
 type AfterCreateFn = (state: boolean) => void
 export enum ConfigModificationState {
   Success,
@@ -58,7 +58,7 @@ export type ModifyCallback = (state: ConfigModificationState) => void
 export default class Page extends Creator {
   public rootPath: string
   public conf: IPageConf
-  private modifyTemplateConfig: ModifyTemplateConfigFn
+  private modifyCreateTemplate: ModifyCreateTemplateFn
   private afterCreate: AfterCreateFn | undefined
   private pageEntryPath: string
 
@@ -166,7 +166,7 @@ export default class Page extends Creator {
   }
 
   // TODO: 关联参考：packages/taro-cli/templates/plugin-compile/src/index.ts
-  modifyTemplateConfigCb (templateInfo: ITemplateInfo) {
+  modifyCreateTemplateCb (templateInfo: ITemplateInfo) {
     this.setTemplateConfig({ ...templateInfo, isCustomTemplate: true })
   }
 
@@ -175,7 +175,7 @@ export default class Page extends Creator {
     this.conf.date = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
     // apply 插件，由插件设置自定义模版 config
     // TODO: 看到这里了
-    await this.modifyTemplateConfig(this.modifyTemplateConfigCb.bind(this))
+    await this.modifyCreateTemplate(this.modifyCreateTemplateCb.bind(this))
     if (!this.conf.isCustomTemplate) {
       this.setTemplateConfig()
       if (!fs.existsSync(this.templatePath(this.conf.template))) {
