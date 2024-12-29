@@ -59,7 +59,7 @@ export default class Plugin {
     // TODO: ?? 此处 bind this 是否可优化为 箭头函数 => 再看下 this 指向问题
     const targetMethodValue = originMethodValue.concat(fn || function (fn: Func) {
       this.register({
-        name,
+        name: targetMethodName,
         fn
       })
     }.bind(this))
