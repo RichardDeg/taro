@@ -51,6 +51,7 @@ export default (ctx: IPluginContext) => {
             subpkg,
             description,
             afterCreate,
+            // TODO: 待定函数的命名
             async modifyCreateTemplate (cb: ModifyCreateTemplateCb) {
               await ctx.applyPlugins({ name: hooks.MODIFY_CREATE_TEMPLATE, opts: cb })
             }

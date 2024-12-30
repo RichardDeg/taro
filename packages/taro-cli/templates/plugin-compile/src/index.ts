@@ -95,6 +95,7 @@ interface IPluginOpts extends ITemplateInfo {
   installPath: string
 }
 
+// TODO: 看到这里了
 // TODO: 关联参考：packages/taro-cli/src/create/page.ts 的 modifyCustomTemplateConfigCb
 // TODO: 这段代码，待确认梳理逻辑
 export default (ctx: IPluginContext, pluginOpts: IPluginOpts) => {
