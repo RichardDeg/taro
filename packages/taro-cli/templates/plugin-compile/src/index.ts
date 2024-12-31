@@ -95,46 +95,44 @@ interface IPluginOpts extends ITemplateInfo {
   installPath: string
 }
 
-// TODO: 看到这里了
 // TODO: 关联参考：packages/taro-cli/src/create/page.ts 的 modifyCustomTemplateConfigCb
 // TODO: 这段代码，待确认梳理逻辑
-export default (ctx: IPluginContext, pluginOpts: IPluginOpts) => {
+export default (ctx: IPluginContext, { installPath, css, typescript, compiler }: IPluginOpts) => {
   ctx.modifyCreateTemplate(async (cb: ModifyCreateTemplateCb)=> {
-    const { installPath, css, typescript, compiler } = pluginOpts
     const templateName = 'mobx'
     const templatePath = path.join(installPath, templateName)
-    const customTemplateConfig = {
-      customTemplatePath: templatePath,
-      css,
-      typescript,
-      compiler
-    }
 
+    // TODO: 看到这里了，代码逻辑有问题，待梳理
     /**
       * 下载模版到电脑本地，可以自行进行判断，看是否需要重新下载
       * 从哪里下载，如何下载，taro 官方不做限定
       * 模版格式和社区模版一样
       * 只要保证下载后的文件目录为 `${templatePath}` 即可，taro 会在该目录下获取模版
-      * 如果下载模版失败，请不要调用 setCustomTemplateConfig，taro 会根据默认流程进行兜底创建
+      * 如果下载模版失败，请不要调用 cb 函数，taro 会根据默认流程进行兜底创建
       */
+    // 如果文件不存在，就下载文件到指定路径
     if (!fs.existsSync(templatePath)) {
-      //如果文件不存在，就下载文件到指定路径
-      await downloadTemplate(customTemplateConfig)
+      await downloadTemplate({ templateName, templatePath })
     }
-
+    // 如果文件下载成功，调用 cb
     if (fs.existsSync(templatePath)) {
-      //如果文件下载成功，调用 cb
-      cb(customTemplateConfig)
+      const templateConfig = {
+        customTemplatePath: templatePath,
+        css,
+        typescript,
+        compiler
+      }
+      cb(templateConfig)
     }
   })
 }
-const downloadTemplate = async (customTemplateConfig) => {
+// TODO: 如何判断下载成功或失败了？什么时候创建了  templatePath 文件了么
+const downloadTemplate = async ({ templateName, templatePath }: { templateName: string, templatePath: string }) => {
   return new Promise<void>(async (resolve, reject)=>{
-    const url = 'https://storage.360buyimg.com/olympic-models-test/mobx.zip'
-    const { name, templatePath } = customTemplateConfig
-    const zipName = `${name}.zip`
+    const zipName = `${templateName}.zip`
     const zipPath = path.join(templatePath, zipName)
-    fs.writeFileSync(zipPath, await download(url))
+    const downloadUrl = 'https://storage.360buyimg.com/olympic-models-test/mobx.zip'
+    fs.writeFileSync(zipPath, await download(downloadUrl))
     const extract = unzip.Extract({ path: templatePath })
     fs.createReadStream(zipPath).pipe(extract)
     extract.on('close', function () {
