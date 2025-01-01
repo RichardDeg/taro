@@ -78,7 +78,10 @@ export default (ctx: IPluginContext, pluginOpts) => {
 {{#if (eq pluginType "plugin-template") }}
 import * as fs from 'fs-extra'
 const path = require('path')
+// 试试参考下：https://nodejs.org/docs/latest/api/zlib.html
+// TODO: 这个包已废弃，找找新的轮子
 const download = require('download')
+// TODO: 这个包已废弃，找找新的轮子
 const unzip = require("unzip")
 interface ITemplateInfo {
   css: 'none' | 'sass' | 'stylus' | 'less'
@@ -129,19 +132,18 @@ export default (ctx: IPluginContext, { installPath, css, typescript, compiler }:
 // TODO: 如何判断下载成功或失败了？什么时候创建了  templatePath 文件了么
 const downloadTemplate = async ({ templateName, templatePath }: { templateName: string, templatePath: string }) => {
   return new Promise<void>(async (resolve, reject)=>{
-    const zipName = `${templateName}.zip`
-    const zipPath = path.join(templatePath, zipName)
+    const zipPath = path.join(templatePath, `${templateName}.zip` )
     const downloadUrl = 'https://storage.360buyimg.com/olympic-models-test/mobx.zip'
-    fs.writeFileSync(zipPath, await download(downloadUrl))
-    const extract = unzip.Extract({ path: templatePath })
-    fs.createReadStream(zipPath).pipe(extract)
-    extract.on('close', function () {
-      console.log("解压完成!!")
-      //删除
+    await download(downloadUrl, zipPath)
+    const readableStream = fs.createReadStream(zipPath)
+    const writableStream = unzip.Extract({ path: templatePath })
+    readableStream.pipe(writableStream)
+    writableStream.on('close', function () {
       fs.unlinkSync(zipPath)
+      console.log("解压完成!")
       resolve()
     })
-    extract.on('error', function (err) {
+    writableStream.on('error', function (err) {
       console.log(err)
       reject()
     })

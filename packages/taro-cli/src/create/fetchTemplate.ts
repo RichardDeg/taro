@@ -3,7 +3,10 @@ import * as path from 'node:path'
 import axios from 'axios'
 import { chalk, fs } from '@tarojs/helper'
 import type { FileStat } from '@tarojs/helper'
+// 试试参考下：https://nodejs.org/docs/latest/api/zlib.html
+// TODO: 这个包已废弃，找找新的轮子
 import * as AdmZip from 'adm-zip'
+// TODO: 这个包已废弃，找找新的轮子
 import * as download from 'download-git-repo'
 import * as ora from 'ora'
 
