@@ -4,6 +4,10 @@ function createWhenTs (err, params) {
   return !!params.typescript
 }
 
+/**
+ * @param {string} path
+ * @returns {string}
+ */
 function normalizePath (path) {
   // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
   return path.replace(/\\/g, '/').replace(/\/{2,}/g, '/')
@@ -39,6 +43,7 @@ const handler = {
       setSubPkgName: normalizePath(path.join(SOURCE_ENTRY, subpkg, pageDir, pageName, 'index.vue'))
     }
   },
+  // TODO: err 的参数传值是否可以置后作为 可选参数
   '/src/pages/index/index.config.js' (err, { pageDir = '', pageName = '', subpkg = '' }) {
     return {
       setPageName: normalizePath(path.join(PAGES_ENTRY, pageDir, pageName, 'index.config.js')),

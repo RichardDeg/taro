@@ -129,6 +129,7 @@ export default (ctx: IPluginContext, { installPath, css, typescript, compiler }:
     }
   })
 }
+// TODO: 代码看不太懂
 // TODO: 如何判断下载成功或失败了？什么时候创建了  templatePath 文件了么
 const downloadTemplate = async ({ templateName, templatePath }: { templateName: string, templatePath: string }) => {
   return new Promise<void>(async (resolve, reject)=>{

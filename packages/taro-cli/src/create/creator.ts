@@ -31,5 +31,5 @@ export default class Creator {
     return filepath
   }
 
-  write () {}
+  async write () {}
 }

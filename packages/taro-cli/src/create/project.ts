@@ -95,7 +95,7 @@ export default class Project extends Creator {
       const date = new Date()
       this.conf = Object.assign(this.conf, answers)
       this.conf.date = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
-      this.write()
+      await this.write()
     } catch (error) {
       console.log(chalk.red('创建项目失败: ', error))
     }
@@ -444,14 +444,16 @@ export default class Project extends Creator {
     return templateArr.filter(({ platforms, compiler }) => filterFrameworkFn(platforms) && filterCompilerFn(compiler))
   }
 
-  write (cb?: () => void) {
+  async write (cb?: () => void) {
     this.conf.src = SOURCE_DIR
     const { projectName, projectDir, template, autoInstall = true, framework, npm } = this.conf as IProjectConf
     // 引入模板编写者的自定义逻辑
     const templatePath = this.templatePath(template)
     const handlerPath = path.join(templatePath, TEMPLATE_CREATOR)
-    const handler = fs.existsSync(handlerPath) ? require(handlerPath).handler : {}
-    createProject({
+    const handlerModule = fs.existsSync(handlerPath) ?require(handlerPath) :{}
+    const { handler = {} } = handlerModule
+
+    await createProject({
       projectRoot: projectDir,
       projectName,
       template,
@@ -466,7 +468,9 @@ export default class Project extends Creator {
       date: this.conf.date,
       description: this.conf.description,
       compiler: this.conf.compiler,
-    }, handler).then(cb)
+    }, handler)
+
+    cb?.()
   }
 }
 

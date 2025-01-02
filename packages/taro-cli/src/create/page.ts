@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 
-import { CompilerType, createPage as createPageBinding, CSSType, FrameworkType, NpmType, PeriodType } from '@tarojs/binding'
+import { CompilerType, createPage, CSSType, FrameworkType, NpmType, PeriodType } from '@tarojs/binding'
 import { babelKit, chalk, DEFAULT_TEMPLATE_SRC, fs, getUserHomeDir, resolveScriptPath, TARO_BASE_CONFIG, TARO_CONFIG_FOLDER } from '@tarojs/helper'
 
 import { getPkgVersion, getRootPath } from '../util'
@@ -9,6 +9,7 @@ import { TEMPLATE_CREATOR } from './constants'
 import Creator from './creator'
 import fetchTemplate from './fetchTemplate'
 
+// TODO: 统一 page & plugin & project & creator 这些文件的代码风格
 const DEFAULT_TEMPLATE_INFO = {
   name: 'default',
   framework: FrameworkType.React,
@@ -129,16 +130,17 @@ export default class Page extends Creator {
     this.conf = { ...this.conf, ...mergedTemplateInfo }
   }
 
-  setPageEntryPath (files: string[], handler) {
-    const configFileName = files.find((filename) => /\.config\.(js|ts)$/.test(filename))
+  setPageEntryPath (files: string[], handler: Object) {
+    const configFileReg = /\.config\.(js|ts)$/
+    const configFileName = files.find((filename) => configFileReg.test(filename))
     if (!configFileName) return
+
     const getPageFn = handler[configFileName]
-    const { setPageName = '', setSubPkgName = '' } = getPageFn?.(() => {}, this.conf) || {}
-    if (this.conf.subpkg) {
-      this.pageEntryPath = setSubPkgName.replace(/\.config\.(js|ts)$/, '')
-    } else {
-      this.pageEntryPath = setPageName.replace(/\.config\.(js|ts)$/, '')
-    }
+    const getPageErrorFn = () => {}
+    const { pageDir, pageName, subpkg } = this.conf
+    const { setPageName, setSubPkgName } = getPageFn?.(getPageErrorFn, { pageDir, pageName, subpkg }) || {}
+    const mergedName = !!subpkg ?setSubPkgName :setPageName
+    this.pageEntryPath = mergedName.replace(configFileReg, '')
   }
 
   async fetchTemplates () {
@@ -174,7 +176,6 @@ export default class Page extends Creator {
     const date = new Date()
     this.conf.date = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
     // apply 插件，由插件设置自定义模版 config
-    // TODO: 看到这里了
     await this.modifyCreateTemplate(this.modifyCreateTemplateCb.bind(this))
     if (!this.conf.isCustomTemplate) {
       this.setTemplateConfig()
@@ -182,9 +183,10 @@ export default class Page extends Creator {
         await this.fetchTemplates()
       }
     }
-    this.write()
+    await this.write()
   }
 
+  // TODO: 看到这里了
   updateAppConfig () {
     const { parse, generate, traverse } = babelKit
 
@@ -235,53 +237,51 @@ export default class Page extends Creator {
     }
   }
 
-  write () {
-    const { projectName, projectDir, template, pageName, isCustomTemplate, customTemplatePath, subpkg, pageDir } = this.conf
-    let templatePath
+  async write () {
+    const { projectName, projectDir, pageName, pageDir, template, isCustomTemplate, customTemplatePath } = this.conf
+    const { framework, css, typescript, compiler, date, description, subpkg } = this.conf
+    const templatePath = isCustomTemplate ?customTemplatePath :this.templatePath(template)
 
-    if (isCustomTemplate) {
-      templatePath = customTemplatePath
-    } else {
-      templatePath = this.templatePath(template)
+    if (!templatePath || !fs.existsSync(templatePath)) {
+      return console.log(chalk.red(`创建页面错误：找不到模板${templatePath}`))
     }
-
-    if (!fs.existsSync(templatePath)) return console.log(chalk.red(`创建页面错误：找不到模板${templatePath}`))
 
     // 引入模板编写者的自定义逻辑
     const handlerPath = path.join(templatePath, TEMPLATE_CREATOR)
-    const basePageFiles = fs.existsSync(handlerPath) ? require(handlerPath).basePageFiles : []
-    const files = Array.isArray(basePageFiles) ? basePageFiles : []
-    const handler = fs.existsSync(handlerPath) ? require(handlerPath).handler : {}
+    const handlerModule = fs.existsSync(handlerPath) ?require(handlerPath) :{}
+    const { handler = {}, basePageFiles = [] } = handlerModule
+    const mergedBasePageFiles = Array.isArray(basePageFiles) ? basePageFiles : []
+    this.setPageEntryPath(mergedBasePageFiles, handler)
 
-    this.setPageEntryPath(files, handler)
-
-    createPageBinding({
-      pageDir,
-      subpkg,
-      projectDir,
-      projectName,
-      template,
-      framework: this.conf.framework,
-      css: this.conf.css || CSSType.None,
-      typescript: this.conf.typescript,
-      compiler: this.conf.compiler,
-      templateRoot: getRootPath(),
-      version: getPkgVersion(),
-      date: this.conf.date,
-      description: this.conf.description,
-      pageName,
-      isCustomTemplate,
-      customTemplatePath,
-      basePageFiles: files,
-      period: PeriodType.CreatePage,
-    }, handler).then(() => {
-      console.log(`${chalk.green('✔ ')}${chalk.grey(`创建页面 ${this.conf.pageName} 成功！`)}`)
+    try {
+      await createPage({
+        projectDir,
+        projectName,
+        pageDir,
+        pageName,
+        compiler,
+        framework,
+        typescript,
+        subpkg,
+        template,
+        isCustomTemplate,
+        customTemplatePath,
+        date,
+        description,
+        basePageFiles: mergedBasePageFiles,
+        css: css || CSSType.None,
+        period: PeriodType.CreatePage,
+        templateRoot: getRootPath(),
+        version: getPkgVersion(),
+      }, handler)
+      console.log(`${chalk.green('✔ ')}${chalk.grey(`创建页面 ${pageName} 成功！`)}`)
+      // TODO: 看到这里了
       this.updateAppConfig()
       this.afterCreate?.(true)
-    }).catch(err => {
+    } catch(err) {
       console.log(err)
       this.afterCreate?.(false)
-    })
+    }
   }
 }
 
