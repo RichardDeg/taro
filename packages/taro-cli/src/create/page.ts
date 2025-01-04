@@ -189,48 +189,42 @@ export default class Page extends Creator {
   // TODO: 看到这里了
   updateAppConfig () {
     const { parse, generate, traverse } = babelKit
+    const { projectDir, subpkg, typescript } = this.conf
+    const [sourceStr, pageStr] = this.pageEntryPath.split('/src/')
 
-    let modifyState: ConfigModificationState = ConfigModificationState.Fail
-    const { subpkg, projectDir, typescript } = this.conf
-    const [sourceString, pageString] = this.pageEntryPath.split('/src/')
-    const appConfigPath = resolveScriptPath(path.join(projectDir, sourceString, 'src', 'app.config'))
+    const appConfigPath = resolveScriptPath(path.join(projectDir, sourceStr, 'src', 'app.config'))
     if (!fs.existsSync(appConfigPath)) {
-      return console.log(
-        `${chalk.red('x ')}${chalk.grey(`无法获取 ${appConfigPath} 配置文件，请手动到配置文件中补全新页面信息`)}`
-      )
+      return console.log(`$chalk.red('x ')}${chalk.grey(`无法获取 ${appConfigPath} 配置文件，请手动到配置文件中补全新页面信息`)}`)
     }
-    const configFileContent = fs.readFileSync(appConfigPath, 'utf-8')
-    const ast = parse(configFileContent, {
+    const appConfigContent = fs.readFileSync(appConfigPath, 'utf-8')
+    const appConfigAst = parse(appConfigContent, {
       sourceType: 'module',
       plugins: typescript ? ['typescript'] : []
     })
 
-    const callback = (state: ConfigModificationState) => {
-      modifyState = state
-    }
-
-    traverse(ast, {
+    // TODO: 看到这里了
+    let modifyState = ConfigModificationState.Fail as ConfigModificationState
+    traverse(appConfigAst, {
       ExportDefaultDeclaration (path) {
         modifyPagesOrSubPackages({
           path,
-          fullPagePath: pageString,
+          fullPagePath: pageStr,
           subPkgRootPath: subpkg,
-          callback
+          callback: value => modifyState = value
         })
       },
     })
 
-    switch (modifyState as ConfigModificationState) {
-      case ConfigModificationState.Fail:
-        console.log(`${chalk.red('x ')}${chalk.grey(`自动补全新页面信息失败， 请手动到 ${appConfigPath} 文件中补全新页面信息`)}`)
-        break
-      case ConfigModificationState.Success:
-      {
-        const newCode = generate(ast, { retainLines: true })
+    switch (modifyState) {
+      case ConfigModificationState.Success: {
+        const newCode = generate(appConfigAst, { retainLines: true })
         fs.writeFileSync(appConfigPath, newCode.code)
         console.log(`${chalk.green('✔ ')}${chalk.grey(`新页面信息已在 ${appConfigPath} 文件中自动补全`)}`)
         break
       }
+      case ConfigModificationState.Fail:
+        console.log(`${chalk.red('x ')}${chalk.grey(`自动补全新页面信息失败， 请手动到 ${appConfigPath} 文件中补全新页面信息`)}`)
+        break
       case ConfigModificationState.NeedLess:
         console.log(`${chalk.green('✔ ')}${chalk.grey(`新页面信息已存在在 ${appConfigPath} 文件中，不需要补全`)}`)
         break
