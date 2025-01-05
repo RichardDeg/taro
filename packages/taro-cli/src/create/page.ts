@@ -202,10 +202,10 @@ export default class Page extends Creator {
       plugins: typescript ? ['typescript'] : []
     })
 
-    // TODO: 看到这里了
     let modifyState = ConfigModificationState.Fail as ConfigModificationState
     traverse(appConfigAst, {
       ExportDefaultDeclaration (path) {
+        // TODO: 看到这里了
         modifyPagesOrSubPackages({
           path,
           fullPagePath: pageStr,

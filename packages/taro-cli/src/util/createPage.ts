@@ -118,15 +118,18 @@ const generateNewPageConfig = (fullPagePath: string, subPkgRootPath = '') => {
   return newPageConfig
 }
 
-export const modifyPagesOrSubPackages = (params: {
+type ModifyPagesOrSubPackagesParams = {
   path: NodePath<ExportDefaultDeclaration>
   fullPagePath: string
   subPkgRootPath?: string
   callback: ModifyCallback
-}) => {
-  const { fullPagePath, subPkgRootPath, callback, path } = params
+}
+// TODO: 看到这里了
+export const modifyPagesOrSubPackages = ({ fullPagePath, subPkgRootPath, callback, path }: ModifyPagesOrSubPackagesParams) => {
   const newPageConfig = generateNewPageConfig(fullPagePath, subPkgRootPath)
-  subPkgRootPath
-    ? modifySubPackages(path, newPageConfig, callback)
-    : modifyPages(path, newPageConfig, callback)
+  if(!!subPkgRootPath) {
+    modifySubPackages(path, newPageConfig, callback)
+  } else {
+    modifyPages(path, newPageConfig, callback)
+  }
 }
