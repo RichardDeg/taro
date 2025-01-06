@@ -1,6 +1,7 @@
 import { babelKit } from '@tarojs/helper'
 
-import { ConfigModificationState, ModifyCallback } from '../create/page'
+// TODO: 这个是如何解决循环引用问题的，有没有优化空间
+import { ConfigModificationState } from '../create/page'
 
 import type { ArrayExpression, ExportDefaultDeclaration, ObjectExpression, ObjectProperty } from '@babel/types'
 import type { NodePath } from 'babel__traverse'
@@ -23,6 +24,7 @@ const isValidSubPkgObject = (subPkgObject: ObjectExpression) => {
   return rootPropertyValueType === 'StringLiteral' && pagesPropertyValueType === 'ArrayExpression'
 }
 
+// TODO: 抽离 addNewSubPackage & addNewPage 中 可复用的代码
 const addNewSubPackage = (node: ObjectExpression, page: string, subPackage: string): ConfigModificationState => {
   let subPackages = node?.properties.find(node => (node as any).key.name === 'subPackages') as ObjectProperty
   if (!subPackages) {
@@ -55,6 +57,7 @@ const addNewSubPackage = (node: ObjectExpression, page: string, subPackage: stri
   return ConfigModificationState.Success
 }
 
+// TODO: 抽离 addNewSubPackage & addNewPage 中 可复用的代码
 const addNewPage = (node: ObjectExpression, page: string): ConfigModificationState => {
   const pages = node?.properties.find(node => (node as any).key.name === 'pages') as ObjectProperty
   if (!pages) return ConfigModificationState.Fail
@@ -72,64 +75,44 @@ const addNewPage = (node: ObjectExpression, page: string): ConfigModificationSta
   return ConfigModificationState.Success
 }
 
-const modifyPages = (path: NodePath<ExportDefaultDeclaration>, newPageConfig, callback: ModifyCallback) => {
+// TODO: 函数变量名待考量
+const getConfigModificationState = (path: NodePath<ExportDefaultDeclaration>, pageConfig: GetPageConfigReturn, cb: Function): ConfigModificationState => {
   let state = ConfigModificationState.Fail
   const node = path.node.declaration as any
   // Case 1. `export default defineAppConfig({})` 这种情况
   if (node.type === 'CallExpression' && node.callee.name === 'defineAppConfig') {
     const configNode = node.arguments[0]
-    state = addNewPage(configNode, newPageConfig.page)
+    state = cb(configNode, pageConfig.page, pageConfig.pkg)
   }
   // Case 2. `export default {}` 这种情况
   if (node.type === 'ObjectExpression') {
-    state = addNewPage(node, newPageConfig.page)
+    state = cb(node, pageConfig.page, pageConfig.pkg)
   }
-  callback(state)
+  return state
 }
 
-const modifySubPackages = (path: NodePath<ExportDefaultDeclaration>, newPageConfig, callback: ModifyCallback) => {
-  let state = ConfigModificationState.Fail
-  const node = path.node.declaration as any
-  // `export default defineAppConfig({})` 这种情况
-  if (node.type === 'CallExpression' && node.callee.name === 'defineAppConfig') {
-    const configNode = node.arguments[0]
-    state = addNewSubPackage(configNode, newPageConfig.page, newPageConfig.pkg)
-  }
-  // `export default {}` 这种情况
-  if (node.type === 'ObjectExpression') {
-    state = addNewSubPackage(node, newPageConfig.page, newPageConfig.pkg)
-  }
-  callback(state)
+type GetPageConfigReturn = {
+  page: string
+  pkg: string
 }
+const getPageConfig = (fullPagePath: string, subPkgRootPath?: string): GetPageConfigReturn => {
+  if(!subPkgRootPath) return { page: fullPagePath, pkg: '' }
 
-const generateNewPageConfig = (fullPagePath: string, subPkgRootPath = '') => {
-  const newPageConfig = {
-    pkg: '',
-    page: ''
-  }
-  if (subPkgRootPath) {
-    const processedSubPkg = `${subPkgRootPath}/`
-    newPageConfig.pkg = processedSubPkg
-    newPageConfig.page = fullPagePath.split(processedSubPkg)[1]
-  } else {
-    newPageConfig.page = fullPagePath
-  }
-
-  return newPageConfig
+  const pkg = `${subPkgRootPath}/`
+  const [ _, page] = fullPagePath.split(pkg)
+  return { pkg, page }
 }
 
 type ModifyPagesOrSubPackagesParams = {
   path: NodePath<ExportDefaultDeclaration>
   fullPagePath: string
   subPkgRootPath?: string
-  callback: ModifyCallback
 }
-// TODO: 看到这里了
-export const modifyPagesOrSubPackages = ({ fullPagePath, subPkgRootPath, callback, path }: ModifyPagesOrSubPackagesParams) => {
-  const newPageConfig = generateNewPageConfig(fullPagePath, subPkgRootPath)
-  if(!!subPkgRootPath) {
-    modifySubPackages(path, newPageConfig, callback)
-  } else {
-    modifyPages(path, newPageConfig, callback)
-  }
+// TODO: 看到这里了, 函数名有待考量
+export const modifyPagesOrSubPackages = ({ fullPagePath, subPkgRootPath, path }: ModifyPagesOrSubPackagesParams): ConfigModificationState => {
+  // TODO: 函数命名 以及 变量名 有待考量
+  const pageConfig = getPageConfig(fullPagePath, subPkgRootPath)
+  // TODO: 这两个子函数有优化的空间
+  const cb = !!subPkgRootPath ?addNewSubPackage :addNewPage
+  return getConfigModificationState(path, pageConfig, cb)
 }

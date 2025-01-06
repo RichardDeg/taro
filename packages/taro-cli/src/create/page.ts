@@ -53,7 +53,6 @@ export enum ConfigModificationState {
   Fail,
   NeedLess
 }
-export type ModifyCallback = (state: ConfigModificationState) => void
 
 // TODO: 看到这里了
 export default class Page extends Creator {
@@ -206,11 +205,10 @@ export default class Page extends Creator {
     traverse(appConfigAst, {
       ExportDefaultDeclaration (path) {
         // TODO: 看到这里了
-        modifyPagesOrSubPackages({
+        modifyState = modifyPagesOrSubPackages({
           path,
           fullPagePath: pageStr,
-          subPkgRootPath: subpkg,
-          callback: value => modifyState = value
+          subPkgRootPath: subpkg
         })
       },
     })
