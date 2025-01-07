@@ -24,8 +24,8 @@ const isValidSubPkgObject = (subPkgObject: ObjectExpression) => {
   return rootPropertyValueType === 'StringLiteral' && pagesPropertyValueType === 'ArrayExpression'
 }
 
-// TODO: 抽离 addNewSubPackage & addNewPage 中 可复用的代码
-const addNewSubPackage = (node: ObjectExpression, page: string, subPackage: string): ConfigModificationState => {
+// TODO: 抽离 addSubPackage & addPage 中 可复用的代码
+const addSubPackage = (node: ObjectExpression, page: string, subPackage: string): ConfigModificationState => {
   let subPackages = node?.properties.find(node => (node as any).key.name === 'subPackages') as ObjectProperty
   if (!subPackages) {
   // config 文件不存在 subPackages 字段的情况，给该字段赋予默认值
@@ -57,9 +57,12 @@ const addNewSubPackage = (node: ObjectExpression, page: string, subPackage: stri
   return ConfigModificationState.Success
 }
 
-// TODO: 抽离 addNewSubPackage & addNewPage 中 可复用的代码
-const addNewPage = (node: ObjectExpression, page: string): ConfigModificationState => {
-  const pages = node?.properties.find(node => (node as any).key.name === 'pages') as ObjectProperty
+// TODO: ts 有些使用复杂问题
+// TODO: 定义一个类型守卫函数，接收 node.properties 的入参，返回指定类型的 单个 node 节点
+// TODO: 抽离 addSubPackage & addPage 中 可复用的代码
+const addPage = (node: ObjectExpression, page: string): ConfigModificationState => {
+  // TODO: 参考 第 60 行注释，将 as 类型断言，移除
+  const pages = node?.properties.find(node => (node.type === 'ObjectMethod' || node.type === 'ObjectProperty') && node.key.type === 'Identifier' && node.key.name === 'pages') as ObjectProperty
   if (!pages) return ConfigModificationState.Fail
 
   const value = pages?.value
@@ -71,22 +74,23 @@ const addNewPage = (node: ObjectExpression, page: string): ConfigModificationSta
 
   const newArrayElement = t.stringLiteral(page)
   value.elements.push(newArrayElement)
-
   return ConfigModificationState.Success
 }
 
 // TODO: 函数变量名待考量
-const getConfigModificationState = (path: NodePath<ExportDefaultDeclaration>, pageConfig: GetPageConfigReturn, cb: Function): ConfigModificationState => {
+const getConfigModificationState = (path: NodePath<ExportDefaultDeclaration>, { page, pkg }: GetPageConfigReturn, cb: Function): ConfigModificationState => {
   let state = ConfigModificationState.Fail
-  const node = path.node.declaration as any
+  const node = path.node.declaration
   // Case 1. `export default defineAppConfig({})` 这种情况
-  if (node.type === 'CallExpression' && node.callee.name === 'defineAppConfig') {
-    const configNode = node.arguments[0]
-    state = cb(configNode, pageConfig.page, pageConfig.pkg)
+  if (node.type === 'CallExpression') {
+    if(node.callee.type === 'V8IntrinsicIdentifier' && node.callee.name === 'defineAppConfig') {
+      const [ configNode ] = node.arguments
+      state = cb(configNode, page, pkg)
+    }
   }
   // Case 2. `export default {}` 这种情况
   if (node.type === 'ObjectExpression') {
-    state = cb(node, pageConfig.page, pageConfig.pkg)
+    state = cb(node, page, pkg)
   }
   return state
 }
@@ -99,7 +103,7 @@ const getPageConfig = (fullPagePath: string, subPkgRootPath?: string): GetPageCo
   if(!subPkgRootPath) return { page: fullPagePath, pkg: '' }
 
   const pkg = `${subPkgRootPath}/`
-  const [ _, page] = fullPagePath.split(pkg)
+  const [ _, page ] = fullPagePath.split(pkg)
   return { pkg, page }
 }
 
@@ -113,6 +117,6 @@ export const modifyPagesOrSubPackages = ({ fullPagePath, subPkgRootPath, path }:
   // TODO: 函数命名 以及 变量名 有待考量
   const pageConfig = getPageConfig(fullPagePath, subPkgRootPath)
   // TODO: 这两个子函数有优化的空间
-  const cb = !!subPkgRootPath ?addNewSubPackage :addNewPage
+  const cb = !!subPkgRootPath ?addSubPackage :addPage
   return getConfigModificationState(path, pageConfig, cb)
 }
