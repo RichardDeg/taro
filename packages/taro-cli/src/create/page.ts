@@ -48,6 +48,7 @@ type ITemplateInfo = CustomPartial<Pick<IPageConf, 'css' | 'compiler' | 'typescr
 export type ModifyCreateTemplateCb = (templateInfo: ITemplateInfo) => void
 type ModifyCreateTemplateFn = (cb: ModifyCreateTemplateCb) => Promise<void>
 type AfterCreateFn = (state: boolean) => void
+// TODO: 这个枚举变量名待与 createPage 中的方法名保持统一
 export enum ConfigModificationState {
   Success,
   Fail,

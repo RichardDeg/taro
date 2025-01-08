@@ -24,7 +24,7 @@ const isValidSubPkgObject = (subPkgObject: ObjectExpression) => {
   return rootPropertyValueType === 'StringLiteral' && pagesPropertyValueType === 'ArrayExpression'
 }
 
-// TODO: 抽离 addSubPackage & addPage 中 可复用的代码
+// TODO: 抽离 addSubPackage & modifyPagesNode 中 可复用的代码
 const addSubPackage = (node: ObjectExpression, page: string, subPackage: string): ConfigModificationState => {
   let subPackages = node?.properties.find(node => (node as any).key.name === 'subPackages') as ObjectProperty
   if (!subPackages) {
@@ -57,23 +57,27 @@ const addSubPackage = (node: ObjectExpression, page: string, subPackage: string)
   return ConfigModificationState.Success
 }
 
-// TODO: ts 有些使用复杂问题
-// TODO: 定义一个类型守卫函数，接收 node.properties 的入参，返回指定类型的 单个 node 节点
-// TODO: 抽离 addSubPackage & addPage 中 可复用的代码
-const addPage = (node: ObjectExpression, page: string): ConfigModificationState => {
-  // TODO: 参考 第 60 行注释，将 as 类型断言，移除
-  const pages = node?.properties.find(node => (node.type === 'ObjectMethod' || node.type === 'ObjectProperty') && node.key.type === 'Identifier' && node.key.name === 'pages') as ObjectProperty
-  if (!pages) return ConfigModificationState.Fail
+// 更新属性为 'pages' 的节点, 并返回更新结果
+const modifyPagesNode = ({ properties }: ObjectExpression, targetPage: string): ConfigModificationState => {
+  const pagesProperty = properties.find(property => property.type === 'ObjectProperty' && property.key.type === 'Identifier' && property.key.name === 'pages') as ObjectProperty
+  if (!pagesProperty)  {
+    return ConfigModificationState.Fail
+  }
 
-  const value = pages?.value
-  // 仅处理 pages 为数组字面量的情形
-  if (!value || value?.type !== 'ArrayExpression') return ConfigModificationState.Fail
+  const pagesPropertyValue = pagesProperty.value
+  if (pagesPropertyValue.type !== 'ArrayExpression') {
+    return ConfigModificationState.Fail
+  }
 
-  const isPageExists = Boolean(value.elements.find(node => (node as any).value === page))
-  if (isPageExists) return ConfigModificationState.NeedLess
+  const pagesPropertyValueElement = Boolean(pagesPropertyValue.elements.find(element => (element?.type === 'BigIntLiteral' || element?.type === 'DecimalLiteral' || element?.type === 'StringLiteral') && element.value === targetPage))
+  if (!!pagesPropertyValueElement) {
+    return ConfigModificationState.NeedLess
+  }
 
-  const newArrayElement = t.stringLiteral(page)
-  value.elements.push(newArrayElement)
+  // 副作用：更新节点
+  const targetPageElement = t.stringLiteral(targetPage)
+  pagesPropertyValue.elements.push(targetPageElement)
+
   return ConfigModificationState.Success
 }
 
@@ -117,6 +121,6 @@ export const modifyPagesOrSubPackages = ({ fullPagePath, subPkgRootPath, path }:
   // TODO: 函数命名 以及 变量名 有待考量
   const pageConfig = getPageConfig(fullPagePath, subPkgRootPath)
   // TODO: 这两个子函数有优化的空间
-  const cb = !!subPkgRootPath ?addSubPackage :addPage
+  const cb = !!subPkgRootPath ?addSubPackage :modifyPagesNode
   return getConfigModificationState(path, pageConfig, cb)
 }
