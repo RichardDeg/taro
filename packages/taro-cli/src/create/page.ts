@@ -4,7 +4,7 @@ import { CompilerType, createPage, CSSType, FrameworkType, NpmType, PeriodType }
 import { babelKit, chalk, DEFAULT_TEMPLATE_SRC, fs, getUserHomeDir, resolveScriptPath, TARO_BASE_CONFIG, TARO_CONFIG_FOLDER } from '@tarojs/helper'
 
 import { getPkgVersion, getRootPath } from '../util'
-import { modifyPagesOrSubPackages } from '../util/createPage'
+import { modifyNode } from '../util/createPage'
 import { TEMPLATE_CREATOR } from './constants'
 import Creator from './creator'
 import fetchTemplate from './fetchTemplate'
@@ -48,8 +48,8 @@ type ITemplateInfo = CustomPartial<Pick<IPageConf, 'css' | 'compiler' | 'typescr
 export type ModifyCreateTemplateCb = (templateInfo: ITemplateInfo) => void
 type ModifyCreateTemplateFn = (cb: ModifyCreateTemplateCb) => Promise<void>
 type AfterCreateFn = (state: boolean) => void
-// TODO: 这个枚举变量名待与 createPage 中的方法名保持统一
-export enum ConfigModificationState {
+// TODO: 声明放置位置待确定
+export enum ModifyNodeState {
   Success,
   Fail,
   NeedLess
@@ -189,7 +189,7 @@ export default class Page extends Creator {
   // TODO: 看到这里了
   updateAppConfig () {
     const { parse, generate, traverse } = babelKit
-    const { projectDir, subpkg, typescript } = this.conf
+    const { projectDir, subpkg = '', typescript } = this.conf
     const [sourceStr, pageStr] = this.pageEntryPath.split('/src/')
 
     const appConfigPath = resolveScriptPath(path.join(projectDir, sourceStr, 'src', 'app.config'))
@@ -202,29 +202,29 @@ export default class Page extends Creator {
       plugins: typescript ? ['typescript'] : []
     })
 
-    let modifyState = ConfigModificationState.Fail as ConfigModificationState
+    let modifyState = ModifyNodeState.Fail as ModifyNodeState
     traverse(appConfigAst, {
       ExportDefaultDeclaration (path) {
         // TODO: 看到这里了
-        modifyState = modifyPagesOrSubPackages({
-          path,
-          fullPagePath: pageStr,
-          subPkgRootPath: subpkg
+        modifyState = modifyNode({
+          pathNode: path,
+          pagesPath: pageStr,
+          subPackagesPath: subpkg
         })
       },
     })
 
     switch (modifyState) {
-      case ConfigModificationState.Success: {
+      case ModifyNodeState.Success: {
         const newCode = generate(appConfigAst, { retainLines: true })
         fs.writeFileSync(appConfigPath, newCode.code)
         console.log(`${chalk.green('✔ ')}${chalk.grey(`新页面信息已在 ${appConfigPath} 文件中自动补全`)}`)
         break
       }
-      case ConfigModificationState.Fail:
+      case ModifyNodeState.Fail:
         console.log(`${chalk.red('x ')}${chalk.grey(`自动补全新页面信息失败， 请手动到 ${appConfigPath} 文件中补全新页面信息`)}`)
         break
-      case ConfigModificationState.NeedLess:
+      case ModifyNodeState.NeedLess:
         console.log(`${chalk.green('✔ ')}${chalk.grey(`新页面信息已存在在 ${appConfigPath} 文件中，不需要补全`)}`)
         break
     }
