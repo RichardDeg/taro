@@ -3,53 +3,61 @@ import { babelKit } from '@tarojs/helper'
 // TODO: 这个是如何解决循环引用问题的，有没有优化空间
 import { ModifyNodeState } from '../create/page'
 
-import type { ArrayExpression, ExportDefaultDeclaration, ObjectExpression, ObjectProperty } from '@babel/types'
+import type { ArrayExpression, ExportDefaultDeclaration, Expression, ObjectExpression, ObjectProperty, PatternLike, SpreadElement } from '@babel/types'
 import type { NodePath } from 'babel__traverse'
 
 const t = babelKit.types
 
-const generateNewSubPackageItem = (subPackage: string) => {
-  const pageObject = t.objectProperty(t.identifier('pages'), t.arrayExpression([]))
-  const subPkgRootObject = t.objectProperty(t.identifier('root'), t.stringLiteral(subPackage))
-  const subPkgItemObject = t.objectExpression([subPkgRootObject, pageObject])
-  return subPkgItemObject
+const buildSubPackagesAstNode = (subPackagesPath: string) => {
+  const subPackagesRootAstNode = t.objectProperty(t.identifier('root'), t.stringLiteral(subPackagesPath))
+  const pagesAstNode = t.objectProperty(t.identifier('pages'), t.arrayExpression([]))
+  const subPackagesAstNode = t.objectExpression([subPackagesRootAstNode, pagesAstNode])
+  return subPackagesAstNode
 }
 
-const isValidSubPkgObject = (subPkgObject: ObjectExpression) => {
-  const properties = subPkgObject?.properties || {}
-  const rootProperty = properties.find((property: ObjectProperty) => (property.key as any)?.name === 'root') as ObjectProperty
-  const pagesProperty = properties.find((property: ObjectProperty) => (property.key as any)?.name === 'pages') as ObjectProperty
-  const rootPropertyValueType = rootProperty?.value?.type
-  const pagesPropertyValueType = pagesProperty?.value?.type
-  return rootPropertyValueType === 'StringLiteral' && pagesPropertyValueType === 'ArrayExpression'
+const findPropertyFromNode = (propertyKey: string, node?: ObjectExpression): ObjectProperty | undefined => {
+  return node?.properties.find(property => property.type === 'ObjectProperty' && property.key.type === 'Identifier' && property.key?.name === propertyKey) as ObjectProperty | undefined
+}
+
+const isEqualElement = (elementValue: string, elementNode?: PatternLike | SpreadElement | Expression | null) => {
+  return (elementNode?.type === 'BigIntLiteral' || elementNode?.type === 'DecimalLiteral' || elementNode?.type === 'StringLiteral') && elementNode.value === elementValue
+}
+
+const isValidSubPackagesElement = (subPackagesElement: ObjectExpression) => {
+  const rootProperty = findPropertyFromNode('root', subPackagesElement)
+  const pagesProperty = findPropertyFromNode('pages', subPackagesElement)
+  return rootProperty?.value.type === 'StringLiteral' && pagesProperty?.value.type === 'ArrayExpression'
 }
 
 // TODO: 看到这里了
 const modifySubPackagesNode = ({ pagesPath, subPackagesPath }: CommonModifyNodeParams, node?: ObjectExpression): ModifyNodeState => {
-  let subPackagesProperty = node?.properties.find(property => property.type === 'ObjectProperty' && property.key.type === 'Identifier' && property.key.name === 'subPackages') as ObjectProperty
+  let subPackagesProperty = findPropertyFromNode('subPackages', node)
+  // 为空，写入默认空值 ast 节点
   if (!subPackagesProperty) {
     subPackagesProperty = t.objectProperty(t.identifier('subPackages'), t.arrayExpression([]))
-    // 副作用
     node?.properties.push(subPackagesProperty)
   }
-  // 文件格式不对的情况
   const subPackagesPropertyValue = subPackagesProperty.value
   if (subPackagesPropertyValue?.type !== 'ArrayExpression') {
     return ModifyNodeState.Fail
   }
 
-  let targetSubPkgObject: ObjectExpression = subPackagesPropertyValue.elements.find(node => (node as any)?.properties?.find(property => (property as any)?.value?.value === subPackagesPath)) as ObjectExpression
-  if (!targetSubPkgObject) {
-    // 不存在 当前分包配置对象的情况
-    const subPkgItemObject = generateNewSubPackageItem(subPackagesPath)
-    targetSubPkgObject = subPkgItemObject
-    subPackagesPropertyValue.elements.push(subPkgItemObject)
+  let subPackagesPropertyValueElement = subPackagesPropertyValue.elements.find(element => {
+    return element?.type === 'ObjectExpression' && !!element?.properties?.find(elementProperty => {
+      return elementProperty.type === 'ObjectProperty' && isEqualElement(subPackagesPath, elementProperty.value)
+    })
+  })
+  // 为空，写入默认空值 元素
+  if (!subPackagesPropertyValueElement) {
+    subPackagesPropertyValueElement = buildSubPackagesAstNode(subPackagesPath)
+    subPackagesPropertyValue.elements.push(subPackagesPropertyValueElement)
   }
-  if (targetSubPkgObject.type !== 'ObjectExpression' || !isValidSubPkgObject(targetSubPkgObject)) {
+  // TODO: 看到这里了
+  if (subPackagesPropertyValueElement.type !== 'ObjectExpression' || !isValidSubPackagesElement(subPackagesPropertyValueElement)) {
     return ModifyNodeState.Fail
   }
 
-  const pagesProperty: ObjectProperty = targetSubPkgObject.properties.find((property: ObjectProperty) => (property.key as any)?.name === 'pages') as ObjectProperty
+  const pagesProperty: ObjectProperty = subPackagesPropertyValueElement.properties.find((property: ObjectProperty) => (property.key as any)?.name === 'pages') as ObjectProperty
   const currentPages = (pagesProperty.value as ArrayExpression).elements
   const isPageExists = Boolean(currentPages.find(node => (node as any).value === pagesPath))
   if (isPageExists) {
@@ -62,17 +70,13 @@ const modifySubPackagesNode = ({ pagesPath, subPackagesPath }: CommonModifyNodeP
 
 // 更新属性为 'pages' 的节点, 并返回更新结果
 const modifyPagesNode = ({ pagesPath }: CommonModifyNodeParams, node?: ObjectExpression): ModifyNodeState => {
-  const pagesProperty = node?.properties.find(property => property.type === 'ObjectProperty' && property.key.type === 'Identifier' && property.key.name === 'pages') as ObjectProperty
-  if (!pagesProperty) {
-    return ModifyNodeState.Fail
-  }
-
-  const pagesPropertyValue = pagesProperty.value
+  const pagesProperty = findPropertyFromNode('pages', node)
+  const pagesPropertyValue = pagesProperty?.value
   if (pagesPropertyValue?.type !== 'ArrayExpression') {
     return ModifyNodeState.Fail
   }
 
-  const pagesPropertyValueElement = Boolean(pagesPropertyValue.elements.find(element => (element?.type === 'BigIntLiteral' || element?.type === 'DecimalLiteral' || element?.type === 'StringLiteral') && element.value === pagesPath))
+  const pagesPropertyValueElement = !!pagesPropertyValue.elements.find(element => isEqualElement(pagesPath, element))
   if (!!pagesPropertyValueElement) {
     return ModifyNodeState.NeedLess
   }
