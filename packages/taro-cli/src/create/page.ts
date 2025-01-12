@@ -205,7 +205,6 @@ export default class Page extends Creator {
     let modifyState = ModifyNodeState.Fail as ModifyNodeState
     traverse(appConfigAst, {
       ExportDefaultDeclaration (path) {
-        // TODO: 看到这里了
         modifyState = modifyNode({
           pathNode: path,
           pagesPath: pageStr,
@@ -214,6 +213,7 @@ export default class Page extends Creator {
       },
     })
 
+    // TODO: 看到这里了
     switch (modifyState) {
       case ModifyNodeState.Success: {
         const newCode = generate(appConfigAst, { retainLines: true })
