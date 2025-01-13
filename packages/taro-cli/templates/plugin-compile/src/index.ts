@@ -1,5 +1,4 @@
-// TODO: 如何确定 此文件是如何执行的，文件的调用入口在哪里
-
+// TODO: 看到这里了 看下 3 种 pluginType 的功能
 import type { IPluginContext } from '@tarojs/service'
 
 /**
@@ -17,16 +16,12 @@ export default (ctx: IPluginContext, pluginOpts) => {
     console.log('这里可以修改webpack配置')
     // 示例：利用webpackChain向html中插入脚本
     if (process.env.TARO_ENV !== 'h5') return
-    chain
-      .plugin('htmlWebpackPlugin')
-      .tap(([pluginConfig]) => {
-        return [
-          {
-            ...pluginConfig,
-            script: pluginConfig.script + 'console.log("向html中插入代码");'
-          }
-        ]
-      })
+    chain.plugin('htmlWebpackPlugin').tap(([pluginConfig]) => {
+      return [{
+        ...pluginConfig,
+        script: pluginConfig.script + 'console.log("向html中插入代码");'
+      }]
+    })
   })
 
   ctx.onBuildComplete(() => {
@@ -54,20 +49,15 @@ export default (ctx: IPluginContext, pluginOpts) => {
 {{#if (eq pluginType "plugin-command") }}
 export default (ctx: IPluginContext, pluginOpts) => {
   ctx.registerCommand({
-    // 命令名
     name: 'say',
-    // 参数说明，执行 taro say --help 时输出的 options 信息
+    async fn() {
+      console.log('插件入参：', pluginOpts)
+      console.log('Taro say:', ctx.runOpts.options.msg)
+    },
     optionsMap: {
       '--msg': '输出的信息',
     },
-    // 执行 taro say --help 时输出的使用例子的信息
     synopsisList: ['taro say --msg Hello!'],
-    // 命令钩子
-    async fn() {
-      console.log('插件入参：', pluginOpts)
-      const { msg } = ctx.runOpts.options
-      console.log('Taro say:', msg)
-    },
   })
 }
 {{/if}}

@@ -1,5 +1,4 @@
 import * as path from 'node:path'
-
 import { fs } from '@tarojs/helper'
 
 import { getRootPath } from '../util'

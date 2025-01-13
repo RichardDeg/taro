@@ -1,5 +1,4 @@
 import * as path from 'node:path'
-
 import { createPlugin } from '@tarojs/binding'
 import { chalk, fs } from '@tarojs/helper'
 
@@ -15,12 +14,12 @@ export interface IPluginConf {
   version: string
   description?: string
 }
+
 type IPluginOptions = Omit<IPluginConf, 'projectName' | 'version'> & {
   projectName?: string
   version?: string
 }
 
-// TODO: 看到这里了
 export default class Plugin extends Creator {
   public conf: IPluginConf
 

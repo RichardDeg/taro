@@ -1,12 +1,15 @@
 import { babelKit } from '@tarojs/helper'
 
-// TODO: 这个是如何解决循环引用问题的，有没有优化空间
-import { ModifyNodeState } from '../create/page'
-
 import { ExportDefaultDeclaration, Expression, ObjectExpression, ObjectProperty, PatternLike, SpreadElement } from '@babel/types'
 import type { NodePath } from 'babel__traverse'
 
 const t = babelKit.types
+
+export enum ModifyNodeState {
+  Success,
+  Fail,
+  NeedLess
+}
 
 const buildEmptyArrayAstNode = (identifierName: string) => {
   return t.objectProperty(t.identifier(identifierName), t.arrayExpression([]))

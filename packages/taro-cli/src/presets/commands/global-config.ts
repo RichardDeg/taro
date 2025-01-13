@@ -1,5 +1,4 @@
 import * as path from 'node:path'
-
 import * as ora from 'ora'
 import * as validatePkgName from 'validate-npm-package-name'
 
@@ -24,6 +23,7 @@ const PLUGIN_TYPE_TO_CONFIG_KEY = {
   preset: 'presets'
 }
 
+// TODO: 看到这里了
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'global-config',

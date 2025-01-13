@@ -1,21 +1,21 @@
 import * as path from 'node:path'
-
 import { CompilerType, createPage, CSSType, FrameworkType, NpmType, PeriodType } from '@tarojs/binding'
 import { babelKit, chalk, DEFAULT_TEMPLATE_SRC, fs, getUserHomeDir, resolveScriptPath, TARO_BASE_CONFIG, TARO_CONFIG_FOLDER } from '@tarojs/helper'
 
 import { getPkgVersion, getRootPath } from '../util'
-import { modifyNode } from '../util/createPage'
+import { modifyNode, ModifyNodeState } from '../util/createPage'
 import { TEMPLATE_CREATOR } from './constants'
-import Creator from './creator'
 import fetchTemplate from './fetchTemplate'
+import Creator from './creator'
 
-// TODO: 统一 page & plugin & project & creator 这些文件的代码风格
-const DEFAULT_TEMPLATE_INFO = {
+import type { CustomPartial } from './types'
+
+export const DEFAULT_TEMPLATE_INFO = {
   name: 'default',
-  framework: FrameworkType.React,
-  css: CSSType.None,
-  compiler: CompilerType.Webpack5,
   typescript: false,
+  css: CSSType.None,
+  framework: FrameworkType.React,
+  compiler: CompilerType.Webpack5,
 }
 
 export interface IPageConf {
@@ -38,24 +38,16 @@ export interface IPageConf {
   description?: string
 }
 
-// TODO: CustomPartial 与 Project 的类型定义重复了
-type CustomPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 type IPageOptions = CustomPartial<IPageConf, 'projectDir' | 'projectName' | 'pageDir' | 'template'> & {
   modifyCreateTemplate : ModifyCreateTemplateFn
   afterCreate?: AfterCreateFn
 }
+
+type AfterCreateFn = (state: boolean) => void
 type ITemplateInfo = CustomPartial<Pick<IPageConf, 'css' | 'compiler' | 'typescript' | 'template' | 'templateSource' | 'clone' | 'isCustomTemplate' | 'customTemplatePath'>, 'template'>
 export type ModifyCreateTemplateCb = (templateInfo: ITemplateInfo) => void
 type ModifyCreateTemplateFn = (cb: ModifyCreateTemplateCb) => Promise<void>
-type AfterCreateFn = (state: boolean) => void
-// TODO: 声明放置位置待确定
-export enum ModifyNodeState {
-  Success,
-  Fail,
-  NeedLess
-}
 
-// TODO: 看到这里了
 export default class Page extends Creator {
   public rootPath: string
   public conf: IPageConf
@@ -186,7 +178,6 @@ export default class Page extends Creator {
     await this.write()
   }
 
-  // TODO: 看到这里了
   updateAppConfig () {
     const { parse, generate, traverse } = babelKit
     const { projectDir, subpkg = '', typescript } = this.conf
@@ -213,11 +204,10 @@ export default class Page extends Creator {
       },
     })
 
-    // TODO: 看到这里了
     switch (modifyState) {
       case ModifyNodeState.Success: {
-        const newCode = generate(appConfigAst, { retainLines: true })
-        fs.writeFileSync(appConfigPath, newCode.code)
+        const { code } = generate(appConfigAst, { retainLines: true })
+        fs.writeFileSync(appConfigPath, code)
         console.log(`${chalk.green('✔ ')}${chalk.grey(`新页面信息已在 ${appConfigPath} 文件中自动补全`)}`)
         break
       }
@@ -268,7 +258,6 @@ export default class Page extends Creator {
         version: getPkgVersion(),
       }, handler)
       console.log(`${chalk.green('✔ ')}${chalk.grey(`创建页面 ${pageName} 成功！`)}`)
-      // TODO: 看到这里了
       this.updateAppConfig()
       this.afterCreate?.(true)
     } catch(err) {

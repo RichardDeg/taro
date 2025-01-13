@@ -1,28 +1,19 @@
 import * as path from 'node:path'
-
-import { CompilerType, createProject, CSSType, FrameworkType, NpmType, PeriodType } from '@tarojs/binding'
-import {
-  chalk,
-  DEFAULT_TEMPLATE_SRC,
-  DEFAULT_TEMPLATE_SRC_GITEE,
-  fs,
-  getUserHomeDir,
-  SOURCE_DIR,
-  TARO_BASE_CONFIG,
-  TARO_CONFIG_FOLDER
-} from '@tarojs/helper'
-import { isArray, isSameStr } from '@tarojs/shared'
-import axios from 'axios'
 import * as inquirer from 'inquirer'
 import * as ora from 'ora'
 import * as semver from 'semver'
+import axios from 'axios'
+import { CompilerType, createProject, CSSType, FrameworkType, NpmType, PeriodType } from '@tarojs/binding'
+import { chalk, DEFAULT_TEMPLATE_SRC, DEFAULT_TEMPLATE_SRC_GITEE, fs, getUserHomeDir, SOURCE_DIR, TARO_BASE_CONFIG, TARO_CONFIG_FOLDER } from '@tarojs/helper'
+import { isArray, isSameStr } from '@tarojs/shared'
 
 import { clearConsole, getPkgVersion, getRootPath } from '../util'
 import { TEMPLATE_CREATOR } from './constants'
-import Creator from './creator'
 import fetchTemplate from './fetchTemplate'
+import Creator  from './creator'
 
 import type { ITemplates } from './fetchTemplate'
+import type { CustomPartial } from './types'
 
 const NONE_AVAILABLE_TEMPLATE = '无可用模板'
 const LOWEST_SUPPORTED_VERSION = 'v18.0.0'
@@ -46,23 +37,22 @@ export interface IProjectConf {
   date?: string
   description?: string
 }
-// TODO: 待统一 plugin & page & project 的  ts 定义代码风格
-type CustomPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-type IProjectConfOptions = CustomPartial<IProjectConf, 'projectName' | 'projectDir' | 'template' | 'css' | 'npm' | 'framework' | 'templateSource'>
+
+type IProjectOptions = CustomPartial<IProjectConf, 'projectName' | 'projectDir' | 'template' | 'css' | 'npm' | 'framework' | 'templateSource'>
+
 type CustomInquirerPrompts = Record<string, unknown>[]
-type AskMethodsFunction = (conf: IProjectConfOptions, choices?: ITemplates[]) => CustomInquirerPrompts
+type AskMethodsFunction = (conf: IProjectOptions, choices?: ITemplates[]) => CustomInquirerPrompts
 type BasicAnswers = Pick<IProjectConf, 'projectName' | 'description' | 'framework' | 'typescript' | 'css' | 'npm'>
 type CompilerAndTemplateSourceAnswers = Pick<IProjectConf, 'compiler' | 'templateSource'>
-type TemplateAnswers = Pick<IProjectConf,'template'>
+type TemplateAnswers = Pick<IProjectConf, 'template'>
 type TemplateSourceAnswers = Pick<IProjectConf, 'templateSource'>
 type FetchTemplatesParameter = BasicAnswers & CompilerAndTemplateSourceAnswers
 
-// TODO: 待统一 plugin & page & project 的 代码风格
 export default class Project extends Creator {
   public rootPath: string
-  public conf: IProjectConfOptions
+  public conf: IProjectOptions
 
-  constructor (options: IProjectConfOptions) {
+  constructor (options: IProjectOptions) {
     super(options.sourceRoot)
     const isUnsupprotedVersion = semver.lt(process.version, LOWEST_SUPPORTED_VERSION)
     if (isUnsupprotedVersion) {
@@ -313,7 +303,7 @@ export default class Project extends Creator {
     }]
   }
 
-  async askTemplateSource({ template, templateSource }: IProjectConfOptions): Promise<CustomInquirerPrompts> {
+  async askTemplateSource({ template, templateSource }: IProjectOptions): Promise<CustomInquirerPrompts> {
     if (template === 'default' || templateSource) return []
 
     const homedir = getUserHomeDir()
@@ -390,7 +380,7 @@ export default class Project extends Creator {
     }]
   }
 
-  async askTemplate({ template, hideDefaultTemplate }: IProjectConfOptions, answeredPromptAnswers: FetchTemplatesParameter): Promise<CustomInquirerPrompts> {
+  async askTemplate({ template, hideDefaultTemplate }: IProjectOptions, answeredPromptAnswers: FetchTemplatesParameter): Promise<CustomInquirerPrompts> {
     if (typeof template === 'string') return []
 
     const templates = await this.fetchTemplates(answeredPromptAnswers)
