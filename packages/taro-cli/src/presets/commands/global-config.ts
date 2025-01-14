@@ -6,9 +6,6 @@ import { execCommand, getPkgNameByFilterVersion, getRootPath } from '../../util'
 
 import type { IPluginContext } from '@tarojs/service'
 
-type TPresetOrPluginAction = 'install' | 'uninstall'
-type TPluginType = 'plugin' | 'preset'
-
 const PRESET_OR_PLUGIN_COMMAND_CHINESE_MAP_MAP = {
   install: '添加',
   uninstall: '删除'
@@ -17,11 +14,13 @@ const PRESET_OR_PLUGIN_CHINESE_NAME_MAP = {
   plugin: '插件',
   preset: '插件集'
 }
-
 const PLUGIN_TYPE_TO_CONFIG_KEY = {
   plugin: 'plugins',
   preset: 'presets'
 }
+
+type TPresetOrPluginAction = 'install' | 'uninstall'
+type TPluginType = 'plugin' | 'preset'
 
 // TODO: 看到这里了
 export default (ctx: IPluginContext) => {

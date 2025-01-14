@@ -1,7 +1,7 @@
 import * as path from 'node:path'
+import * as child_process from 'node:child_process'
 
 import { chalk, fs, isWindows } from '@tarojs/helper'
-import { exec } from 'child_process'
 
 export function getRootPath (): string {
   return path.resolve(__dirname, '../../')
@@ -93,17 +93,18 @@ export function clearConsole () {
   }
 }
 
+// TODO: 看到这里了，待区分 child_process.exec 中参数的作用 与返回值 stdout?.on 手动监听事件有什么不同
 export function execCommand (params: {
   command: string
   successCallback?: (data: string) => void
   failCallback?: (data: string) => void
 }) {
   const { command, successCallback, failCallback } = params
-  const child = exec(command)
-  child.stdout!.on('data', function (data) {
+  const child = child_process.exec(command)
+  child.stdout?.on('data', function (data) {
     successCallback?.(data)
   })
-  child.stderr!.on('data', function (data) {
+  child.stderr?.on('data', function (data) {
     failCallback?.(data)
   })
 }
