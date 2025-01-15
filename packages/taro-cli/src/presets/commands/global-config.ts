@@ -27,14 +27,17 @@ export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'global-config',
     fn ({ _, options }) {
-      const [, action, pluginName] = _
       const { getUserHomeDir, TARO_GLOBAL_CONFIG_DIR, fs, TARO_GLOBAL_CONFIG_FILE } = ctx.helper
       const homedir = getUserHomeDir()
-      const globalPluginConfigDir = path.join(homedir, TARO_GLOBAL_CONFIG_DIR)
       if (!homedir) return console.log('找不到用户根目录')
+
+      // TODO: 看到这里了
       const rootPath = getRootPath()
       const templatePath = path.join(rootPath, 'templates', 'global-config')
       const registry = options.registry || options.r
+      const [, action, pluginName] = _
+      const globalPluginConfigDir = path.join(homedir, TARO_GLOBAL_CONFIG_DIR)
+
       function makeSureConfigExists () {
         if (!fs.existsSync(globalPluginConfigDir)) {
           const spinner = ora(`目录不存在，全局配置初始化`).start()
@@ -47,6 +50,7 @@ export default (ctx: IPluginContext) => {
           }
         }
       }
+
       function addOrRemovePresetOrPlugin (actionType: TPresetOrPluginAction, pluginType: TPluginType) {
         makeSureConfigExists()
         const presetOrPluginChineseName = PRESET_OR_PLUGIN_CHINESE_NAME_MAP[pluginType]
@@ -103,6 +107,7 @@ export default (ctx: IPluginContext) => {
           }
         })
       }
+
       switch (action) {
         case 'add-plugin':
           addOrRemovePresetOrPlugin('install', 'plugin')

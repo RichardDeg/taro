@@ -92,21 +92,15 @@ export function clearConsole () {
     readline.clearScreenDown(process.stdout)
   }
 }
-
-// TODO: 看到这里了，待区分 child_process.exec 中参数的作用 与返回值 stdout?.on 手动监听事件有什么不同
-export function execCommand (params: {
+type ExecCommandParams = {
   command: string
-  successCallback?: (data: string) => void
-  failCallback?: (data: string) => void
-}) {
-  const { command, successCallback, failCallback } = params
+  successCallback: (data: string) => void
+  failCallback: (data: string) => void
+}
+export function execCommand ({ command, successCallback, failCallback }: ExecCommandParams) {
   const child = child_process.exec(command)
-  child.stdout?.on('data', function (data) {
-    successCallback?.(data)
-  })
-  child.stderr?.on('data', function (data) {
-    failCallback?.(data)
-  })
+  child.stdout?.on('data', successCallback)
+  child.stderr?.on('data', failCallback)
 }
 
 export function getPkgNameByFilterVersion (pkgString: string) {

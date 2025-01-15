@@ -135,26 +135,32 @@ export default class Page extends Creator {
     this.pageEntryPath = mergedName.replace(configFileReg, '')
   }
 
-  async fetchTemplates () {
+  async readOrWriteTemplateSource() {
+    if (this.conf.templateSource) return this.conf.templateSource
+
     const homedir = getUserHomeDir()
+    if (!homedir) console.log(chalk.yellow('找不到用户根目录，使用默认模版源！'))
+
+    const taroConfigPath = path.join(homedir, TARO_CONFIG_FOLDER)
+    const taroConfig = path.join(taroConfigPath, TARO_BASE_CONFIG)
+
     let templateSource = DEFAULT_TEMPLATE_SRC
-    if (!homedir) chalk.yellow('找不到用户根目录，使用默认模版源！')
-
-    if (this.conf.templateSource) {
-      templateSource = this.conf.templateSource
+    // 检查本地配置
+    if (fs.existsSync(taroConfig)) {
+      // 存在则把模板源读出来
+      const config = await fs.readJSON(taroConfig)
+      templateSource = config?.templateSource || DEFAULT_TEMPLATE_SRC
     } else {
-      const taroConfigPath = path.join(homedir, TARO_CONFIG_FOLDER)
-      const taroConfig = path.join(taroConfigPath, TARO_BASE_CONFIG)
-      if (fs.existsSync(taroConfig)) {
-        const config = await fs.readJSON(taroConfig)
-        templateSource = config && config.templateSource ? config.templateSource : DEFAULT_TEMPLATE_SRC
-      } else {
-        await fs.createFile(taroConfig)
-        await fs.writeJSON(taroConfig, { templateSource })
-        templateSource = DEFAULT_TEMPLATE_SRC
-      }
+      // 不存在则创建配置
+      await fs.createFile(taroConfig)
+      await fs.writeJSON(taroConfig, { templateSource })
     }
+    return templateSource
+  }
 
+  async fetchTemplates () {
+    // 读取模版源
+    const templateSource = await this.readOrWriteTemplateSource()
     // 从模板源下载模板
     await fetchTemplate(templateSource, this.templatePath(''), this.conf.clone)
   }

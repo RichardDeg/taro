@@ -27,10 +27,7 @@ export default (ctx: IPluginContext) => {
       }
 
       if (!noCheck) {
-        const checkResult = await checkConfig({
-          projectConfig: ctx.initialConfig,
-          helper: ctx.helper
-        })
+        const checkResult = await validateConfig(ctx.initialConfig, ctx.helper)
         if (!checkResult.isValid) {
           const ERROR = chalk.red('[✗] ')
           const WARNING = chalk.yellow('[!] ')
@@ -208,9 +205,4 @@ export default (ctx: IPluginContext) => {
       'taro build --type weapp --mode prepare --env-prefix TARO_APP_',
     ]
   })
-}
-
-async function checkConfig ({ projectConfig, helper }) {
-  const result = await validateConfig(projectConfig, helper)
-  return result
 }
