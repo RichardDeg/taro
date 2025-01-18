@@ -22,7 +22,6 @@ const configKeyMap = {
 type TActionType = keyof (typeof actionTypeMap)
 type TPluginType = keyof (typeof pluginTypeMap)
 
-// TODO: 看到这里了
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'global-config',
@@ -75,26 +74,25 @@ export default (ctx: IPluginContext) => {
           successCallback (data) {
             console.log(data.replace(/\n$/, ''))
             spinner.start(`开始修改${pluginTypeName}配置`)
+
             const configFilePath = path.join(globalConfigDir, TARO_GLOBAL_CONFIG_FILE)
             const globalConfig = fs.readJSONSync(configFilePath, { throws: false })
             if(!globalConfig) spinner.fail('获取配置文件失败')
+
             const configKey = configKeyMap[pluginType]
             const configValues = globalConfig[configKey] || []
-            const pluginWithoutVersionNameIndex = configValues.findIndex(item => {
+            const pluginIndex = configValues.findIndex(item => {
               if (typeof item === 'string') return item === pluginWithoutVersionName
               if (item instanceof Array) return item[0] === pluginWithoutVersionName
             })
-            const hasFoundPluginInConfig = pluginWithoutVersionNameIndex !== -1;
-
-            // TODO: 看到这里了
-            const shouldChangeFile = hasFoundPluginInConfig ? actionType === 'uninstall': actionType === 'install';
-            if (shouldChangeFile) {
-              actionType === 'install' ? configValues.push(pluginWithoutVersionName) : configValues.splice(pluginWithoutVersionNameIndex, 1)
-              try {
-                fs.writeJSONSync(configFilePath, { [configKey]: configValues })
-              } catch (e) {
-                spinner.fail(`修改配置文件失败：${e}`)
-              }
+            const shouldAdd = actionType === 'install'
+            const shouldRemove = actionType === 'uninstall'
+            const shouldWriteFile = pluginIndex === -1 ? shouldAdd : shouldRemove;
+            const mergedConfigValues = shouldAdd ? [...configValues, pluginIndex] : [...configValues.slice(0, pluginIndex), ...configValues.slice(pluginIndex + 1)]
+            try {
+              if (shouldWriteFile) fs.writeJSONSync(configFilePath, { [configKey]: mergedConfigValues })
+            } catch (e) {
+              spinner.fail(`修改配置文件失败：${e}`)
             }
             spinner.succeed('修改配置文件成功')
           },

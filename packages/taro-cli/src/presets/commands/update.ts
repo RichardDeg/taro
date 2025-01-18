@@ -10,6 +10,7 @@ import { execCommand, getPkgItemByKey } from '../../util'
 
 import type { IPluginContext } from '@tarojs/service'
 
+// TODO: 看到这里了
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'update',
