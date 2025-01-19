@@ -1,5 +1,4 @@
 import * as path from 'node:path'
-
 import * as envinfo from 'envinfo'
 
 import { getPkgVersion } from '../../util'
@@ -11,8 +10,8 @@ export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'info',
     async fn ({ _ }) {
-      const rn = _[1] === 'rn'
-      const { fs, chalk, PROJECT_CONFIG } = ctx.helper
+      const hasRnInCommand = _[1] === 'rn'
+      const { fs, chalk, PROJECT_CONFIG, UPDATE_PACKAGE_LIST } = ctx.helper
       const { appPath, configPath } = ctx.paths
 
       if (!configPath || !fs.existsSync(configPath)) {
@@ -20,14 +19,23 @@ export default (ctx: IPluginContext) => {
         process.exit(1)
       }
 
-      if (rn) {
+      if (hasRnInCommand) {
         const tempPath = path.join(appPath, '.rn_temp')
         if (fs.lstatSync(tempPath).isDirectory()) {
           process.chdir('.rn_temp')
         }
       }
 
-      await info({}, ctx)
+      // TODO: 看到这里了
+      const info = await envinfo.run({
+        System: ['OS', 'Shell'],
+        Binaries: ['Node', 'Yarn', 'npm'],
+        npmPackages: [...UPDATE_PACKAGE_LIST, 'react', 'react-native', 'expo', 'taro-ui'],
+        npmGlobalPackages: ['typescript']
+      }, {
+        title: `Taro CLI ${getPkgVersion()} environment info`
+      })
+      console.log(info)
     },
     synopsisList: [
       'taro info',
@@ -36,15 +44,4 @@ export default (ctx: IPluginContext) => {
   })
 }
 
-async function info (options, ctx) {
-  const npmPackages = ctx.helper.UPDATE_PACKAGE_LIST.concat(['react', 'react-native', 'expo', 'taro-ui'])
-  const info = await envinfo.run(Object.assign({}, {
-    System: ['OS', 'Shell'],
-    Binaries: ['Node', 'Yarn', 'npm'],
-    npmPackages,
-    npmGlobalPackages: ['typescript']
-  }, options), {
-    title: `Taro CLI ${getPkgVersion()} environment info`
-  })
-  console.log(info)
-}
+
