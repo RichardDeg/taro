@@ -5,7 +5,6 @@ import { getPkgVersion } from '../../util'
 
 import type { IPluginContext } from '@tarojs/service'
 
-// TODO: 看到这里了
 export default (ctx: IPluginContext) => {
   ctx.registerCommand({
     name: 'info',
@@ -26,15 +25,12 @@ export default (ctx: IPluginContext) => {
         }
       }
 
-      // TODO: 看到这里了
       const info = await envinfo.run({
         System: ['OS', 'Shell'],
         Binaries: ['Node', 'Yarn', 'npm'],
         npmPackages: [...UPDATE_PACKAGE_LIST, 'react', 'react-native', 'expo', 'taro-ui'],
         npmGlobalPackages: ['typescript']
-      }, {
-        title: `Taro CLI ${getPkgVersion()} environment info`
-      })
+      }, { title: `Taro CLI ${getPkgVersion()} environment info` })
       console.log(info)
     },
     synopsisList: [
