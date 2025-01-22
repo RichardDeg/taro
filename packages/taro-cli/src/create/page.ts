@@ -5,7 +5,6 @@ import { babelKit, chalk, DEFAULT_TEMPLATE_SRC, fs, getUserHomeDir, resolveScrip
 import { getPkgVersion, getRootPath } from '../util'
 import { modifyNode, ModifyNodeState } from '../util/createPage'
 import { TEMPLATE_CREATOR } from './constants'
-import fetchTemplate from './fetchTemplate'
 import Creator from './creator'
 
 import type { CustomPartial } from './types'
@@ -135,7 +134,7 @@ export default class Page extends Creator {
     this.pageEntryPath = mergedName.replace(configFileReg, '')
   }
 
-  async readOrWriteTemplateSource() {
+  async readTemplateSourceFromConfig() {
     if (this.conf.templateSource) return this.conf.templateSource
 
     const homedir = getUserHomeDir()
@@ -160,9 +159,9 @@ export default class Page extends Creator {
 
   async fetchTemplates () {
     // 读取模版源
-    const templateSource = await this.readOrWriteTemplateSource()
+    const templateSource = await this.readTemplateSourceFromConfig()
     // 从模板源下载模板
-    await fetchTemplate(templateSource, this.templatePath(''), this.conf.clone)
+    await this.downloadTemplate(templateSource, this.conf.clone)
   }
 
   // TODO: 关联参考：packages/taro-cli/templates/plugin-compile/src/index.ts

@@ -9,10 +9,9 @@ import { isArray, isSameStr } from '@tarojs/shared'
 
 import { clearConsole, getPkgVersion, getRootPath } from '../util'
 import { TEMPLATE_CREATOR } from './constants'
-import fetchTemplate from './fetchTemplate'
-import Creator  from './creator'
+import Creator from './creator'
 
-import type { ITemplates } from './fetchTemplate'
+import type { ITemplates } from './creator'
 import type { CustomPartial } from './types'
 
 const NONE_AVAILABLE_TEMPLATE = '无可用模板'
@@ -429,7 +428,7 @@ export default class Project extends Creator {
 
     // 下载模板列表
     const isClone = /gitee/.test(confTemplateSource) || confClone
-    const templateArr = await fetchTemplate(confTemplateSource, this.templatePath(''), isClone)
+    const templateArr = await this.downloadTemplate(confTemplateSource, isClone)
     // 过滤模板列表
     return templateArr.filter(({ platforms, compiler }) => filterFrameworkFn(platforms) && filterCompilerFn(compiler))
   }
