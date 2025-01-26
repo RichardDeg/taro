@@ -28,6 +28,7 @@ export default (ctx: IPluginContext, options: IOptions) => {
   const blockElements = ['body', 'svg', 'address', 'fieldset', 'li', 'span', 'article', 'figcaption', 'main', 'aside', 'figure', 'nav', 'blockquote', 'footer', 'ol', 'details', 'p', 'dialog', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'dd', 'header', 'section', 'div', 'hgroup', 'table', 'dl', 'hr', 'ul', 'dt', 'view', 'view-block']
   const specialElements = ['slot', 'form', 'iframe', 'img', 'audio', 'video', 'canvas', 'a', 'input', 'label', 'textarea', 'progress', 'button']
 
+  // TODO: 看到这里了
   patchMappingElements(ctx, options, inlineElements, blockElements)
 
   // 默认允许使用 getBoundingClientRect 等 API
