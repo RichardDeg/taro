@@ -15,13 +15,14 @@ export default (ctx: IPluginContext, pluginOpts) => {
   ctx.modifyWebpackChain(({ chain }: { chain: webpackChain }) => {
     console.log('这里可以修改webpack配置')
     // 示例：利用webpackChain向html中插入脚本
-    if (process.env.TARO_ENV !== 'h5') return
-    chain.plugin('htmlWebpackPlugin').tap(([pluginConfig]) => {
-      return [{
-        ...pluginConfig,
-        script: pluginConfig.script + 'console.log("向html中插入代码");'
-      }]
-    })
+    if (process.env.TARO_ENV === 'h5') {
+      chain.plugin('htmlWebpackPlugin').tap(([pluginConfig]) => {
+        return [{
+          ...pluginConfig,
+          script: pluginConfig.script + 'console.log("向html中插入代码");'
+        }]
+      })
+    }
   })
 
   ctx.onBuildComplete(() => {

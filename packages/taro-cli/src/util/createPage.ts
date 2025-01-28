@@ -3,7 +3,7 @@ import { babelKit } from '@tarojs/helper'
 import { ExportDefaultDeclaration, Expression, ObjectExpression, ObjectProperty, PatternLike, SpreadElement } from '@babel/types'
 import type { NodePath } from 'babel__traverse'
 
-const t = babelKit.types
+const { types: t } = babelKit
 
 export enum ModifyNodeState {
   Success,

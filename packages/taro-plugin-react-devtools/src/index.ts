@@ -39,14 +39,14 @@ export default function (ctx: IPluginContext, options: IOptions) {
   })
 
   ctx.modifyWebpackChain(({ chain }) => {
-    chain
-      .plugin('definePlugin')
-      .tap(args => {
-        const config = args[0]
-        config.__REACT_DEVTOOLS_HOSTNAME__ = hostname
-        config.__REACT_DEVTOOLS_PORT__ = port
-        return args
-      })
+    chain.plugin('definePlugin').tap(([pluginConfig, ...restArgs]) => {
+      const mergedPluginConfig = {
+        ...pluginConfig,
+        __REACT_DEVTOOLS_HOSTNAME__: hostname,
+        __REACT_DEVTOOLS_PORT__: port
+      }
+      return [mergedPluginConfig, ...restArgs]
+    })
 
     // 最理想是可以使用 definePlugin 设置 __REACT_DEVTOOLS_GLOBAL_HOOK__: window.__REACT_DEVTOOLS_GLOBAL_HOOK__
     // 但是 providerPlugin 不会识别 definePlugin 改写的 window 从而注入 window，可能是两个插件的调用时机问题

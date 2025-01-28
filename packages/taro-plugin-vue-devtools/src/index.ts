@@ -39,16 +39,16 @@ export default function (ctx: IPluginContext, options: IOptions) {
   })
 
   ctx.modifyWebpackChain(({ chain }) => {
-    chain
-      .plugin('definePlugin')
-      .tap(args => {
-        const config = args[0]
-        config.__VUE_DEVTOOLS_HOSTNAME__ = hostname
-        config.__VUE_DEVTOOLS_PORT__ = port
-        config.ENABLE_SIZE_APIS = true
-        config.ENABLE_CONTAINS = true
-        return args
-      })
+    chain.plugin('definePlugin').tap(([pluginConfig, ...restArgs]) => {
+      const mergedPluginConfig = {
+        ...pluginConfig,
+        __VUE_DEVTOOLS_HOSTNAME__: hostname,
+        __VUE_DEVTOOLS_PORT__: port,
+        ENABLE_SIZE_APIS: true,
+        ENABLE_CONTAINS: true
+      }
+      return [mergedPluginConfig, ...restArgs]
+    })
 
     chain
       .plugin('providerPlugin')

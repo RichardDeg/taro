@@ -6,11 +6,7 @@ import { isArray, isString } from '@tarojs/shared'
 import type { IPluginContext, TaroPlatformBase } from '@tarojs/service'
 import type { IComponentConfig } from '@tarojs/taro/types/compile/hooks'
 
-const {
-  types: t,
-  generate,
-  traverse
-} = babelKit
+const { types: t, generate, traverse, parse } = babelKit
 
 export interface IOptions {
   pxtransformBlackList?: any[]
@@ -28,18 +24,17 @@ export default (ctx: IPluginContext, options: IOptions) => {
   const blockElements = ['body', 'svg', 'address', 'fieldset', 'li', 'span', 'article', 'figcaption', 'main', 'aside', 'figure', 'nav', 'blockquote', 'footer', 'ol', 'details', 'p', 'dialog', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'dd', 'header', 'section', 'div', 'hgroup', 'table', 'dl', 'hr', 'ul', 'dt', 'view', 'view-block']
   const specialElements = ['slot', 'form', 'iframe', 'img', 'audio', 'video', 'canvas', 'a', 'input', 'label', 'textarea', 'progress', 'button']
 
-  // TODO: 看到这里了
   patchMappingElements(ctx, options, inlineElements, blockElements)
 
-  // 默认允许使用 getBoundingClientRect 等 API
   ctx.modifyWebpackChain(({ chain }) => {
-    chain
-      .plugin('definePlugin')
-      .tap(args => {
-        args[0].ENABLE_SIZE_APIS = options.enableSizeAPIs ?? true
-        return args
-      })
+    chain.plugin('definePlugin').tap(([pluginConfig, ...restArgs]) => {
+      // 默认允许使用 getBoundingClientRect 等 API
+      const mergedEnableSizeAPIs = options.enableSizeAPIs ?? true
+      const mergedPluginConfig = { ...pluginConfig, ENABLE_SIZE_APIS: mergedEnableSizeAPIs}
+      return [mergedPluginConfig, ...restArgs]
+    })
   })
+  // TODO: 看到这里了
   ctx.registerMethod({
     name: 'onSetupClose',
     fn (platform: TaroPlatformBase) {
@@ -114,35 +109,35 @@ function modifyPostcssConfigs (config: Record<string, any>, options: IOptions, i
 }
 
 function patchMappingElements (ctx: IPluginContext, options: IOptions, inlineElements: string[], blockElements: string[]) {
-  const helper = ctx.helper
-  const filePath = path.resolve(__dirname, './runtime.js')
-  const content = helper.fs.readFileSync(filePath).toString()
-  const ast = babelKit.parse(content, { sourceType: 'unambiguous' })
+  const { fs } = ctx.helper
+  const runtimeFilePath = path.resolve(__dirname, './runtime.js')
+  const runtimeFileContent = fs.readFileSync(runtimeFilePath, 'utf-8')
+  const runtimeFileAst = parse(runtimeFileContent, { sourceType: 'unambiguous' })
 
-  if (t.isNode(ast)) {
+  if (t.isNode(runtimeFileAst)) {
     options.modifyElements?.(inlineElements, blockElements)
 
-    traverse(ast, {
+    traverse(runtimeFileAst, {
       VariableDeclarator (path) {
         const node = path.node
         const varId = node.id
         if (varId.type === 'Identifier') {
           if (varId.name === 'inlineElements') {
-            node.init = getNewExpression(inlineElements)
+            node.init = buildNewExpressionAstNode(inlineElements)
           }
           if (varId.name === 'blockElements') {
-            node.init = getNewExpression(blockElements)
+            node.init = buildNewExpressionAstNode(blockElements)
           }
         }
       }
     })
 
-    const str = generate(ast).code
-    helper.fs.writeFileSync(filePath, str)
+    const { code } = generate(runtimeFileAst)
+    fs.writeFileSync(runtimeFilePath, code)
   }
 }
 
-function getNewExpression (elements: string[]) {
+function buildNewExpressionAstNode (elements: string[]) {
   return t.newExpression(
     t.identifier('Set'),
     [t.arrayExpression(elements.map(el => t.stringLiteral(el)))]

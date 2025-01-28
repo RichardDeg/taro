@@ -18,9 +18,10 @@ export interface IOptions {
 export default (ctx: IPluginContext, options: IOptions) => {
   ctx.modifyWebpackChain(({ chain }) => {
     if (process.env.TARO_PLATFORM === 'mini') {
-      chain.plugin('definePlugin').tap((args) => {
-        args[0].ENABLE_COOKIE = options.enableCookie ?? false
-        return args
+      chain.plugin('definePlugin').tap(([pluginConfig, ...restArgs]) => {
+        const mergedEnableCookie = options.enableCookie ?? false
+        const mergedPluginConfig = { ...pluginConfig, ENABLE_COOKIE: mergedEnableCookie}
+        return [mergedPluginConfig, ...restArgs]
       })
 
       const runtimeAlias = `${packageName}/dist/runtime`
