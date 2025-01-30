@@ -34,7 +34,6 @@ export default (ctx: IPluginContext, options: IOptions) => {
       return [mergedPluginConfig, ...restArgs]
     })
   })
-  // TODO: 看到这里了
   ctx.registerMethod({
     name: 'onSetupClose',
     fn (platform: TaroPlatformBase) {
@@ -43,11 +42,7 @@ export default (ctx: IPluginContext, options: IOptions) => {
   })
   // 映射、收集使用到的小程序组件
   ctx.onParseCreateElement(({ nodeName, componentConfig }: OnParseCreateElementArgs) => {
-    if (!(
-      inlineElements.includes(nodeName) ||
-      blockElements.includes(nodeName) ||
-      specialElements.includes(nodeName)
-    )) return
+    if(![...inlineElements, ...blockElements, ...specialElements].includes(nodeName)) return
 
     const simple = ['audio', 'button', 'canvas', 'form', 'label', 'progress', 'textarea', 'video']
     const special = {
@@ -56,21 +51,21 @@ export default (ctx: IPluginContext, options: IOptions) => {
       img: ['image'],
       input: ['input', 'checkbox', 'radio']
     }
-    const includes = componentConfig.includes
 
+    const includes = componentConfig.includes
     if (simple.includes(nodeName) && !includes.has(nodeName)) {
       includes.add(nodeName)
     } else if (nodeName in special) {
       const maps = special[nodeName]
       maps.forEach(item => {
-        !includes.has(item) && includes.add(item)
+        if(!includes.has(item)) includes.add(item)
       })
     }
   })
+  // TODO: 看到这里了
   // 修改 H5 postcss options
   ctx.modifyRunnerOpts(({ opts }) => {
-    if (!opts?.platform) return
-    modifyPostcssConfigs(opts, options, opts.platform === 'h5')
+    modifyPostcssConfigs(opts, options)
   })
 }
 
@@ -83,20 +78,19 @@ function injectRuntimePath (platform: TaroPlatformBase) {
   }
 }
 
-function modifyPostcssConfigs (config: Record<string, any>, options: IOptions, isH5?: boolean) {
+// TODO: 看到这里了
+function modifyPostcssConfigs (config: Record<string, any>, options: IOptions) {
+  if (!config?.platform) return
+
   config.postcss ||= {}
   const postcssConfig = config.postcss
 
-  if (!isH5) {
-    postcssConfig.htmltransform ||= {
-      enable: true
-    }
+  if (config.platform !== 'h5') {
+    postcssConfig.htmltransform ||= { enable: true }
   }
 
   if (options.pxtransformBlackList) {
-    postcssConfig.pxtransform ||= {
-      enable: true
-    }
+    postcssConfig.pxtransform ||= { enable: true }
     const pxtransformConfig = postcssConfig.pxtransform
 
     if (pxtransformConfig.enable) {
