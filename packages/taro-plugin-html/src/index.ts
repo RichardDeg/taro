@@ -62,10 +62,9 @@ export default (ctx: IPluginContext, options: IOptions) => {
       })
     }
   })
-  // TODO: 看到这里了
   // 修改 H5 postcss options
   ctx.modifyRunnerOpts(({ opts }) => {
-    modifyPostcssConfigs(opts, options)
+    modifyPostcssConfig(opts, options)
   })
 }
 
@@ -78,8 +77,7 @@ function injectRuntimePath (platform: TaroPlatformBase) {
   }
 }
 
-// TODO: 看到这里了
-function modifyPostcssConfigs (config: Record<string, any>, options: IOptions) {
+function modifyPostcssConfig (config: Record<string, any>, options: IOptions) {
   if (!config?.platform) return
 
   config.postcss ||= {}
@@ -89,15 +87,14 @@ function modifyPostcssConfigs (config: Record<string, any>, options: IOptions) {
     postcssConfig.htmltransform ||= { enable: true }
   }
 
-  if (options.pxtransformBlackList) {
+  if (!!options.pxtransformBlackList?.length) {
     postcssConfig.pxtransform ||= { enable: true }
-    const pxtransformConfig = postcssConfig.pxtransform
+    const pxtransformInPostcss = postcssConfig.pxtransform
 
-    if (pxtransformConfig.enable) {
-      pxtransformConfig.config ||= {}
-      const config = pxtransformConfig.config
-      config.selectorBlackList ||= []
-      config.selectorBlackList = config.selectorBlackList.concat(options.pxtransformBlackList)
+    if (pxtransformInPostcss.enable) {
+      pxtransformInPostcss.config ||= {}
+      const configInPxtransform = pxtransformInPostcss.config
+      configInPxtransform.selectorBlackList = [...(configInPxtransform.selectorBlackList ||[]), ...options.pxtransformBlackList]
     }
   }
 }
