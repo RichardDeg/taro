@@ -110,11 +110,8 @@ const defaultMiniLifecycle: MiniLifecycle = {
   ]
 }
 
-export function TaroHook (type: HOOK_TYPE, initial?: TFunc): Hook {
-  return {
-    type,
-    initial: initial || null
-  }
+export function TaroHook (type: HOOK_TYPE, initial: TFunc | null = null): Hook {
+  return { type, initial }
 }
 
 export class TaroHooks<T extends Record<string, TFunc> = any> extends Events {
