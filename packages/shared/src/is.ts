@@ -1,3 +1,5 @@
+/** 判断数据类型的函数集合 */
+
 export function isString (o: unknown): o is string {
   return typeof o === 'string'
 }
@@ -36,7 +38,3 @@ export function isObjectStringLiteral (o: unknown): o is string {
 }
 
 export const isArray = Array.isArray
-
-export const isWebPlatform = () => process.env.TARO_ENV === 'h5' || process.env.TARO_PLATFORM === 'web'
-
-export const isSameStr = (str1: string, str2: string) => str1.toLowerCase() === str2.toLowerCase()

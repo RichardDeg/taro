@@ -247,3 +247,7 @@ export function indent (str: string, size: number): string {
     })
     .join('\n')
 }
+
+export const isWebPlatform = () => process.env.TARO_ENV === 'h5' || process.env.TARO_PLATFORM === 'web'
+
+export const isSameStr = (str1: string, str2: string) => str1.toLowerCase() === str2.toLowerCase()
