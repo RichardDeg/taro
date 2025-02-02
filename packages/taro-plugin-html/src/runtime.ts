@@ -13,6 +13,7 @@ import {
 } from './utils'
 
 // TODO: 看到这里了
+// TODO:【???】hooks.tap 中的 tap 是怎样推导出来的 tap 属性
 hooks.tap('modifyHydrateData', (data, node) => {
   const nodeName = data[Shortcuts.NodeName]
   if (!isHtmlTags(nodeName)) return

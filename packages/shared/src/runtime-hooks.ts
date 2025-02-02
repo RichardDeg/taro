@@ -23,27 +23,6 @@ interface Node {
   callback?: TFunc
 }
 
-interface MiniLifecycle {
-  app: [
-    string, /** onLaunch */
-    string, /** onShow */
-    string /** onHide */
-  ]
-  page: [
-    string, /** onLoad */
-    string, /** onUnload */
-    string, /** onReady */
-    string, /** onShow */
-    string, /** onHide */
-    string[], /** others */
-    string[] /** side-effects */
-  ]
-  component: [
-    string, /** attached */
-    string, /** detached */
-  ]
-}
-
 interface MiniElementData {
   [Shortcuts.Childnodes]?: MiniData[]
   [Shortcuts.NodeName]: string
@@ -66,13 +45,37 @@ interface UpdatePayload {
   value: string | boolean | (() => MiniData | MiniData[])
 }
 
-type Target = Record<string, unknown> & { dataset: Record<string, unknown>, id: string }
+type Target = Record<string, unknown> & {
+  dataset: Record<string, unknown>,
+  id: string
+}
 
 interface MpEvent {
   type: string
   detail: Record<string, unknown>
   target: Target
   currentTarget: Target
+}
+
+interface MiniLifecycle {
+  app: [
+    string,   /** onLaunch     */
+    string,   /** onShow       */
+    string    /** onHide       */
+  ]
+  page: [
+    string,   /** onLoad       */
+    string,   /** onUnload     */
+    string,   /** onReady      */
+    string,   /** onShow       */
+    string,   /** onHide       */
+    string[], /** others       */
+    string[]  /** side-effects */
+  ]
+  component: [
+    string,   /** attached     */
+    string,   /** detached     */
+  ]
 }
 
 const defaultMiniLifecycle: MiniLifecycle = {
@@ -133,14 +136,16 @@ export class TaroHooks<T extends Record<string, TFunc> = any> extends Events {
     list.forEach(cb => this.on(hookName, cb))
   }
 
+  // TODO: 看到这里了
   tap<K extends Extract<keyof T, string>> (hookName: K, callback: T[K] | T[K][]) {
-    const hooks = this.hooks
-    const { type, initial } = hooks[hookName]
+    const { type, initial } = this.hooks[hookName]
     if (type === HOOK_TYPE.SINGLE) {
       this.off(hookName)
       this.on(hookName, isFunction(callback) ? callback : callback[callback.length - 1])
     } else {
-      initial && this.off(hookName, initial)
+      if (!!initial) {
+        this.off(hookName, initial)
+      }
       this.tapOneOrMany(hookName, callback)
     }
   }
@@ -186,7 +191,7 @@ type ITaroHooks = {
   /** 解决 React 生命周期名称的兼容问题 */
   getLifecycle: (instance, lifecyle) => TFunc | Array<TFunc> | undefined
   /** 提供Hook，为不同平台提供修改生命周期配置 */
-  modifyRecursiveComponentConfig: (defaultConfig:MiniLifecycle, options:any) => any
+  modifyRecursiveComponentConfig: (defaultConfig: MiniLifecycle, options: any) => any
   /** 解决百度小程序的模版语法问题 */
   getPathIndex: (indexOfNode: number) => string
   /** 解决支付宝小程序分包时全局作用域不一致的问题 */
@@ -262,7 +267,7 @@ export const hooks = new TaroHooks<ITaroHooks>({
 
   getLifecycle: TaroHook(HOOK_TYPE.SINGLE, (instance, lifecycle) => instance[lifecycle]),
 
-  modifyRecursiveComponentConfig: TaroHook(HOOK_TYPE.SINGLE, (defaultConfig) => defaultConfig),
+  modifyRecursiveComponentConfig: TaroHook(HOOK_TYPE.SINGLE, defaultConfig => defaultConfig),
 
   getPathIndex: TaroHook(HOOK_TYPE.SINGLE, indexOfNode => `[${indexOfNode}]`),
 
