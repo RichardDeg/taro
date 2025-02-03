@@ -1,40 +1,35 @@
 type EventName = string | symbol
-type EventCallbacks = Record<EventName, Record<'next' | 'tail', unknown>>
+type EventCallbacks = Record<EventName, Record<'next' | 'tail', Object>>
 
 export class Events {
   protected callbacks?: EventCallbacks
-  static eventSplitter = ',' // Note: Harmony ACE API 8 开发板不支持使用正则 split 字符串 /\s+/
+  // Note: Harmony ACE API 8 开发板不支持使用正则 split 字符串 /\s+/
+  static eventSplitter = ','
 
   constructor (opts?) {
     this.callbacks = opts?.callbacks ?? {}
   }
 
-  on (eventName: EventName, callback: (...args: any[]) => void, context?: any): this {
-    let event: EventName | undefined, tail, _eventName: EventName[]
-    if (!callback) {
-      return this
-    }
-    if (typeof eventName === 'symbol') {
-      _eventName = [eventName]
-    } else {
-      _eventName = eventName.split(Events.eventSplitter)
-    }
+  on (eventName: EventName, callback?: (...args: any[]) => void, context?: any): this {
+    if (!callback) return this
+
     this.callbacks ||= {}
-    const calls = this.callbacks
-    while ((event = _eventName.shift())) {
-      const list = calls[event]
-      const node: any = list ? list.tail : {}
-      node.next = tail = {}
-      node.context = context
-      node.callback = callback
-      calls[event] = {
-        tail,
-        next: list ? list.next : node
+    const eventList: (EventName | undefined)[] = typeof eventName === 'symbol' ? [eventName] : eventName.split(Events.eventSplitter)
+    for (const event of eventList) {
+      if (!event) break
+
+      const tail = {}
+      if (this.callbacks[event]) {
+        this.callbacks[event].tail = tail
+      } else {
+        const node = { next: tail, context, callback }
+        this.callbacks[event] = { tail, next: node }
       }
     }
     return this
   }
 
+  // TODO: 看到这里了
   once (events: EventName, callback: (...r: any[]) => void, context?: any): this {
     const wrapper = (...args: any[]) => {
       callback.apply(this, args)
