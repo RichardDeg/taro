@@ -1,5 +1,14 @@
 type EventName = string | symbol
+// TODO: 待移除 any 类型，确定 EventCallbacks 与 node 的 ts 类型，还有可选参数问题
+// // TODO: 待确定，这样定义 ts 类型是否会引起循环引用问题
+// type EventCallbackNode = {
+//   next: EventCallbackNode
+//   tail?: EventCallbackNode
+//   callback?: CallbackFn
+//   context?: any
+// }
 type EventCallbacks = Record<EventName, Record<'next' | 'tail', Object>>
+type CallbackFn = (...args: any[]) => void
 
 export class Events {
   protected callbacks?: EventCallbacks
@@ -10,9 +19,7 @@ export class Events {
     this.callbacks = opts?.callbacks ?? {}
   }
 
-  on (eventName: EventName, callback?: (...args: any[]) => void, context?: any): this {
-    if (!callback) return this
-
+  on (eventName: EventName, callback: CallbackFn, context?: any) {
     this.callbacks ||= {}
     const eventList: (EventName | undefined)[] = typeof eventName === 'symbol' ? [eventName] : eventName.split(Events.eventSplitter)
     for (const event of eventList) {
@@ -30,37 +37,30 @@ export class Events {
   }
 
   // TODO: 看到这里了
-  once (events: EventName, callback: (...r: any[]) => void, context?: any): this {
-    const wrapper = (...args: any[]) => {
-      callback.apply(this, args)
-      this.off(events, wrapper, context)
-    }
+  off (eventName?: EventName, callback?: CallbackFn, context?: any) {
+    // 无注册事件，直接返回
+    if (!this.callbacks) return this
 
-    this.on(events, wrapper, context)
-
-    return this
-  }
-
-  off (events?: EventName, callback?: (...args: any[]) => void, context?: any) {
-    let event: EventName | undefined, calls: EventCallbacks | undefined, _events: EventName[]
-    if (!(calls = this.callbacks)) {
-      return this
-    }
-    if (!(events || callback || context)) {
+    // 清空所有注册事件
+    if (!eventName && !callback && !context) {
       delete this.callbacks
       return this
     }
-    if (typeof events === 'symbol') {
-      _events = [events]
-    } else {
-      _events = events ? events.split(Events.eventSplitter) : Object.keys(calls)
-    }
-    while ((event = _events.shift())) {
-      let node: any = calls[event]
-      delete calls[event]
-      if (!node || !(callback || context)) {
-        continue
-      }
+
+    const eventList: (EventName | undefined)[] = typeof eventName === 'symbol'
+      ? [eventName]
+      : !!eventName
+        ? eventName.split(Events.eventSplitter)
+        : Object.keys(this.callbacks)
+
+    // TODO: 看到这里了
+    for (const event of eventList) {
+      if (!event) break
+
+      let node: any = this.callbacks[event]
+      delete this.callbacks[event]
+      if (!node || (!callback && !context)) continue
+
       const tail = node.tail
       while ((node = node.next) !== tail) {
         const cb = node.callback
@@ -73,22 +73,30 @@ export class Events {
     return this
   }
 
-  trigger (events: EventName, ...args: any[]) {
-    let event: EventName | undefined, node, calls: EventCallbacks | undefined, _events: EventName[]
-    if (!(calls = this.callbacks)) {
-      return this
+  once (eventName: EventName, callback: CallbackFn, context?: any) {
+    const wrapper = (...wrapperArgs: any[]) => {
+      callback.apply(this, wrapperArgs)
+      this.off(eventName, wrapper, context)
     }
-    if (typeof events === 'symbol') {
-      _events = [events]
-    } else {
-      _events = events.split(Events.eventSplitter)
-    }
-    while ((event = _events.shift())) {
-      if ((node = calls[event])) {
-        const tail = node.tail
-        while ((node = node.next) !== tail) {
-          node.callback.apply(node.context || this, args)
-        }
+
+    this.on(eventName, wrapper, context)
+
+    return this
+  }
+
+  trigger (eventName: EventName, ...args: any[]) {
+    if (!this.callbacks) return this
+
+    const eventList: (EventName | undefined)[] = typeof eventName === 'symbol' ? [eventName] : eventName.split(Events.eventSplitter)
+    for (const event of eventList) {
+      if (!event) break
+
+      let node: any = this.callbacks[event]
+      if (!node) continue
+
+      const tail = node.tail
+      while ((node = node.next) !== tail) {
+        node.callback.apply(node.context || this, args)
       }
     }
     return this
