@@ -29,7 +29,7 @@ export class Events {
       if (this.callbacks[event]) {
         this.callbacks[event].tail = tail
       } else {
-        const node = { next: tail, context, callback }
+        const node = { next: tail, callback, context }
         this.callbacks[event] = { tail, next: node }
       }
     }
@@ -53,20 +53,27 @@ export class Events {
         ? eventName.split(Events.eventSplitter)
         : Object.keys(this.callbacks)
 
-    // TODO: 看到这里了
+    // TODO: 待重构，以双节点指针的形式，改写 node 链表上的节点
     for (const event of eventList) {
       if (!event) break
 
       let node: any = this.callbacks[event]
+      // 清空指定注册事件, 删除 node 链表的全部节点
       delete this.callbacks[event]
-      if (!node || (!callback && !context)) continue
 
-      const tail = node.tail
-      while ((node = node.next) !== tail) {
-        const cb = node.callback
-        const ctx = node.context
-        if ((callback && cb !== callback) || (context && ctx !== context)) {
-          this.on(event, cb, ctx)
+      if (!!node && (!!callback || !!context)) {
+        const tail = node.tail
+        node = node.next
+
+        this.callbacks ||= {}
+        while (node !== tail) {
+          const cb = node.callback
+          const ctx = node.context
+          // 重新注册事件, 重新创建 node 链表的节点（剔除 callback 或 context 的同属性节点）
+          if ((callback && cb !== callback) || (context && ctx !== context)) {
+            this.on(event, cb, ctx)
+          }
+          node = node.next
         }
       }
     }
@@ -95,8 +102,12 @@ export class Events {
       if (!node) continue
 
       const tail = node.tail
-      while ((node = node.next) !== tail) {
-        node.callback.apply(node.context || this, args)
+      node = node.next
+      while (node !== tail) {
+        const cb = node.callback
+        const ctx = node.context
+        cb.apply(ctx || this, args)
+        node = node.next
       }
     }
     return this
