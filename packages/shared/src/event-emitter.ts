@@ -25,21 +25,28 @@ export class Events {
   }
 
   on (eventName: EventName, callback: CallbackFn, context?: any) {
+    if (!callback) return this
+
     this.callbacks ||= {}
     const eventList: (EventName | undefined)[] = typeof eventName === 'symbol' ? [eventName] : eventName.split(Events.eventSplitter)
     for (const event of eventList) {
       if (!event) break
 
-      const tailNode = {}
-      if (this.callbacks[event]) {
-        // TODO: 这个 if 分支功能待确定 ???
-        this.callbacks[event].tail = tailNode
-      } else {
-        const eventNode = { next: tailNode, callback, context }
-        const headerNode = { tail: tailNode, next: eventNode }
-        this.callbacks[event] = headerNode
-      }
+      // !!! tail 既做指针，也做值使用。每轮循环创建的空对象都有2个指针：tail 和 node.next
+      const tail = {}
+      const list = this.callbacks[event]
+
+      // !!! 此处用于同步2个指针的指向：tail 和 node.next
+      const node: any = list ? list.tail : {}
+      node.callback = callback
+      node.context = context
+      // !!! 此处同步改动3处：改变本轮 node.next 指针的指向；覆写了 上一轮 list.tail & list.next.next 两个指针代表的对象的值
+      node.next = tail
+
+      // !!! 此处改动1处：改变本轮 tail 指针的指向，保持和本轮 node.next 指向一致
+      this.callbacks[event] = { tail, next: list ? list.next : node }
     }
+
     return this
   }
 
@@ -70,13 +77,13 @@ export class Events {
     for (const event of eventList) {
       if (!event) break
 
-      const headerNode: any = this.callbacks[event]
+      const headNode: any = this.callbacks[event]
       // 清除指定注册事件, 删除 node 链表的全部节点
       delete this.callbacks[event]
 
-      if (!!headerNode && (!!callback || !!context)) {
-        const tailNode = headerNode.tail
-        let eventNode = headerNode.next
+      if (!!headNode && (!!callback || !!context)) {
+        const tailNode = headNode.tail
+        let eventNode = headNode.next
         while (eventNode !== tailNode) {
           const cb = eventNode.callback
           const ctx = eventNode.context
@@ -109,11 +116,11 @@ export class Events {
     for (const event of eventList) {
       if (!event) break
 
-      const headerNode: any = this.callbacks[event]
-      if (!headerNode) continue
+      const headNode: any = this.callbacks[event]
+      if (!headNode) continue
 
-      const tailNode = headerNode.tail
-      let eventNode = headerNode.next
+      const tailNode = headNode.tail
+      let eventNode = headNode.next
       while (eventNode !== tailNode) {
         const cb = eventNode.callback
         const ctx = eventNode.context
