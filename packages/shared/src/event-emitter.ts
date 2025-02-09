@@ -1,6 +1,6 @@
 type EventName = string | symbol
 type EventCallbacks = Record<EventName, Record<'next' | 'tail', Object>>
-type CallbackFn = (...args: any[]) => void
+export type CallbackFn = (...args: any[]) => void
 
 export class Events {
   protected callbacks?: EventCallbacks

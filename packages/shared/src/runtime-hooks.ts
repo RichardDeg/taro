@@ -2,9 +2,7 @@ import { Events } from './event-emitter'
 import { isFunction } from './is'
 
 import type { Shortcuts } from './template'
-
-// Note: @tarojs/runtime 不依赖 @tarojs/taro, 所以不能改为从 @tarojs/taro 引入 (可能导致循环依赖)
-type TFunc = (...args: any[]) => any
+import type { CallbackFn } from './event-emitter'
 
 export enum HOOK_TYPE {
   SINGLE,
@@ -14,13 +12,13 @@ export enum HOOK_TYPE {
 
 interface Hook {
   type: HOOK_TYPE
-  initial?: TFunc | null
+  initial?: CallbackFn | null
 }
 
 interface Node {
   next: Node
   context?: any
-  callback?: TFunc
+  callback?: CallbackFn
 }
 
 interface MiniElementData {
@@ -113,11 +111,11 @@ const defaultMiniLifecycle: MiniLifecycle = {
   ]
 }
 
-export function TaroHook (type: HOOK_TYPE, initial: TFunc | null = null): Hook {
+export function TaroHook (type: HOOK_TYPE, initial: CallbackFn | null = null): Hook {
   return { type, initial }
 }
 
-export class TaroHooks<T extends Record<string, TFunc> = any> extends Events {
+export class TaroHooks<T extends Record<string, CallbackFn> = any> extends Events {
   hooks: Record<keyof T, Hook>
 
   constructor (hooks: Record<keyof T, Hook>, opts?) {
@@ -136,7 +134,6 @@ export class TaroHooks<T extends Record<string, TFunc> = any> extends Events {
     list.forEach(cb => this.on(hookName, cb))
   }
 
-  // TODO: 看到这里了
   tap<K extends Extract<keyof T, string>> (hookName: K, callback: T[K] | T[K][]) {
     const { type, initial } = this.hooks[hookName]
     if (type === HOOK_TYPE.SINGLE) {
@@ -150,33 +147,26 @@ export class TaroHooks<T extends Record<string, TFunc> = any> extends Events {
     }
   }
 
-  call<K extends Extract<keyof T, string>> (hookName: K, ...rest: Parameters<T[K]>): ReturnType<T[K]> | undefined {
+  call<K extends Extract<keyof T, string>> (hookName: K, ...restArgs: Parameters<T[K]>): ReturnType<T[K]> | undefined {
     const hook = this.hooks[hookName]
-    if (!hook) return
+    if (!hook || !this.callbacks) return
 
-    const { type } = hook
+    const list = this.callbacks[hookName] as { tail: Node, next: Node }
+    if(!list) return
 
-    const calls = this.callbacks
-    if (!calls) return
+    const tail = list.tail
+    let node = list.next
+    let args: any[] = restArgs
+    let res
 
-    const list = calls[hookName] as { tail: Node, next: Node }
-
-    if (list) {
-      const tail = list.tail
-      let node: Node = list.next
-      let args = rest
-      let res
-
-      while (node !== tail) {
-        res = node.callback?.apply(node.context || this, args)
-        if (type === HOOK_TYPE.WATERFALL) {
-          const params: any = [res]
-          args = params
-        }
-        node = node.next
+    while (node !== tail) {
+      res = node.callback?.apply(node.context || this, args)
+      if (hook.type === HOOK_TYPE.WATERFALL) {
+        args = [res]
       }
-      return res
+      node = node.next
     }
+    return res
   }
 
   isExist (hookName: string) {
@@ -189,7 +179,7 @@ type ITaroHooks = {
   getMiniLifecycle: (defaultConfig: MiniLifecycle) => MiniLifecycle
   getMiniLifecycleImpl: () => MiniLifecycle
   /** 解决 React 生命周期名称的兼容问题 */
-  getLifecycle: (instance, lifecyle) => TFunc | Array<TFunc> | undefined
+  getLifecycle: (instance, lifecyle) => CallbackFn | Array<CallbackFn> | undefined
   /** 提供Hook，为不同平台提供修改生命周期配置 */
   modifyRecursiveComponentConfig: (defaultConfig: MiniLifecycle, options: any) => any
   /** 解决百度小程序的模版语法问题 */
@@ -200,7 +190,7 @@ type ITaroHooks = {
   getSpecialNodes: () => string[]
   onRemoveAttribute: (element, qualifiedName: string) => boolean
   /** 用于把 React 同一事件回调中的所有 setState 合并到同一个更新处理中 */
-  batchedEventUpdates: (cb: TFunc) => void
+  batchedEventUpdates: (cb: CallbackFn) => void
   /** 用于处理 React 中的小程序生命周期 hooks */
   mergePageInstance: (prev, next) => void
   /** 用于修改传递给小程序 Page 构造器的对象 */
