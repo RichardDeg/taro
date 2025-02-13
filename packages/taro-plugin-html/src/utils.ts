@@ -1,15 +1,12 @@
 import { isHasExtractProp } from '@tarojs/runtime'
 import { isFunction, isString, Shortcuts, toCamelCase } from '@tarojs/shared'
 
-import {
-  blockElements,
-  inlineElements,
-  specialElements,
-  SpecialMaps
-} from './constant'
+// TODO: ??? inlineElements 和 blockElements 目前都为空 Set, 此常数变量是否有问题
+import { blockElements, inlineElements, specialElements, SpecialMaps } from './constant'
 
 import type { TaroElement } from '@tarojs/runtime'
 
+// TODO: ??? inlineElements 和 blockElements 目前都为空 Set, 此函数是否有问题
 export function isHtmlTags (nodeName: string): boolean {
   if (inlineElements.has(nodeName) || blockElements.has(nodeName) || specialElements.has(nodeName)) {
     return true
@@ -22,9 +19,7 @@ export function getMappedType (nodeName: string, rawProps: Record<string, any>, 
     return 'text'
   } else if (specialElements.has(nodeName)) {
     const mapping = specialElements.get(nodeName)!
-    if (isString(mapping)) {
-      return mapping
-    }
+    if (isString(mapping)) return mapping
     const { mapName } = mapping
     return isFunction(mapName) ? mapName(rawProps) : mapName
   } else {
@@ -89,8 +84,8 @@ export function ensureHtmlClass (tagName: string, className = ''): string {
 }
 
 export function ensureRect (props: Record<string, any>, style = ''): string {
-  let cssText = style
   const { width, height } = props
+  let cssText = style
   if (width) {
     cssText = `width: ${width};${cssText}`
   }

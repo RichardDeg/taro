@@ -12,13 +12,13 @@ import {
   mapNameByContion
 } from './utils'
 
-// TODO: 看到这里了
-// TODO:【???】hooks.tap 中的 tap 是怎样推导出来的 tap 属性
 hooks.tap('modifyHydrateData', (data, node) => {
   const nodeName = data[Shortcuts.NodeName]
   if (!isHtmlTags(nodeName)) return
 
-  process.env.NODE_ENV !== 'production' && warn(data[Shortcuts.NodeName] === 'select', '请使用 Picker 组件代替 <select>')
+  if(process.env.NODE_ENV !== 'production') {
+    warn(nodeName === 'select', '请使用 Picker 组件代替 <select>')
+  }
 
   // map nodeName
   data[Shortcuts.NodeName] = getMappedType(nodeName, data, node)
@@ -49,6 +49,7 @@ hooks.tap('modifyHydrateData', (data, node) => {
   data[Shortcuts.Style] = ensureRect(data, data[Shortcuts.Style])
 })
 
+// TODO: 看到这里了
 hooks.tap('modifySetAttrPayload', (element, key, payload, componentsAlias) => {
   const { nodeName, _path, props } = element
   if (!isHtmlTags(nodeName)) return

@@ -11,6 +11,7 @@ export class Events {
     this.callbacks = opts?.callbacks ?? {}
   }
 
+  // TODO:??? on 的事件注册，为什么使用类似 next.next1.next2.next3 嵌套的形式存储，而不直接使用数组呢？
   on (eventName: EventName, callback: CallbackFn, context?: any) {
     if (!callback) return this
 
