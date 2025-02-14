@@ -49,7 +49,6 @@ hooks.tap('modifyHydrateData', (data, node) => {
   data[Shortcuts.Style] = ensureRect(data, data[Shortcuts.Style])
 })
 
-// TODO: 看到这里了
 hooks.tap('modifySetAttrPayload', (element, key, payload, componentsAlias) => {
   const { nodeName, _path, props } = element
   if (!isHtmlTags(nodeName)) return
@@ -104,6 +103,7 @@ hooks.tap('modifySetAttrPayload', (element, key, payload, componentsAlias) => {
   }
 })
 
+// TODO: 看到这里了
 hooks.tap('modifyRmAttrPayload', (element, key, payload, componentsAlias) => {
   const { nodeName, _path, props } = element
   if (!isHtmlTags(nodeName)) return
