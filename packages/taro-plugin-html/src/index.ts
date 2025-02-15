@@ -30,7 +30,7 @@ export default (ctx: IPluginContext, options: IOptions) => {
     chain.plugin('definePlugin').tap(([pluginConfig, ...restArgs]) => {
       // 默认允许使用 getBoundingClientRect 等 API
       const mergedEnableSizeAPIs = options.enableSizeAPIs ?? true
-      const mergedPluginConfig = { ...pluginConfig, ENABLE_SIZE_APIS: mergedEnableSizeAPIs}
+      const mergedPluginConfig = { ...pluginConfig, ENABLE_SIZE_APIS: mergedEnableSizeAPIs }
       return [mergedPluginConfig, ...restArgs]
     })
   })

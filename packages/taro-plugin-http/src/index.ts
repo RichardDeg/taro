@@ -6,6 +6,7 @@ import { name as packageName } from '../package.json'
 
 import type { IPluginContext, TaroPlatformBase } from '@tarojs/service'
 
+// TODO: 看到这里了
 export interface IOptions {
   /** 支持 document.cookie 和 http 设置 cookie (默认false) */
   enableCookie?: boolean
