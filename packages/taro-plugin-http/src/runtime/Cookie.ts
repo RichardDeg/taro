@@ -1,6 +1,6 @@
 /******************************************************************************
 Copyright (c) 2019 wechat-miniprogram.
-Reference and modify code  by miniprogram-render/src/bom/cookie.js.
+Reference and modify code by miniprogram-render/src/bom/cookie.js.
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -23,6 +23,7 @@ export class Cookie {
     this.#map = {} // 三维数组，domain - path - key
   }
 
+  // TODO: 看到这里了
   static parse (cookieStr: string) {
     if (!cookieStr && typeof cookieStr !== 'string') return null
 
@@ -36,6 +37,7 @@ export class Cookie {
     const key = (parseKeyValue[1] || '').trim()
     const value = (parseKeyValue[2] || '').trim()
 
+    // TODO: 看到这里了
     // 其他字段
     let path: string | null = null
     let domain: string | null = null

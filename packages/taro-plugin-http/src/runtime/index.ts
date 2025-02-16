@@ -5,6 +5,7 @@ import { type XMLHttpRequestEvent, XMLHttpRequest } from './XMLHttpRequest'
 
 declare const ENABLE_COOKIE: boolean
 
+// TODO: 看到这里了
 if (process.env.TARO_PLATFORM !== 'web') {
   if (ENABLE_COOKIE) {
     const _cookie = createCookieInstance()

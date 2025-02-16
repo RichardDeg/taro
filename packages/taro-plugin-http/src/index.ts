@@ -6,7 +6,6 @@ import { name as packageName } from '../package.json'
 
 import type { IPluginContext, TaroPlatformBase } from '@tarojs/service'
 
-// TODO: 看到这里了
 export interface IOptions {
   /** 支持 document.cookie 和 http 设置 cookie (默认false) */
   enableCookie?: boolean
@@ -21,22 +20,32 @@ export default (ctx: IPluginContext, options: IOptions) => {
     if (process.env.TARO_PLATFORM === 'mini') {
       chain.plugin('definePlugin').tap(([pluginConfig, ...restArgs]) => {
         const mergedEnableCookie = options.enableCookie ?? false
-        const mergedPluginConfig = { ...pluginConfig, ENABLE_COOKIE: mergedEnableCookie}
+        const mergedPluginConfig = { ...pluginConfig, ENABLE_COOKIE: mergedEnableCookie }
         return [mergedPluginConfig, ...restArgs]
       })
 
       const runtimeAlias = `${packageName}/dist/runtime`
       chain.resolve.alias.set(runtimeAlias, path.join(__dirname, 'runtime.js'))
       // 注入相关全局BOM对象
-      chain.plugin('providerPlugin').tap((args) => {
-        args[0].XMLHttpRequest = [runtimeAlias, 'XMLHttpRequest']
-
+      chain.plugin('providerPlugin').tap(([pluginConfig, ...restArgs]) => {
+        let mergedFormData = pluginConfig.FormData
+        let mergedBlob = pluginConfig.Blob
         // 实际上本runtime 没有实现 FormData 和 Blob 对象， 所以第三方库中的这2个对象会被替换成 undefined
-        // （axios这类请求库用到了这2个对象，所以要么实现它要么把它替换掉, 这里我们选择把它替换掉，这样可以确保除了上传以外的功能可以继续使用）
-        ;(options.disabledFormData ?? true) && (args[0].FormData ||= [runtimeAlias, 'FormData'])
-        ;(options.disabledBlob ?? true) && (args[0].Blob ||= [runtimeAlias, 'Blob'])
-
-        return args
+        // (axios这类请求库用到了这2个对象，所以要么实现它要么把它替换掉, 这里我们选择把它替换掉，这样可以确保除了上传以外的功能可以继续使用)
+        if(options.disabledFormData ?? true) {
+          mergedFormData ||= [runtimeAlias, 'FormData']
+        }
+        if(options.disabledBlob ?? true) {
+          mergedBlob ||= [runtimeAlias, 'Blob']
+        }
+        const mergedXMLHttpRequest = [runtimeAlias, 'XMLHttpRequest']
+        const mergedPluginConfig = {
+          ...pluginConfig,
+          XMLHttpRequest: mergedXMLHttpRequest,
+          FormData: mergedFormData,
+          Blob: mergedBlob,
+        }
+        return [mergedPluginConfig, ...restArgs]
       })
 
       // if (ctx.initialConfig.compiler === 'webpack4' || (isObject<boolean>(ctx.initialConfig.compiler) && ctx.initialConfig.compiler.type === 'webpack4')) {
