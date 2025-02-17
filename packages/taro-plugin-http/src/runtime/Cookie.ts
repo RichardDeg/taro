@@ -24,19 +24,18 @@ export class Cookie {
   }
 
   static parse (cookieStr: string) {
-    if (!cookieStr && typeof cookieStr !== 'string') return null
+    if (!cookieStr || typeof cookieStr !== 'string') return null
 
     const cookieStrArr = cookieStr.trim().split(';')
 
-    // key-value
+    /************** 解析 cookie 字段: name、value *************************************************/
     // eslint-disable-next-line no-control-regex
-    const parseKeyValue = /^([^=;\x00-\x1F]+)=([^;\n\r\0\x00-\x1F]*).*/.exec(cookieStrArr.shift()!)
-    if (!parseKeyValue) return null
+    const parseNameAndValueResult = /^([^=;\x00-\x1F]+)=([^;\n\r\0\x00-\x1F]*).*/.exec(cookieStrArr.shift()!)
+    if (!parseNameAndValueResult) return null
+    const cookieName = (parseNameAndValueResult[1] || '').trim()
+    const cookieValue = (parseNameAndValueResult[2] || '').trim()
 
-    const key = (parseKeyValue[1] || '').trim()
-    const value = (parseKeyValue[2] || '').trim()
-
-    // 其他字段
+    /************** 解析 cookie 字段: path、domain、expires、maxAge、secure、httpOnly **************/
     let path: string | null = null
     let domain: string | null = null
     let expires: number | null = null
@@ -81,8 +80,8 @@ export class Cookie {
     }
 
     return {
-      key,
-      value,
+      key: cookieName,
+      value: cookieValue,
       path,
       domain,
       expires,
@@ -107,7 +106,6 @@ export class Cookie {
     return path.startsWith(cookiePath)
   }
 
-  // TODO: 看到这里了
   /**
    * 判断过期
    */
@@ -123,6 +121,7 @@ export class Cookie {
     return true
   }
 
+  // TODO: 看到这里了
   /**
    * 设置 cookie
    */
