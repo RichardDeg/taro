@@ -23,7 +23,6 @@ export class Cookie {
     this.#map = {} // 三维数组，domain - path - key
   }
 
-  // TODO: 看到这里了
   static parse (cookieStr: string) {
     if (!cookieStr && typeof cookieStr !== 'string') return null
 
@@ -37,7 +36,6 @@ export class Cookie {
     const key = (parseKeyValue[1] || '').trim()
     const value = (parseKeyValue[2] || '').trim()
 
-    // TODO: 看到这里了
     // 其他字段
     let path: string | null = null
     let domain: string | null = null
@@ -79,9 +77,6 @@ export class Cookie {
         case 'httponly':
           httpOnly = true
           break
-        default:
-          // ignore
-          break
       }
     }
 
@@ -102,22 +97,17 @@ export class Cookie {
    */
   $_checkDomain (host, cookieDomain) {
     if (host === cookieDomain) return true
-
-    const index = host.indexOf(`.${cookieDomain}`)
-
-    return index > 0 && cookieDomain.length + index + 1 === host.length
+    return host.endsWith(`.${cookieDomain}`)
   }
 
   /**
    * 判断 path
    */
   $_checkPath (path, cookiePath) {
-    if (path === cookiePath) return true
-
-    cookiePath = cookiePath === '/' ? '' : cookiePath
-    return path.indexOf(`${cookiePath}/`) === 0
+    return path.startsWith(cookiePath)
   }
 
+  // TODO: 看到这里了
   /**
    * 判断过期
    */
