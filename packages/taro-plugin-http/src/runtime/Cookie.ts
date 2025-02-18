@@ -16,7 +16,12 @@ PERFORMANCE OF THIS SOFTWARE.
 import { parseUrl } from '@tarojs/runtime'
 import { getStorageSync, setStorage } from '@tarojs/taro'
 
+// FIXME: 猜测: 部分函数的入参类型不标明，即表示对第三方传入的入参类型持不信任态度，所以要用 js 逻辑兜底类型校验
+
 const STORAGE_KEY = 'PAGE_COOKIE'
+
+type CustomCookieObj = Exclude<ReturnType<typeof Cookie.parse>, null> & { createTime?: string } | null
+
 export class Cookie {
   #map: any
   constructor () {
@@ -126,44 +131,44 @@ export class Cookie {
    * 设置 cookie
    */
   setCookie (cookie, url) {
-    cookie = Cookie.parse(cookie)
+    const mergedCookie: CustomCookieObj = Cookie.parse(cookie)
+    if (!mergedCookie) return
 
-    if (!cookie) return
-
+    // TODO: 看到这里了
     const { hostname, port, pathname } = parseUrl(url)
     const host = (hostname || '') + (port ? ':' + port : '') || ''
     const path = (pathname || '')[0] === '/' ? pathname : '/'
 
-    if (cookie.domain) {
+    if (mergedCookie.domain) {
       // 判断 domain
-      if (!this.$_checkDomain(host, cookie.domain)) return
+      if (!this.$_checkDomain(host, mergedCookie.domain)) return
     } else {
       // 使用 host 作为默认的 domain
-      cookie.domain = host
+      mergedCookie.domain = host
     }
 
     // 需要设置 path 字段的情况，取 url 中除去最后一节的 path
-    if (!cookie.path || cookie.path[0] !== '/') {
+    if (!mergedCookie.path || mergedCookie.path[0] !== '/') {
       const lastIndex = path.lastIndexOf('/')
 
-      cookie.path = lastIndex === 0 ? path : path.substr(0, lastIndex)
+      mergedCookie.path = lastIndex === 0 ? path : path.substr(0, lastIndex)
     }
 
     // 存入 cookie
     const map = this.#map
-    const cookieDomain = cookie.domain
-    const cookiePath = cookie.path
-    const cookieKey = cookie.key
+    const cookieDomain = mergedCookie.domain
+    const cookiePath = mergedCookie.path || ''
+    const cookieKey = mergedCookie.key
 
     if (!map[cookieDomain]) map[cookieDomain] = {}
     if (!map[cookieDomain][cookiePath]) map[cookieDomain][cookiePath] = {}
 
     const oldCookie = map[cookieDomain][cookiePath][cookieKey]
-    cookie.createTime = (oldCookie && oldCookie.createTime) || Date.now()
+    mergedCookie.createTime = (oldCookie && oldCookie.createTime) || Date.now()
 
-    if (this.$_checkExpires(cookie)) {
+    if (this.$_checkExpires(mergedCookie)) {
       // 未过期
-      map[cookieDomain][cookiePath][cookieKey] = cookie
+      map[cookieDomain][cookiePath][cookieKey] = mergedCookie
     } else if (oldCookie) {
       // 存在旧 cookie，且被设置为已过期
       delete map[cookieDomain][cookiePath][cookieKey]
