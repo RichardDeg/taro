@@ -179,6 +179,7 @@ export type { TaroURL }
 export const TaroURLProvider: typeof TaroURL = process.env.TARO_PLATFORM === 'web' ? env.window.URL : TaroURL
 
 export function parseUrl (url = '') {
+  // 参考 window.location 的输出结构
   const result = {
     href: '',
     origin: '',
@@ -193,12 +194,11 @@ export function parseUrl (url = '') {
   if (!url || !isString(url)) return result
 
   url = url.trim()
-  const PATTERN = /^(([^:/?#]+):)?\/\/(([^/?#]+):(.+)@)?([^/?#:]*)(:(\d+))?([^?#]*)(\?([^#]*))?(#(.*))?/
-  const matches = url.match(PATTERN)
+  const reg = /^(([^:/?#]+):)?\/\/(([^/?#]+):(.+)@)?([^/?#:]*)(:(\d+))?([^?#]*)(\?([^#]*))?(#(.*))?/
+  const matches = url.match(reg)
 
   if (!matches) return result
 
-  // TODO: username & password ?
   result.protocol = matches[1] || 'https:'
   result.hostname = matches[6] || 'taro.com'
   result.port = matches[8] || ''

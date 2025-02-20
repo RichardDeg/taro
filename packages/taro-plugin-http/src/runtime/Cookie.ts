@@ -126,7 +126,7 @@ export class Cookie {
     return true
   }
 
-  // TODO: 看到这里了
+  // TODO: 看到这里了，代码结构待梳理，从功能角度出发；空值处理有问题
   /**
    * 设置 cookie
    */
@@ -134,11 +134,10 @@ export class Cookie {
     const mergedCookie: CustomCookieObj = Cookie.parse(cookie)
     if (!mergedCookie) return
 
-    // TODO: 看到这里了
-    const { hostname, port, pathname } = parseUrl(url)
-    const host = (hostname || '') + (port ? ':' + port : '') || ''
-    const path = (pathname || '')[0] === '/' ? pathname : '/'
+    const { host, pathname } = parseUrl(url)
+    const path = pathname[0] === '/' ? pathname : '/'
 
+    // TODO: 看到这里了
     if (mergedCookie.domain) {
       // 判断 domain
       if (!this.$_checkDomain(host, mergedCookie.domain)) return
@@ -156,7 +155,7 @@ export class Cookie {
 
     // 存入 cookie
     const map = this.#map
-    const cookieDomain = mergedCookie.domain
+    const cookieDomain = mergedCookie.domain || ''
     const cookiePath = mergedCookie.path || ''
     const cookieKey = mergedCookie.key
 
