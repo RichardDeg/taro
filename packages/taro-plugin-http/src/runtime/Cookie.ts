@@ -19,13 +19,11 @@ import { getStorageSync, setStorage } from '@tarojs/taro'
 // FIXME: 猜测: 部分函数的入参类型不标明，即表示对第三方传入的入参类型持不信任态度，所以要用 js 逻辑兜底类型校验
 
 const STORAGE_KEY = 'PAGE_COOKIE'
-
-type CustomCookieObj = Exclude<ReturnType<typeof Cookie.parse>, null> & { createTime?: string } | null
-
 export class Cookie {
   #map: any
   constructor () {
-    this.#map = {} // 三维数组，domain - path - key
+    /** { domain: { path: { key: 类 window.location 对象 } } } */
+    this.#map = {}
   }
 
   static parse (cookieStr: string) {
@@ -60,7 +58,7 @@ export class Cookie {
 
       switch (key) {
         case 'path':
-          if (value[0] === '/') path = value
+          if (value.startsWith('/')) path = value
           break
         case 'domain':
           value = value.replace(/^\./, '').toLowerCase()
@@ -96,6 +94,7 @@ export class Cookie {
     }
   }
 
+  // TODO: 以下 $_函数 待重命名，名称未体现功能结果
   /**
    * 判断 domain
    */
@@ -104,6 +103,7 @@ export class Cookie {
     return host.endsWith(`.${cookieDomain}`)
   }
 
+  // TODO: 以下 $_函数 待重命名，名称未体现功能结果
   /**
    * 判断 path
    */
@@ -111,6 +111,7 @@ export class Cookie {
     return path.startsWith(cookiePath)
   }
 
+  // TODO: 以下 $_函数 待重命名，名称未体现功能结果
   /**
    * 判断过期
    */
@@ -131,54 +132,35 @@ export class Cookie {
    * 设置 cookie
    */
   setCookie (cookie, url) {
-    const mergedCookie: CustomCookieObj = Cookie.parse(cookie)
-    if (!mergedCookie) return
-
+    const cookieObj = Cookie.parse(cookie)
     const { host, pathname } = parseUrl(url)
-    const path = pathname[0] === '/' ? pathname : '/'
 
-    // TODO: 看到这里了
-    if (mergedCookie.domain) {
-      // 判断 domain
-      if (!this.$_checkDomain(host, mergedCookie.domain)) return
+    if (!cookieObj || !this.$_checkDomain(host, cookieObj.domain)) return
+
+    // TODO: 待优化 mergedCookiePath 的代码
+    let mergedCookiePath = cookieObj.path || ''
+    if (!mergedCookiePath.startsWith('/')) {
+      const path = pathname.startsWith('/') ? pathname : '/'
+      const lastSlashIndex = path.lastIndexOf('/')
+      mergedCookiePath = lastSlashIndex === 0 ? path : path.substr(0, lastSlashIndex)
+    }
+
+    const cookieKey = cookieObj.key
+    const mergedCookieDomain = cookieObj.domain || host
+
+    this.#map[mergedCookieDomain] ||= {}
+    this.#map[mergedCookieDomain][mergedCookiePath] ||= {}
+
+    if (!this.$_checkExpires(cookieObj)) {
+      delete this.#map[mergedCookieDomain][mergedCookiePath][cookieKey]
     } else {
-      // 使用 host 作为默认的 domain
-      mergedCookie.domain = host
+      const oldCookie = this.#map[mergedCookieDomain][mergedCookiePath][cookieKey]
+      const mergedCookieCreateTime = oldCookie?.createTime || Date.now()
+      const mergedCookie = { ...cookieObj, createTime: mergedCookieCreateTime, domain: mergedCookieDomain, path: mergedCookiePath }
+      this.#map[mergedCookieDomain][mergedCookiePath][cookieKey] = mergedCookie
     }
 
-    // 需要设置 path 字段的情况，取 url 中除去最后一节的 path
-    if (!mergedCookie.path || mergedCookie.path[0] !== '/') {
-      const lastIndex = path.lastIndexOf('/')
-
-      mergedCookie.path = lastIndex === 0 ? path : path.substr(0, lastIndex)
-    }
-
-    // 存入 cookie
-    const map = this.#map
-    const cookieDomain = mergedCookie.domain || ''
-    const cookiePath = mergedCookie.path || ''
-    const cookieKey = mergedCookie.key
-
-    if (!map[cookieDomain]) map[cookieDomain] = {}
-    if (!map[cookieDomain][cookiePath]) map[cookieDomain][cookiePath] = {}
-
-    const oldCookie = map[cookieDomain][cookiePath][cookieKey]
-    mergedCookie.createTime = (oldCookie && oldCookie.createTime) || Date.now()
-
-    if (this.$_checkExpires(mergedCookie)) {
-      // 未过期
-      map[cookieDomain][cookiePath][cookieKey] = mergedCookie
-    } else if (oldCookie) {
-      // 存在旧 cookie，且被设置为已过期
-      delete map[cookieDomain][cookiePath][cookieKey]
-    }
-
-    // 持久化 cookie
-    setStorage &&
-      setStorage({
-        key: STORAGE_KEY,
-        data: this.serialize(),
-      })
+    setStorage?.({ key: STORAGE_KEY, data: this.serialize() })
   }
 
   /**
