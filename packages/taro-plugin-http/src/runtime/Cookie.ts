@@ -94,7 +94,6 @@ export class Cookie {
     }
   }
 
-  // TODO: 以下 $_函数 待重命名，名称未体现功能结果
   /**
    * 判断 domain
    */
@@ -103,7 +102,6 @@ export class Cookie {
     return host.endsWith(`.${cookieDomain}`)
   }
 
-  // TODO: 以下 $_函数 待重命名，名称未体现功能结果
   /**
    * 判断 path
    */
@@ -111,7 +109,6 @@ export class Cookie {
     return path.startsWith(cookiePath)
   }
 
-  // TODO: 以下 $_函数 待重命名，名称未体现功能结果
   /**
    * 判断过期
    */
@@ -127,7 +124,6 @@ export class Cookie {
     return true
   }
 
-  // TODO: 看到这里了，代码结构待梳理，从功能角度出发；空值处理有问题
   /**
    * 设置 cookie
    */
@@ -135,9 +131,9 @@ export class Cookie {
     const cookieObj = Cookie.parse(cookie)
     const { host, pathname } = parseUrl(url)
 
-    if (!cookieObj || !this.$_checkDomain(host, cookieObj.domain)) return
+    if (!cookieObj) return
+    if (!this.$_checkDomain(host, cookieObj.domain)) return
 
-    // TODO: 待优化 mergedCookiePath 的代码
     let mergedCookiePath = cookieObj.path || ''
     if (!mergedCookiePath.startsWith('/')) {
       const path = pathname.startsWith('/') ? pathname : '/'
@@ -163,63 +159,60 @@ export class Cookie {
     setStorage?.({ key: STORAGE_KEY, data: this.serialize() })
   }
 
+  // TODO: 看到这里了
   /**
    * 拉取 cookie
    */
   getCookie (url: string, includeHttpOnly = false) {
-    const { protocol, hostname, port, pathname } = parseUrl(url)
-    const host = (hostname || '') + (port ? ':' + port : '') || ''
-    const path = (pathname || '')[0] === '/' ? pathname : '/'
-    const res: any[] = []
+    const { protocol, host, pathname } = parseUrl(url)
+    const path = pathname.startsWith('/') ? pathname : '/'
 
-    const map = this.#map
-    const domainList = Object.keys(map)
-
+    const mergedCookieList: any[] = []
+    const domainList = Object.keys(this.#map)
     for (const domainItem of domainList) {
-      // 判断 domain
-      if (this.$_checkDomain(host, domainItem)) {
-        const domainMap = map[domainItem] || {}
-        const pathList = Object.keys(domainMap)
+      if (!this.$_checkDomain(host, domainItem)) continue
 
-        for (const pathItem of pathList) {
-          // 判断 path
-          if (this.$_checkPath(path, pathItem)) {
-            const pathMap = map[domainItem][pathItem] || {}
+      const domainMap = this.#map[domainItem] || {}
+      const pathList = Object.keys(domainMap)
 
-            Object.keys(pathMap).forEach((key) => {
-              const cookie: any = pathMap[key]
+      for (const pathItem of pathList) {
+        if (!this.$_checkPath(path, pathItem)) continue
 
-              if (!cookie) return
+        const pathMap = domainMap[pathItem] || {}
+        const keyList = Object.keys(pathMap)
 
-              // 判断协议
-              if (cookie.secure && protocol !== 'https:' && protocol !== 'wss:') return
-              if (!includeHttpOnly && cookie.httpOnly && protocol && protocol !== 'http:') return
+        for (const keyItem of keyList) {
+          const cookie = pathMap[keyItem]
 
-              // 判断过期
-              if (this.$_checkExpires(cookie)) {
-                res.push(cookie)
-              } else {
-                // 过期，删掉
-                delete map[domainItem][pathItem][key]
-              }
-            })
+          if (!cookie) continue
+          // TODO: 待确定 wss 与 cookie.secure 的关系
+          if (cookie.secure && !['https:', 'wss:'].includes(protocol)) continue
+          if (!includeHttpOnly && cookie.httpOnly && !['https:', 'http:'].includes(protocol)) continue
+
+          if (this.$_checkExpires(cookie)) {
+            mergedCookieList.push(cookie)
+          } else {
+            // TODO: 参考下 js-cookie ,在读取 cookie 时 会删除过期键值么。是否这行代码可删除
+            delete this.#map[domainItem][pathItem][keyItem]
           }
         }
       }
     }
 
-    return res
-      .sort((a, b) => {
-        const gap = a.createTime - b.createTime
+    const cookieStr = mergedCookieList
+    .sort((a, b) => {
+      const gap = a.createTime - b.createTime
 
-        if (!gap) {
-          return a.key < b.key ? -1 : 1
-        } else {
-          return gap
-        }
-      })
-      .map((cookie) => `${cookie.key}=${cookie.value}`)
-      .join('; ')
+      if (!gap) {
+        return a.key < b.key ? -1 : 1
+      } else {
+        return gap
+      }
+    })
+    .map((cookie) => `${cookie.key}=${cookie.value}`)
+    .join('; ')
+
+    return cookieStr
   }
 
   /**
