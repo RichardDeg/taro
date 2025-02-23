@@ -192,7 +192,7 @@ export class Cookie {
           if (this.$_checkExpires(cookie)) {
             mergedCookieList.push(cookie)
           } else {
-            // TODO: 参考下 js-cookie ,在读取 cookie 时 会删除过期键值么。是否这行代码可删除
+            // TODO: 参考下 js-cookie, 在读取 cookie 时 会删除过期键值么。是否这行代码可删除
             delete this.#map[domainItem][pathItem][keyItem]
           }
         }
@@ -241,7 +241,6 @@ export class Cookie {
       map = {}
     }
 
-    // 合并 cookie
     const domainList = Object.keys(map)
 
     for (const domainItem of domainList) {
@@ -249,18 +248,17 @@ export class Cookie {
       const pathList = Object.keys(domainMap)
 
       for (const pathItem of pathList) {
-        const pathMap = map[domainItem][pathItem] || {}
+        const pathMap = domainMap[pathItem] || {}
+        const keyList = Object.keys(pathMap)
 
-        Object.keys(pathMap).forEach((key) => {
-          const cookie = pathMap[key]
-
+        for (const keyItem of keyList) {
+          const cookie = pathMap[keyItem]
           if (!cookie) return
 
-          // 已存在则不覆盖
-          if (!this.#map[domainItem]) this.#map[domainItem] = {}
-          if (!this.#map[domainItem][pathItem]) this.#map[domainItem][pathItem] = {}
-          if (!this.#map[domainItem][pathItem][key]) this.#map[domainItem][pathItem][key] = cookie
-        })
+          this.#map[domainItem] ||= {}
+          this.#map[domainItem][pathItem] ||= {}
+          this.#map[domainItem][pathItem][keyItem] ||= cookie
+        }
       }
     }
   }
