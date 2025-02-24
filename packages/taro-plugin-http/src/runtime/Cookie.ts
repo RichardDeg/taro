@@ -159,7 +159,6 @@ export class Cookie {
     setStorage?.({ key: STORAGE_KEY, data: this.serialize() })
   }
 
-  // TODO: 看到这里了
   /**
    * 拉取 cookie
    */
@@ -199,20 +198,13 @@ export class Cookie {
       }
     }
 
-    const cookieStr = mergedCookieList
-    .sort((a, b) => {
-      const gap = a.createTime - b.createTime
-
-      if (!gap) {
-        return a.key < b.key ? -1 : 1
-      } else {
-        return gap
-      }
-    })
-    .map((cookie) => `${cookie.key}=${cookie.value}`)
-    .join('; ')
-
-    return cookieStr
+    const compareFn = (a, b) => {
+      const timeDiff = a.createTime - b.createTime
+      if (timeDiff !== 0) return timeDiff
+      return a.key < b.key ? -1 : 1
+    }
+    const callbackFn = ({ key, value }) => `${key}=${value}`
+    return mergedCookieList.sort(compareFn).map(callbackFn).join('; ')
   }
 
   /**
