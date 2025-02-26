@@ -184,14 +184,12 @@ export class Cookie {
           const cookie = pathMap[keyItem]
 
           if (!cookie) continue
-          // TODO: 待确定 wss 与 cookie.secure 的关系
           if (cookie.secure && !['https:', 'wss:'].includes(protocol)) continue
           if (!includeHttpOnly && cookie.httpOnly && !['https:', 'http:'].includes(protocol)) continue
 
           if (this.$_checkExpires(cookie)) {
             mergedCookieList.push(cookie)
           } else {
-            // TODO: 参考下 js-cookie, 在读取 cookie 时 会删除过期键值么。是否这行代码可删除
             delete this.#map[domainItem][pathItem][keyItem]
           }
         }

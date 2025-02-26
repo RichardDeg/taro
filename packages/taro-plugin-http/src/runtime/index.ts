@@ -1,11 +1,12 @@
 import { document, window } from '@tarojs/runtime'
 
 import { Cookie, createCookieInstance } from './Cookie'
-import { type XMLHttpRequestEvent, XMLHttpRequest } from './XMLHttpRequest'
+import { XMLHttpRequest } from './XMLHttpRequest'
+
+import type { XMLHttpRequestEvent } from './XMLHttpRequest'
 
 declare const ENABLE_COOKIE: boolean
 
-// TODO: 看到这里了
 if (process.env.TARO_PLATFORM !== 'web') {
   if (ENABLE_COOKIE) {
     const _cookie = createCookieInstance()
@@ -34,7 +35,7 @@ if (process.env.TARO_PLATFORM !== 'web') {
       }
     })
   }
-
+  // TODO: 看到这里了
   window.XMLHttpRequest = XMLHttpRequest
 }
 

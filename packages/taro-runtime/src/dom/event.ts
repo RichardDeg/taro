@@ -34,6 +34,7 @@ export class TaroEvent {
 
   public defaultPrevented = false
 
+  // TODO: 看到这里了
   // Mouse Event botton property, it's used in 3rd lib, like react-router. default 0 in general
   public button = 0
 
