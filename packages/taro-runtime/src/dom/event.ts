@@ -34,11 +34,10 @@ export class TaroEvent {
 
   public defaultPrevented = false
 
-  // TODO: 看到这里了
-  // Mouse Event botton property, it's used in 3rd lib, like react-router. default 0 in general
+  // Mouse Event button property, it's used in 3rd lib, like react-router. default 0 in general
   public button = 0
 
-  // timestamp can either be hi-res ( relative to page load) or low-res (relative to UNIX epoch)
+  // timestamp can either be hi-res (relative to page load) or low-res (relative to UNIX epoch)
   // here use hi-res timestamp
   public timeStamp = Date.now()
 
@@ -47,8 +46,8 @@ export class TaroEvent {
   public constructor (type: string, opts: EventOptions, event?: MpEvent) {
     this.type = type.toLowerCase()
     this.mpEvent = event
-    this.bubbles = Boolean(opts && opts.bubbles)
-    this.cancelable = Boolean(opts && opts.cancelable)
+    this.bubbles = Boolean(opts?.bubbles)
+    this.cancelable = Boolean(opts?.cancelable)
   }
 
   public stopPropagation () {
@@ -65,56 +64,53 @@ export class TaroEvent {
 
   get target () {
     const cacheTarget = this.cacheTarget
-    if (!cacheTarget) {
-      const target = Object.create(this.mpEvent?.target || null)
-      const currentEle = env.document.getElementById(target.dataset?.sid || target.id || null)
-      // Note：优先判断冒泡场景alipay的targetDataset的sid, 不然冒泡场景target属性吐出不对，其余拿取当前绑定id
-      const element = env.document.getElementById(target.targetDataset?.sid || target.dataset?.sid || target.id || null)
+    if (!!cacheTarget) return cacheTarget
 
-      target.dataset = {
-        ...(currentEle !== null ? currentEle.dataset : EMPTY_OBJ),
-        ...(element !== null ? element.dataset : EMPTY_OBJ)
-      }
+    const target = Object.create(this.mpEvent?.target || null)
+    // TODO: 看到这里了
+    const currentEle = env.document.getElementById(target.dataset?.sid || target.id || null)
+    // Note：优先判断冒泡场景alipay的targetDataset的sid, 不然冒泡场景target属性吐出不对，其余拿取当前绑定id
+    const element = env.document.getElementById(target.targetDataset?.sid || target.dataset?.sid || target.id || null)
 
-      for (const key in this.mpEvent?.detail) {
-        target[key] = this.mpEvent!.detail[key]
-      }
-
-      this.cacheTarget = target
-
-      return target
-    } else {
-      return cacheTarget
+    target.dataset = {
+      ...(currentEle !== null ? currentEle.dataset : EMPTY_OBJ),
+      ...(element !== null ? element.dataset : EMPTY_OBJ)
     }
+
+    for (const key in this.mpEvent?.detail) {
+      target[key] = this.mpEvent!.detail[key]
+    }
+
+    this.cacheTarget = target
+
+    return target
   }
 
   get currentTarget () {
     const cacheCurrentTarget = this.cacheCurrentTarget
-    if (!cacheCurrentTarget) {
-      const doc = env.document
+    if (!!cacheCurrentTarget) return cacheCurrentTarget
 
-      const currentTarget = Object.create(this.mpEvent?.currentTarget || null)
+    const doc = env.document
 
-      const element = doc.getElementById(currentTarget.dataset?.sid || currentTarget.id || null)
-      const targetElement = doc.getElementById(this.mpEvent?.target?.dataset?.sid as string || this.mpEvent?.target?.id as string || null)
+    const currentTarget = Object.create(this.mpEvent?.currentTarget || null)
 
-      if (element === null || (element && element === targetElement)) {
-        this.cacheCurrentTarget = this.target
-        return this.target
-      }
+    const element = doc.getElementById(currentTarget.dataset?.sid || currentTarget.id || null)
+    const targetElement = doc.getElementById(this.mpEvent?.target?.dataset?.sid as string || this.mpEvent?.target?.id as string || null)
 
-      currentTarget.dataset = element.dataset
-
-      for (const key in this.mpEvent?.detail) {
-        currentTarget[key] = this.mpEvent!.detail[key]
-      }
-
-      this.cacheCurrentTarget = currentTarget
-
-      return currentTarget
-    } else {
-      return cacheCurrentTarget
+    if (element === null || (element && element === targetElement)) {
+      this.cacheCurrentTarget = this.target
+      return this.target
     }
+
+    currentTarget.dataset = element.dataset
+
+    for (const key in this.mpEvent?.detail) {
+      currentTarget[key] = this.mpEvent!.detail[key]
+    }
+
+    this.cacheCurrentTarget = currentTarget
+
+    return currentTarget
   }
 }
 
