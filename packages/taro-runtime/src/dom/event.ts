@@ -45,9 +45,9 @@ export class TaroEvent {
 
   public constructor (type: string, opts: EventOptions, event?: MpEvent) {
     this.type = type.toLowerCase()
-    this.mpEvent = event
     this.bubbles = Boolean(opts?.bubbles)
     this.cancelable = Boolean(opts?.cancelable)
+    this.mpEvent = event
   }
 
   public stopPropagation () {
@@ -63,14 +63,12 @@ export class TaroEvent {
   }
 
   get target () {
-    const cacheTarget = this.cacheTarget
-    if (!!cacheTarget) return cacheTarget
+    if (!!this.cacheTarget) return this.cacheTarget
 
     const target = Object.create(this.mpEvent?.target || null)
-    // TODO: 看到这里了
-    const currentEle = env.document.getElementById(target.dataset?.sid || target.id || null)
     // Note：优先判断冒泡场景alipay的targetDataset的sid, 不然冒泡场景target属性吐出不对，其余拿取当前绑定id
     const element = env.document.getElementById(target.targetDataset?.sid || target.dataset?.sid || target.id || null)
+    const currentEle = env.document.getElementById(target.dataset?.sid || target.id || null)
 
     target.dataset = {
       ...(currentEle !== null ? currentEle.dataset : EMPTY_OBJ),
@@ -82,20 +80,15 @@ export class TaroEvent {
     }
 
     this.cacheTarget = target
-
     return target
   }
 
   get currentTarget () {
-    const cacheCurrentTarget = this.cacheCurrentTarget
-    if (!!cacheCurrentTarget) return cacheCurrentTarget
-
-    const doc = env.document
+    if (!!this.cacheCurrentTarget) return this.cacheCurrentTarget
 
     const currentTarget = Object.create(this.mpEvent?.currentTarget || null)
-
-    const element = doc.getElementById(currentTarget.dataset?.sid || currentTarget.id || null)
-    const targetElement = doc.getElementById(this.mpEvent?.target?.dataset?.sid as string || this.mpEvent?.target?.id as string || null)
+    const element = env.document.getElementById(currentTarget.dataset?.sid || currentTarget.id || null)
+    const targetElement = env.document.getElementById(this.mpEvent?.target?.dataset?.sid as string || this.mpEvent?.target?.id as string || null)
 
     if (element === null || (element && element === targetElement)) {
       this.cacheCurrentTarget = this.target
@@ -109,7 +102,6 @@ export class TaroEvent {
     }
 
     this.cacheCurrentTarget = currentTarget
-
     return currentTarget
   }
 }
@@ -123,11 +115,8 @@ export function createEvent (event: MpEvent | string, node?: TaroElement) {
   const domEv = new TaroEvent(event.type, { bubbles: true, cancelable: true }, event)
 
   for (const key in event) {
-    if (key === CURRENT_TARGET || key === TARGET || key === TYPE || key === TIME_STAMP) {
-      continue
-    } else {
-      domEv[key] = event[key]
-    }
+    const isSpecialKey = [CURRENT_TARGET, TARGET, TYPE, TIME_STAMP].includes(key)
+    if (!isSpecialKey) domEv[key] = event[key]
   }
 
   if (domEv.type === CONFIRM && node?.nodeName === INPUT) {
@@ -175,6 +164,7 @@ export function eventHandler (event: MpEvent) {
     if (hooks.isExist('batchedEventUpdates')) {
       const type = event.type
 
+      // TODO: 看到这里了
       if (
         !hooks.call('isBubbleEvents', type) ||
         !isParentBinded(node, type) ||

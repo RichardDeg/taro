@@ -78,13 +78,10 @@ export function isHasExtractProp (el: TaroElement): boolean {
  * @param node 当前组件
  * @param type 事件类型
  */
-export function isParentBinded (node: TaroElement | null, type: string): boolean {
-  while ((node = node?.parentElement || null)) {
-    if (!node || node.nodeName === ROOT_STR || node.nodeName === 'root-portal') {
-      return false
-    } else if (node.__handlers[type]?.length) {
-      return true
-    }
+export function isParentBinded (node: TaroElement | null | undefined, type: string): boolean {
+  while (node = node?.parentElement) {
+    if (!node || [ROOT_STR, 'root-portal'].includes(node.nodeName)) return false
+    if (node.__handlers[type]?.length) return true
   }
 
   return false
@@ -110,11 +107,7 @@ interface Ctor {
 }
 
 export function extend (ctor: Ctor, methodName: string, options: TFunc | Record<string, any>) {
-  if (isFunction(options)) {
-    options = {
-      value: options
-    }
-  }
+  if (isFunction(options)) options = { value: options }
   Object.defineProperty(ctor.prototype, methodName, {
     configurable: true,
     enumerable: true,
