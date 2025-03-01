@@ -12,7 +12,7 @@ import {
   TYPE
 } from '../constants'
 import env from '../env'
-import { isParentBinded } from '../utils'
+import { hasParentBound } from '../utils'
 
 import type { EventOptions, MpEvent } from '../interface'
 import type { TaroElement } from './element'
@@ -164,16 +164,15 @@ export function eventHandler (event: MpEvent) {
     if (hooks.isExist('batchedEventUpdates')) {
       const type = event.type
 
-      // TODO: 看到这里了
       if (
         !hooks.call('isBubbleEvents', type) ||
-        !isParentBinded(node, type) ||
+        !hasParentBound(node, type) ||
         (type === TOUCHMOVE && !!node.props.catchMove)
       ) {
         // 最上层组件统一 batchUpdate
         hooks.call('batchedEventUpdates', () => {
           if (eventsBatch[type]) {
-            eventsBatch[type].forEach(fn => fn())
+            eventsBatch[type].forEach(singleEvent => singleEvent())
             delete eventsBatch[type]
           }
           dispatch()

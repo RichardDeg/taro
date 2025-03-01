@@ -52,7 +52,6 @@ const STATUS_TEXT_MAP = {
   505: 'HTTP Version Not Supported',
 }
 
-// TODO: 看到这里了
 export interface XMLHttpRequestEvent extends TaroEvent {
   target: XMLHttpRequest
   currentTarget: XMLHttpRequest
@@ -105,6 +104,7 @@ export class XMLHttpRequest extends Events {
     return '[object XMLHttpRequest]'
   }
 
+  // TODO: 看到这里了
   #method: string
   #url: string
   #data: null
