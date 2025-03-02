@@ -87,8 +87,9 @@ function createXMLHttpRequestEvent (event: string, target:XMLHttpRequest, loaded
   return e
 }
 
-// https://developer.mozilla.org/zh-CN/docs/Web/API/XMLHttpRequest
+// XMLHttpRequest 参考资料：https://developer.mozilla.org/zh-CN/docs/Web/API/XMLHttpRequest
 export class XMLHttpRequest extends Events {
+  // readyState 参考资料：https://developer.mozilla.org/zh-CN/docs/Web/API/XMLHttpRequest/readyState
   static readonly UNSENT = 0
   static readonly OPENED = 1
   static readonly HEADERS_RECEIVED = 2
@@ -104,7 +105,6 @@ export class XMLHttpRequest extends Events {
     return '[object XMLHttpRequest]'
   }
 
-  // TODO: 看到这里了
   #method: string
   #url: string
   #data: null
@@ -119,10 +119,10 @@ export class XMLHttpRequest extends Events {
   #withCredentials: boolean
   #requestTask: null | Taro.RequestTask<any>
 
-  // 事件正常流转： loadstart => progress（可能多次） => load => loadend
+  // 事件正常流转：loadstart => progress（可能多次） => load => loadend
   // error 流转： loadstart => error => loadend
   // abort 流转： loadstart => abort => loadend
-  // web在线测试： https://developer.mozilla.org/zh-CN/play
+  // web 在线测试：https://developer.mozilla.org/zh-CN/play
 
   /** 当 request 被停止时触发，例如当程序调用 XMLHttpRequest.abort() 时 */
   onabort: ((e: XMLHttpRequestEvent) => void) | null = null
@@ -136,7 +136,7 @@ export class XMLHttpRequest extends Events {
   /** 请求成功完成时触发 */
   onload: ((e: XMLHttpRequestEvent) => void) | null = null
 
-  /** 当请求结束时触发，无论请求成功 ( load) 还是失败 (abort 或 error)。 */
+  /** 当请求结束时触发，无论请求成功 (load) 还是失败 (abort 或 error)。 */
   onloadend: ((e: XMLHttpRequestEvent) => void) | null = null
 
   /** 在预设时间内没有接收到响应时触发 */
@@ -167,8 +167,10 @@ export class XMLHttpRequest extends Events {
     this.#requestTask = null
   }
 
+  // TODO: 看到这里了
   addEventListener (event: string, callback: (arg: any) => void) {
     if (!isString(event)) return
+    // TODO: 这个 ts 类型为什么推导不出来
     this.on(event, callback, null)
   }
 
