@@ -59,7 +59,7 @@ export interface XMLHttpRequestEvent extends TaroEvent {
   total: number
 }
 
-function createXMLHttpRequestEvent (event: string, target:XMLHttpRequest, loaded: number): XMLHttpRequestEvent {
+function createXMLHttpRequestEvent (event: string, target: XMLHttpRequest, loaded: number): XMLHttpRequestEvent {
   const e = createEvent(event) as XMLHttpRequestEvent
   try {
     Object.defineProperties(e, {
@@ -167,10 +167,8 @@ export class XMLHttpRequest extends Events {
     this.#requestTask = null
   }
 
-  // TODO: 看到这里了
   addEventListener (event: string, callback: (arg: any) => void) {
     if (!isString(event)) return
-    // TODO: 这个 ts 类型为什么推导不出来
     this.on(event, callback, null)
   }
 
@@ -183,10 +181,10 @@ export class XMLHttpRequest extends Events {
    * readyState 变化
    */
   #callReadyStateChange (readyState) {
-    const hasChange = readyState !== this.#readyState
+    const isDiff = readyState !== this.#readyState
     this.#readyState = readyState
 
-    if (hasChange) {
+    if (isDiff) {
       const readystatechangeEvent = createXMLHttpRequestEvent('readystatechange', this, 0)
       this.trigger('readystatechange', readystatechangeEvent)
       isFunction(this.onreadystatechange) && this.onreadystatechange(readystatechangeEvent)
@@ -197,7 +195,7 @@ export class XMLHttpRequest extends Events {
    * 执行请求
    */
   #callRequest () {
-    if (!window || !window.document) {
+    if (!window?.document) {
       console.warn('this page has been unloaded, so this request will be canceled.')
       return
     }
@@ -250,11 +248,12 @@ export class XMLHttpRequest extends Events {
     })
   }
 
+  // TODO: 看到这里了
   /**
    * 请求成功
    */
   #requestSuccess ({ data, statusCode, header }) {
-    if (!window || !window.document) {
+    if (!window?.document) {
       console.warn('this page has been unloaded, so this request will be canceled.')
       return
     }
@@ -264,35 +263,38 @@ export class XMLHttpRequest extends Events {
 
     this.#callReadyStateChange(XMLHttpRequest.HEADERS_RECEIVED)
 
-    if (ENABLE_COOKIE) {
-      // 处理 set-cookie
-      const setCookieStr = this.getResponseHeader('set-cookie')
 
-      if (setCookieStr && typeof setCookieStr === 'string') {
+    // 读取 set-cookie 的值，并写入 document.cookie
+    if (ENABLE_COOKIE) {
+      const setCookieStr = this.getResponseHeader('set-cookie')
+      // TODO: 这段代码拷贝到控制台，运行下，校验下功能，试试有没有优化空间
+      if (!!setCookieStr) {
+        const setCookieArr: string[] = []
+
         let start = 0
         let startSplit = 0
-        let nextSplit = setCookieStr.indexOf(',', startSplit)
-        const cookies: string[] = []
+        let nextSplit = setCookieStr.indexOf(',')
 
-        while (nextSplit >= 0) {
+        while (nextSplit !== -1) {
           const lastSplitStr = setCookieStr.substring(start, nextSplit)
-          const splitStr = setCookieStr.substr(nextSplit)
+          const splitStr = setCookieStr.substring(nextSplit)
 
+          // TODO: 待确定正则不匹配的字符串；setCookieStr 会有被剔除的无效字符么
           // eslint-disable-next-line no-control-regex
           if (/^,\s*([^,=;\x00-\x1F]+)=([^;\n\r\0\x00-\x1F]*).*/.test(splitStr)) {
             // 分割成功，则上一片是完整 cookie
-            cookies.push(lastSplitStr)
+            setCookieArr.push(lastSplitStr)
             start = nextSplit + 1
           }
 
           startSplit = nextSplit + 1
           nextSplit = setCookieStr.indexOf(',', startSplit)
         }
-
         // 塞入最后一片 cookie
-        cookies.push(setCookieStr.substr(start))
+        const lastSplitStr = setCookieStr.substring(start)
+        setCookieArr.push(lastSplitStr)
 
-        cookies.forEach((cookie) => {
+        setCookieArr.forEach(cookie => {
           window.document.cookie = cookie
         })
       }
@@ -428,17 +430,16 @@ export class XMLHttpRequest extends Events {
   }
 
   getAllResponseHeaders () {
-    if (this.#readyState === XMLHttpRequest.UNSENT || this.#readyState === XMLHttpRequest.OPENED || !this.#resHeader) { return '' }
+    if (this.#readyState === XMLHttpRequest.UNSENT || this.#readyState === XMLHttpRequest.OPENED || !this.#resHeader) return ''
 
     return Object.keys(this.#resHeader)
       .map((key) => `${key}: ${this.#resHeader![key]}`)
       .join('\r\n')
   }
 
-  getResponseHeader (name) {
-    if (this.#readyState === XMLHttpRequest.UNSENT || this.#readyState === XMLHttpRequest.OPENED || !this.#resHeader) { return null }
+  getResponseHeader (name: string) {
+    if (this.#readyState === XMLHttpRequest.UNSENT || this.#readyState === XMLHttpRequest.OPENED || !this.#resHeader) return null
 
-    // 处理大小写不敏感
     const key = Object.keys(this.#resHeader).find((item) => item.toLowerCase() === name.toLowerCase())
     const value = key ? this.#resHeader[key] : null
 
