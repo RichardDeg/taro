@@ -248,7 +248,6 @@ export class XMLHttpRequest extends Events {
     })
   }
 
-  // TODO: 看到这里了
   /**
    * 请求成功
    */
@@ -263,11 +262,22 @@ export class XMLHttpRequest extends Events {
 
     this.#callReadyStateChange(XMLHttpRequest.HEADERS_RECEIVED)
 
-
-    // 读取 set-cookie 的值，并写入 document.cookie
+    /**
+     * FIXME: BUG !!! 存疑!!! 如果 setCookieStr 是以分号分割的，该代码写入 window.document.cookie 会丢失部分键值对
+     * - eg.1:
+     *   - setCookieStr = 'kkk, f=12121,456, aaaa=7878; fff=io, ffffff=hghghghg';
+     *   - setCookieArr = ['kkk', ' f=12121,456', ' aaaa=7878; fff=io', ' ffffff=hghghghg'];
+     *   - 部分写入失败：fff=io
+     * - eg.2:
+     *   - setCookieStr = 'aaa=bbb; domain=taro.com';
+     *   - 全部写入失败
+     * - eg.3:
+     *   - setCookieStr = 'aaa=ccc; domain2222=taro.com';
+     *   - 部分写入失败： domain2222=taro.com
+     */
+    // 读取 set-cookie 的值，并写入 window.document.cookie
     if (ENABLE_COOKIE) {
       const setCookieStr = this.getResponseHeader('set-cookie')
-      // TODO: 这段代码拷贝到控制台，运行下，校验下功能，试试有没有优化空间
       if (!!setCookieStr) {
         const setCookieArr: string[] = []
 
@@ -279,7 +289,6 @@ export class XMLHttpRequest extends Events {
           const lastSplitStr = setCookieStr.substring(start, nextSplit)
           const splitStr = setCookieStr.substring(nextSplit)
 
-          // TODO: 待确定正则不匹配的字符串；setCookieStr 会有被剔除的无效字符么
           // eslint-disable-next-line no-control-regex
           if (/^,\s*([^,=;\x00-\x1F]+)=([^;\n\r\0\x00-\x1F]*).*/.test(splitStr)) {
             // 分割成功，则上一片是完整 cookie
@@ -315,6 +324,7 @@ export class XMLHttpRequest extends Events {
     }
   }
 
+  // TODO: 看到这里了
   /**
    * 请求失败
    */
