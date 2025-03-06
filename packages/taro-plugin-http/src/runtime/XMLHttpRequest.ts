@@ -2,6 +2,11 @@ import { createEvent, Events, parseUrl, TaroEvent, window } from '@tarojs/runtim
 import { isFunction, isString } from '@tarojs/shared'
 import { request } from '@tarojs/taro'
 
+// TODO: 看到这里了
+// TODO: 把 taro-plugin-http 看完之后的小任务
+// TODO:!!! 提升任务，手动实现一个 XMLHttpRequest 请求。此文件为标准参考答案。
+// - 对标 MDN 资料，实现一模一样的 初入参 api
+
 declare const ENABLE_COOKIE: boolean
 
 const SUPPORT_METHOD = ['OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'TRACE', 'CONNECT']
@@ -324,7 +329,6 @@ export class XMLHttpRequest extends Events {
     }
   }
 
-  // TODO: 看到这里了
   /**
    * 请求失败
    */
@@ -391,7 +395,7 @@ export class XMLHttpRequest extends Events {
   }
 
   get statusText () {
-    if (this.#readyState === XMLHttpRequest.UNSENT || this.#readyState === XMLHttpRequest.OPENED) return ''
+    if ([XMLHttpRequest.UNSENT, XMLHttpRequest.OPENED].includes(this.#readyState)) return ''
 
     return STATUS_TEXT_MAP[this.#status + ''] || this.#statusText || ''
   }
@@ -400,6 +404,7 @@ export class XMLHttpRequest extends Events {
     return this.#readyState
   }
 
+  // 参考 responseType：https://developer.mozilla.org/zh-CN/docs/Web/API/XMLHttpRequest/responseType
   get responseType () {
     return this.#responseType
   }
@@ -440,7 +445,7 @@ export class XMLHttpRequest extends Events {
   }
 
   getAllResponseHeaders () {
-    if (this.#readyState === XMLHttpRequest.UNSENT || this.#readyState === XMLHttpRequest.OPENED || !this.#resHeader) return ''
+    if (!this.#resHeader || [XMLHttpRequest.UNSENT, XMLHttpRequest.OPENED].includes(this.#readyState)) return ''
 
     return Object.keys(this.#resHeader)
       .map((key) => `${key}: ${this.#resHeader![key]}`)
@@ -448,7 +453,7 @@ export class XMLHttpRequest extends Events {
   }
 
   getResponseHeader (name: string) {
-    if (this.#readyState === XMLHttpRequest.UNSENT || this.#readyState === XMLHttpRequest.OPENED || !this.#resHeader) return null
+    if (!this.#resHeader || [XMLHttpRequest.UNSENT, XMLHttpRequest.OPENED].includes(this.#readyState)) return ''
 
     const key = Object.keys(this.#resHeader).find((item) => item.toLowerCase() === name.toLowerCase())
     const value = key ? this.#resHeader[key] : null
@@ -457,14 +462,14 @@ export class XMLHttpRequest extends Events {
   }
 
   open (method, url) {
-    if (typeof method === 'string') method = method.toUpperCase()
-
-    if (SUPPORT_METHOD.indexOf(method) < 0) return
     if (!url || typeof url !== 'string') return
+    if (!method || typeof method !== 'string') return
+
+    method = method.toUpperCase()
+    if (SUPPORT_METHOD.indexOf(method) === -1) return
 
     this.#method = method
     this.#url = url
-
     this.#callReadyStateChange(XMLHttpRequest.OPENED)
   }
 

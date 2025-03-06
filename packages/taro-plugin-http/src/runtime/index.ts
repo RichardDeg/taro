@@ -35,7 +35,7 @@ if (process.env.TARO_PLATFORM !== 'web') {
       }
     })
   }
-  // TODO: 看到这里了
+  // TODO: 看到这里了, 为什么要自己实现一个 XMLHttpRequest 类，window 原生有，差异化/定制化的内容是什么
   window.XMLHttpRequest = XMLHttpRequest
 }
 
