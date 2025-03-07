@@ -6,6 +6,10 @@ import { request } from '@tarojs/taro'
 // TODO: 把 taro-plugin-http 看完之后的小任务
 // TODO:!!! 提升任务，手动实现一个 XMLHttpRequest 请求。此文件为标准参考答案。
 // - 对标 MDN 资料，实现一模一样的 初入参 api
+// - 1）ReadMe.md 文档很重要，值得参考
+// - 2）Taro.request 和 wx.request 有什么不同
+// - 3）Web 端中调用 Taro.request 和 小程序端调用 Taro.request 又有什么不同
+// - 4）Taro.request 和 XMLHttpRequest 和 axios 又有什么不同
 
 declare const ENABLE_COOKIE: boolean
 
