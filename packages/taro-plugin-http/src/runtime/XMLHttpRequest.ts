@@ -10,6 +10,8 @@ import { request } from '@tarojs/taro'
 // - 2）Taro.request 和 wx.request 有什么不同
 // - 3）Web 端中调用 Taro.request 和 小程序端调用 Taro.request 又有什么不同
 // - 4）Taro.request 和 XMLHttpRequest 和 axios 又有什么不同
+// - 5) 这个插件是如何被调用的，入口在哪里
+// - 6）什么是运行时，什么是编译时。编译小程序和运行小程序有什么不同。为什么这个插件，通过 rollup 分别打包为编译时 dist 和运行时 dist
 
 declare const ENABLE_COOKIE: boolean
 

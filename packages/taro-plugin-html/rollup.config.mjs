@@ -27,7 +27,7 @@ const compileConfig = {
   }
 }
 
-// 供 CLI 运行时使用的 Taro 插件入口
+// 运行时入口
 const runtimeConfig = {
   ...base,
   input: path.join(cwd, 'src/runtime.ts'),

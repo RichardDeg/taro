@@ -14,8 +14,8 @@ const compileConfig = {
   output: {
     file: path.join(cwd, 'dist/index.js'),
     format: 'cjs',
-    sourcemap: true,
     exports: 'named',
+    sourcemap: true,
   },
   plugins: [
     externals({
@@ -31,8 +31,8 @@ const runtimeConfig = {
   input: path.join(cwd, 'src/runtime/index.ts'),
   output: {
     file: path.join(cwd, 'dist/runtime.js'),
+    format: 'es',
     sourcemap: true,
-    format: 'es'
   },
   plugins: [
     externals({
