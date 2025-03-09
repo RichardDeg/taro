@@ -4,13 +4,15 @@ import { request } from '@tarojs/taro'
 
 // TODO: 看到这里了
 // TODO: 把 taro-plugin-http 看完之后的小任务
-// TODO:!!! 提升任务，手动实现一个 XMLHttpRequest 请求。此文件为标准参考答案。
+// TODO: !!! 提升任务，手动实现一个 XMLHttpRequest 请求。此文件为标准参考答案。
 // - 对标 MDN 资料，实现一模一样的 初入参 api
 // - 1）ReadMe.md 文档很重要，值得参考
 // - 2）Taro.request 和 wx.request 有什么不同
 // - 3）Web 端中调用 Taro.request 和 小程序端调用 Taro.request 又有什么不同
 // - 4）Taro.request 和 XMLHttpRequest 和 axios 又有什么不同
 // - 5) 这个插件是如何被调用的，入口在哪里
+//      - 5.1) 推测: 通过 webpack 的插件机制，ctx.modifyWebpackChain 注册进去的，即去 taro 的 插件找如何调用这个插件的答案
+//      - 5.2) 那么如果我想自己写一个 webpack 插件，怎么让 taro 可以引用到
 // - 6）什么是运行时，什么是编译时。编译小程序和运行小程序有什么不同。为什么这个插件，通过 rollup 分别打包为编译时 dist 和运行时 dist
 
 declare const ENABLE_COOKIE: boolean
