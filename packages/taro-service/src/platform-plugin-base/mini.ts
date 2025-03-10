@@ -152,15 +152,11 @@ ${exampleCommand}`))
 
   private async buildImpl (extraOptions = {}) {
     const runner = await this.getRunner()
-    const options = this.getOptions(
-      Object.assign(
-        {
-          runtimePath: this.runtimePath,
-          taroComponentsPath: this.taroComponentsPath
-        },
-        extraOptions
-      )
-    )
+    const options = this.getOptions({
+      runtimePath: this.runtimePath,
+      taroComponentsPath: this.taroComponentsPath,
+      ...extraOptions,
+    })
     await runner(options)
   }
 

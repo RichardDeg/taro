@@ -447,6 +447,7 @@ const NativeSlot = {
 
 const Script = {}
 
+/** 组件列表 */
 export const internalComponents: Record<string, Record<string, string>> = {
   View,
   Icon,
@@ -502,11 +503,13 @@ export const controlledComponent = new Set([
   'textarea'
 ])
 
+/** 可以 focus 聚焦的组件 */
 export const focusComponents = new Set([
   'input',
   'textarea'
 ])
 
+/** 不需要渲染子节点的元素 */
 export const voidElements = new Set([
   'progress',
   'icon',
@@ -522,6 +525,10 @@ export const voidElements = new Set([
   'navigation-bar'
 ])
 
+/**
+ * - 可以递归调用自身的组件
+ * number: 表示最大嵌套层数，-1 表示无限制
+*/
 export const nestElements = new Map([
   ['view', -1],
   ['catch-view', -1],

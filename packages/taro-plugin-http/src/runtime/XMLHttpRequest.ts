@@ -13,7 +13,7 @@ import { request } from '@tarojs/taro'
 // - 5) 这个插件是如何被调用的，入口在哪里
 //      - 5.1) 推测: 通过 webpack 的插件机制，ctx.modifyWebpackChain 注册进去的，即去 taro 的 插件找如何调用这个插件的答案
 //      - 5.2) 那么如果我想自己写一个 webpack 插件，怎么让 taro 可以引用到
-// - 6）什么是运行时，什么是编译时。编译小程序和运行小程序有什么不同。为什么这个插件，通过 rollup 分别打包为编译时 dist 和运行时 dist
+// - 6）为什么这个插件，通过 rollup 分别打包为编译时 dist 和运行时 dist
 
 declare const ENABLE_COOKIE: boolean
 

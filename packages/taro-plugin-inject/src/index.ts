@@ -52,8 +52,9 @@ export default (ctx: IPluginContext, options: IOptions) => {
       }
 
       if (components || syncApis || asyncApis || componentsMap) {
-        injectRuntimePath(platform)
+        platform.runtimePath = injectRuntimePath(platform)
 
+        // TODO: 看到这里了
         if (components) {
           template.mergeComponents(ctx, components)
         }
@@ -74,13 +75,17 @@ export default (ctx: IPluginContext, options: IOptions) => {
   })
 }
 
-function injectRuntimePath (platform: TaroPlatformBase) {
+function injectRuntimePath (runtimePath: string | string[]) {
+  let mergedRuntimePath = runtimePath
+
   const injectedPath = `@tarojs/plugin-inject/dist/runtime`
-  if (isArray(platform.runtimePath)) {
-    platform.runtimePath.push(injectedPath)
-  } else if (isString(platform.runtimePath)) {
-    platform.runtimePath = [platform.runtimePath, injectedPath]
+  if (isArray(mergedRuntimePath)) {
+    mergedRuntimePath.push(injectedPath)
+  } else if (isString(mergedRuntimePath)) {
+    mergedRuntimePath = [mergedRuntimePath, injectedPath]
   }
+
+  return mergedRuntimePath
 }
 
 function injectComponentsReact (fs, taroComponentsPath, componentsMap) {
