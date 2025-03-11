@@ -54,11 +54,11 @@ export default (ctx: IPluginContext, options: IOptions) => {
       if (components || syncApis || asyncApis || componentsMap) {
         platform.runtimePath = injectRuntimePath(platform)
 
-        // TODO: 看到这里了
         if (components) {
           template.mergeComponents(ctx, components)
         }
 
+        // TODO: 看到这里了
         if (componentsMap) {
           injectComponentsReact(fs, platform.taroComponentsPath, componentsMap)
           platform.taroComponentsPath = `@tarojs/plugin-inject/dist/components-react`
@@ -88,6 +88,7 @@ function injectRuntimePath (runtimePath: string | string[]) {
   return mergedRuntimePath
 }
 
+// TODO: 看到这里了
 function injectComponentsReact (fs, taroComponentsPath, componentsMap) {
   const filePath = path.resolve(__dirname, '../dist/components-react.js')
   fs.writeFileSync(filePath, `

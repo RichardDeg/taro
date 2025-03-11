@@ -424,17 +424,14 @@ export function getInstalledNpmPkgVersion(pkgName: string, basedir: string): str
   return fs.readJSONSync(pkgPath).version
 }
 
-export const recursiveMerge = <T = any> (src: Partial<T>, ...args: (Partial<T> | undefined)[]) => {
-  return mergeWith(src, ...args, (value, srcValue) => {
-    const typeValue = typeof value
-    const typeSrcValue = typeof srcValue
+/** lodash.mergeWith api 文档：https://cloud.tencent.com/developer/information/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8lodash%E7%9A%84_.mergewith%E5%92%8Ccustomizer%E5%87%BD%E6%95%B0 */
+export const recursiveMerge = <T = any> (targetObj: Partial<T>, ...sources: (Partial<T> | undefined)[]) => {
+  return mergeWith(targetObj, ...sources, (targetObjPropertyValue, sourceObjPropertyValue) => {
+    const typeValue = typeof targetObjPropertyValue
+    const typeSrcValue = typeof sourceObjPropertyValue
     if (typeValue !== typeSrcValue) return
-    if (Array.isArray(value) && Array.isArray(srcValue)) {
-      return value.concat(srcValue)
-    }
-    if (typeValue === 'object') {
-      return recursiveMerge(value, srcValue)
-    }
+    if (Array.isArray(targetObjPropertyValue) && Array.isArray(sourceObjPropertyValue)) return [...targetObjPropertyValue, ...sourceObjPropertyValue]
+    if (typeValue === 'object') return recursiveMerge(targetObjPropertyValue, sourceObjPropertyValue)
   })
 }
 
