@@ -58,7 +58,6 @@ export default (ctx: IPluginContext, options: IOptions) => {
           template.mergeComponents(ctx, components)
         }
 
-        // TODO: 看到这里了
         if (componentsMap) {
           injectComponentsReact(fs, platform.taroComponentsPath, componentsMap)
           platform.taroComponentsPath = `@tarojs/plugin-inject/dist/components-react`
@@ -88,7 +87,6 @@ function injectRuntimePath (runtimePath: string | string[]) {
   return mergedRuntimePath
 }
 
-// TODO: 看到这里了
 function injectComponentsReact (fs, taroComponentsPath, componentsMap) {
   const filePath = path.resolve(__dirname, '../dist/components-react.js')
   fs.writeFileSync(filePath, `
@@ -107,13 +105,13 @@ ${Object.keys(componentsMap).map((key) => `export const ${key} = '${componentsMa
 
 function injectComponents (fs, components) {
   fs.writeFileSync(path.resolve(__dirname, '../dist/components.js'), `
-export const components = ${components ? JSON.stringify(components) : JSON.stringify({})};
+export const components = ${JSON.stringify(components || {})};
 `)
 }
 
 function injectApis (fs, syncApis, asyncApis) {
   fs.writeFileSync(path.resolve(__dirname, '../dist/apis-list.js'), `
-export const noPromiseApis = new Set(${syncApis ? JSON.stringify(syncApis) : JSON.stringify([])});
-export const needPromiseApis = new Set(${asyncApis ? JSON.stringify(asyncApis) : JSON.stringify([])});
+export const noPromiseApis = new Set(${JSON.stringify(syncApis || [])});
+export const needPromiseApis = new Set(${JSON.stringify(asyncApis || [])});
 `)
 }

@@ -246,9 +246,7 @@ function processApis (taro, global, config: IProcessApisIOptions = {}) {
       : patchNeedPromiseApis
   )
 
-  if (config.modifyApis) {
-    config.modifyApis(apis)
-  }
+  config.modifyApis?.(apis)
 
   apis.forEach(key => {
     if (_needPromiseApis.has(key)) {
@@ -268,7 +266,7 @@ function processApis (taro, global, config: IProcessApisIOptions = {}) {
         if (config.transformMeta) {
           const transformResult = config.transformMeta(key, options)
           key = transformResult.key
-          ; (options as Record<string, any>) = transformResult.options
+          options = transformResult.options
           // 新 key 可能不存在
           if (!global.hasOwnProperty(key)) {
             return nonsupport(key)()
@@ -278,6 +276,7 @@ function processApis (taro, global, config: IProcessApisIOptions = {}) {
         let task: any = null
         const obj: Record<string, any> = Object.assign({}, options)
 
+        // woooooow 😯，原来如此
         // 为页面跳转相关的 API 设置一个随机数作为路由参数。为了给 runtime 区分页面。
         setUniqueKeyToRoute(key, options)
 
@@ -285,7 +284,9 @@ function processApis (taro, global, config: IProcessApisIOptions = {}) {
         const p: any = new Promise((resolve, reject) => {
           obj.success = res => {
             config.modifyAsyncResult?.(key, res)
-            options.success?.(res)
+            if (typeof options === 'object') {
+              options.success?.(res)
+            }
             if (key === 'connectSocket') {
               resolve(
                 Promise.resolve().then(() => task ? Object.assign(task, res) : res)
@@ -295,11 +296,15 @@ function processApis (taro, global, config: IProcessApisIOptions = {}) {
             }
           }
           obj.fail = res => {
-            options.fail?.(res)
+            if (typeof options === 'object') {
+              options.fail?.(res)
+            }
             reject(res)
           }
           obj.complete = res => {
-            options.complete?.(res)
+            if (typeof options === 'object') {
+              options.complete?.(res)
+            }
           }
           if (args.length) {
             task = global[key](obj, ...args)
