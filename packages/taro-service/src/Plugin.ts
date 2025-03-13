@@ -56,7 +56,6 @@ export default class Plugin {
   registerMethod (...args: any[]) {
     const { name: targetMethodName, fn } = processRegisterMethodArgs(args)
     const originMethodValue = this.ctx.methods.get(targetMethodName) || []
-    // TODO: ?? 此处 bind this 是否可优化为 箭头函数 => 再看下 this 指向问题
     const targetMethodValue = originMethodValue.concat(fn || function (fn: Func) {
       this.register({
         name: targetMethodName,

@@ -247,16 +247,18 @@ export default class Kernel extends EventEmitter {
   }
 
   checkPluginOpts (pluginCtx, opts) {
-    if (typeof pluginCtx.optsSchema !== 'function') {
-      return
-    }
+    if (typeof pluginCtx.optsSchema !== 'function') return
+
     this.debugger('checkPluginOpts', pluginCtx)
     const joi = require('joi')
     const schema = pluginCtx.optsSchema(joi)
+
     if (!joi.isSchema(schema)) {
       throw new Error(`插件${pluginCtx.id}中设置参数检查 schema 有误，请检查！`)
     }
+
     const { error } = schema.validate(opts)
+
     if (error) {
       error.message = `插件${pluginCtx.id}获得的参数不符合要求，请检查！`
       throw error

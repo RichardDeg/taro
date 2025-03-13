@@ -12,6 +12,8 @@ import WeappCI from './WeappCI'
 
 import type { IPluginContext } from '@tarojs/service'
 
+export { CIOptions } from './BaseCi'
+
 const enum EnumAction {
   /** 自动打开预览工具 */
   'open' = 'open',
@@ -32,7 +34,6 @@ interface MinimistArgs {
   upload: boolean
 }
 
-export { CIOptions } from './BaseCi'
 export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions)) => {
   const args = minimist<MinimistArgs>(process.argv.slice(2), {
     boolean: [EnumAction.open, EnumAction.preview, EnumAction.upload],

@@ -428,7 +428,7 @@ export interface WeappConfig {
   ignores?: Array<string>
   /** 指定使用哪一个 ci 机器人，可选值：1 ~ 30 */
   robot?: number
-    /** 预览和上传时的编译设置 */
+  /** 预览和上传时的编译设置 */
   setting?: {
     /** 对应于微信开发者工具的 "es6 转 es5" */
     es6: boolean
@@ -460,7 +460,8 @@ export interface TTConfig {
 }
 
 /** 终端类型 */
-export type AlipayClientType = /** 支付宝 */
+export type AlipayClientType = 
+  /** 支付宝 */
   | 'alipay'
   /** AMPE */
   | 'ampe'
