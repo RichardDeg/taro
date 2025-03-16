@@ -23,6 +23,8 @@ const enum EnumAction {
   'upload' = 'upload',
 }
 
+const EnumActionList = [EnumAction.open, EnumAction.preview, EnumAction.upload]
+
 interface MinimistArgs {
   /** 自定义要处理的项目目录 */
   projectPath: string
@@ -36,7 +38,7 @@ interface MinimistArgs {
 
 export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions)) => {
   const args = minimist<MinimistArgs>(process.argv.slice(2), {
-    boolean: [EnumAction.open, EnumAction.preview, EnumAction.upload],
+    boolean: EnumActionList,
     string: ['projectPath'],
     default: {
       projectPath: ''
@@ -121,6 +123,7 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
     // 可通过异步函数获取插件选项
     const pluginOpts = typeof _pluginOpts === 'function' ? await _pluginOpts() : _pluginOpts
     let ci: BaseCI | null = null
+    // TODO: 看到这里了
     switch (platform) {
       case 'weapp':
       case 'qywx':
@@ -141,8 +144,6 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
         break
       case 'jd':
         ci = new JdCI(ctx, pluginOpts)
-        break
-      default:
         break
     }
     if (!ci) {
@@ -179,17 +180,11 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
     const onBuildDone = ctx.onBuildComplete || ctx.onBuildFinish
     onBuildDone(async () => {
       let action: EnumAction | null = null
-      switch (true) {
-        case args[EnumAction.open]:
-          action = EnumAction.open
-          break
-        case args[EnumAction.preview]:
-          action = EnumAction.preview
-          break
-        case args[EnumAction.upload]:
-          action = EnumAction.upload
-          break
-      }
+
+      EnumActionList.forEach(enumAction => {
+        if (!action && args[enumAction]) action = enumAction
+      })
+
       if (action) {
         await doAction(ctx.runOpts.options.platform, action, args.projectPath)
       }
@@ -197,9 +192,12 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
   }
 
   // 注册独立的命令，可直接上传构建后的代码
-  [EnumAction.open, EnumAction.preview, EnumAction.upload].forEach(action => {
+  EnumActionList.forEach(action => {
     ctx.registerCommand({
       name: action,
+      async fn ({ options }) {
+        doAction(options.type, action, options.projectPath)
+      },
       optionsMap: {
         '--type [typeName]': `${action} type, 支持 weapp/swan/alipay/iot/tt/dd`,
         '--projectPath': `${action} 目录, 不传默认为配置项 'outputRoot' 配置目录`
@@ -208,9 +206,6 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
         `taro ${action} --type weapp`,
         `taro ${action} --type alipay`
       ],
-      async fn ({ options }) {
-        doAction(options.type, action, options.projectPath)
-      }
     })
   })
 }

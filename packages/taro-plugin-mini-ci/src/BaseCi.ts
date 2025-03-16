@@ -163,6 +163,7 @@ export default abstract class BaseCI {
   /** 命令要操作的项目目录 */
   protected projectPath: string
 
+  // TODO: 看到这里了
   constructor (ctx: IPluginContext, pluginOpts: CIOptions) {
     this.ctx = ctx
     this.pluginOpts = pluginOpts
