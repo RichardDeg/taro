@@ -126,6 +126,17 @@ export interface JdConfig {
   ignores?: string[]
 }
 
+interface TriggerHooksData {
+  platform: string
+  qrCodeLocalPath: string
+  qrCodeContent: string
+}
+interface TriggerHooksParams {
+  success: boolean
+  data: TriggerHooksData
+  error?: Error
+}
+
 export interface CIOptions {
   /** 发布版本号，默认取 package.json 文件的 taroConfig.version 字段 */
   version?: string
@@ -163,7 +174,6 @@ export default abstract class BaseCI {
   /** 命令要操作的项目目录 */
   protected projectPath: string
 
-  // TODO: 看到这里了
   constructor (ctx: IPluginContext, pluginOpts: CIOptions) {
     this.ctx = ctx
     this.pluginOpts = pluginOpts
@@ -183,15 +193,10 @@ export default abstract class BaseCI {
     this.projectPath = path
   }
 
-  /** 执行预览命令后触发 */
-  async triggerPreviewHooks (content: {
-    success: boolean
-    data: { platform: string, qrCodeLocalPath: string, qrCodeContent: string }
-    error?: Error
-  }) {
-    const { success, data, error } = content
+  /** 通用执行命令方法 */
+  async _triggerHooks ({ success, data, error }: TriggerHooksParams, pluginName: string) {
     await this.ctx.applyPlugins({
-      name: ON_PREVIEW_COMPLETE,
+      name: pluginName,
       opts: {
         success,
         data: {
@@ -209,30 +214,14 @@ export default abstract class BaseCI {
     }
   }
 
-  /** 执行上传命令后触发 */
-  async triggerUploadHooks (content: {
-    success: boolean
-    data: { platform: string, qrCodeLocalPath: string, qrCodeContent: string }
-    error?: Error
-  }) {
-    const { success, data, error } = content
-    await this.ctx.applyPlugins({
-      name: ON_UPLOAD_COMPLETE,
-      opts: {
-        success,
-        data: {
-          version: this.version,
-          desc: this.desc,
-          projectPath: this.projectPath,
-          ...data
-        },
-        error
-      },
-    })
+  /** 执行预览命令后触发 */
+  async triggerPreviewHooks (content: TriggerHooksParams) {
+    await this._triggerHooks(content, ON_PREVIEW_COMPLETE)
+  }
 
-    if (!success) {
-      process.exit(1)
-    }
+  /** 执行上传命令后触发 */
+  async triggerUploadHooks (content: TriggerHooksParams) {
+    await this._triggerHooks(content, ON_UPLOAD_COMPLETE)
   }
 
   /** 初始化函数，new实例化后会被立即调用一次 */
