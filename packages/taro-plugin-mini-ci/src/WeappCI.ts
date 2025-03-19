@@ -18,10 +18,11 @@ export default class WeappCI extends BaseCI {
   init () {
     const { appPath } = this.ctx.paths
     const { fs, chalk, ProcessTypeEnum, printLog } = this.ctx.helper
-    if (this.pluginOpts.weapp == null) {
+    if (!this.pluginOpts.weapp) {
       throw new Error('请为"@tarojs/plugin-mini-ci"插件配置 "weapp" 选项')
     }
     try {
+      // 参考：https://www.npmjs.com/package/miniprogram-ci
       this.ci = getNpmPkgSync('miniprogram-ci', process.cwd())
     } catch (error) {
       printLog(ProcessTypeEnum.ERROR, chalk.red('请安装依赖：miniprogram-ci'))
@@ -33,9 +34,9 @@ export default class WeappCI extends BaseCI {
     const weappConfig = {
       type: 'miniProgram' as ProjectType,
       projectPath: this.projectPath,
-      appid: this.pluginOpts.weapp!.appid,
-      privateKeyPath: this.pluginOpts.weapp!.privateKeyPath,
-      ignores: this.pluginOpts.weapp!.ignores,
+      appid: this.pluginOpts.weapp.appid,
+      privateKeyPath: this.pluginOpts.weapp.privateKeyPath,
+      ignores: this.pluginOpts.weapp.ignores,
     }
     const privateKeyPath = path.isAbsolute(weappConfig.privateKeyPath) ? weappConfig.privateKeyPath : path.join(appPath, weappConfig.privateKeyPath)
     if (!fs.pathExistsSync(privateKeyPath)) {
@@ -48,17 +49,14 @@ export default class WeappCI extends BaseCI {
     const { fs, printLog, ProcessTypeEnum, getUserHomeDir } = this.ctx.helper
     // 检查安装路径是否存在
     if (!(await fs.pathExists(this.devToolsInstallPath))) {
-      printLog(ProcessTypeEnum.ERROR, '微信开发者工具安装路径不存在', this.devToolsInstallPath)
-      return
+      return printLog(ProcessTypeEnum.ERROR, '微信开发者工具安装路径不存在', this.devToolsInstallPath)
     }
     // TODO: 待统一方法 os.platform() 与 process.platform 与 path.win32.sep
     // TODO: 待梳理定义统一处理路径的方法: normalizePath, 分别处理路径分隔符不同，win32, darwin 等 Platform ｜ 正则表达式的不同 ｜ 方法的不同： replace、startWith
-    /** 命令行工具所在路径 */
-    const cliPath = path.join(this.devToolsInstallPath, os.platform() === 'win32' ? '/cli.bat' : '/Contents/MacOS/cli')
     const isWindows = os.platform() === 'win32'
 
     // 检查是否开启了命令行
-    const errMesg = '工具的服务端口已关闭。要使用命令行调用工具，请打开工具 -> 设置 -> 安全设置，将服务端口开启。详细信息: https://developers.weixin.qq.com/miniprogram/dev/devtools/cli.html '
+    const errMsg = '工具的服务端口已关闭。要使用命令行调用工具，请打开工具 -> 设置 -> 安全设置，将服务端口开启。详细信息: https://developers.weixin.qq.com/miniprogram/dev/devtools/cli.html '
     const installPath = isWindows ? this.devToolsInstallPath : `${this.devToolsInstallPath}/Contents/MacOS`
     const md5 = crypto.createHash('md5').update(installPath).digest('hex')
     const ideStatusFile = path.join(
@@ -68,15 +66,14 @@ export default class WeappCI extends BaseCI {
         : `/Library/Application Support/微信开发者工具/${md5}/Default/.ide-status`
     )
     if (!(await fs.pathExists(ideStatusFile))) {
-      printLog(ProcessTypeEnum.ERROR, errMesg)
-      return
+      return printLog(ProcessTypeEnum.ERROR, errMsg)
     }
-    const ideStatus = await fs.readFile(ideStatusFile, 'utf-8')
-    if (ideStatus === 'Off') {
-      printLog(ProcessTypeEnum.ERROR, errMesg)
-      return
+    if ((await fs.readFile(ideStatusFile, 'utf-8')) === 'Off') {
+      return printLog(ProcessTypeEnum.ERROR, errMsg)
     }
 
+    /** 命令行工具所在路径 */
+    const cliPath = path.join(this.devToolsInstallPath, isWindows ? '/cli.bat' : '/Contents/MacOS/cli')
     if (!(await fs.pathExists(cliPath))) {
       printLog(ProcessTypeEnum.ERROR, '命令行工具路径不存在', cliPath)
     }
@@ -85,6 +82,7 @@ export default class WeappCI extends BaseCI {
     shell.exec(`${cliPath} open --project ${this.projectPath}`)
   }
 
+  // TODO: 看到这里了
   async preview () {
     const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     try {

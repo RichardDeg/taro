@@ -29,6 +29,10 @@ export interface IProcessTypeMap {
 }
 
 export const processTypeMap: IProcessTypeMap = {
+  [ProcessTypeEnum.START]: {
+    name: '启动',
+    color: 'green',
+  },
   [ProcessTypeEnum.CREATE]: {
     name: '创建',
     color: 'cyan',
@@ -64,10 +68,6 @@ export const processTypeMap: IProcessTypeMap = {
   [ProcessTypeEnum.UNLINK]: {
     name: '删除',
     color: 'magenta',
-  },
-  [ProcessTypeEnum.START]: {
-    name: '启动',
-    color: 'green',
   },
   [ProcessTypeEnum.REFERENCE]: {
     name: '引用',
