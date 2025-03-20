@@ -9,10 +9,7 @@ import * as QRCode from 'qrcode'
 export async function readQrcodeImageContent (imagePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
     Jimp.read(imagePath, function (err, image) {
-      if (err) {
-        reject(err)
-        return
-      }
+      if (err) return reject(err)
       // @ts-ignore
       const scanData = jsQR(image.bitmap.data, image.bitmap.width, image.bitmap.height)
 

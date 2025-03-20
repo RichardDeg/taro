@@ -123,12 +123,12 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
     // 可通过异步函数获取插件选项
     const pluginOpts = typeof _pluginOpts === 'function' ? await _pluginOpts() : _pluginOpts
     let ci: BaseCI | null = null
-    // TODO: 看到这里了
     switch (platform) {
       case 'weapp':
       case 'qywx':
         ci = new WeappCI(ctx, pluginOpts)
         break
+      // TODO: 看到这里了
       case 'tt':
         ci = new TTCI(ctx, pluginOpts)
         break

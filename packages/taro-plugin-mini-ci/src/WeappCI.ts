@@ -82,7 +82,6 @@ export default class WeappCI extends BaseCI {
     shell.exec(`${cliPath} open --project ${this.projectPath}`)
   }
 
-  // TODO: 看到这里了
   async preview () {
     const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     try {
