@@ -11,7 +11,7 @@ export default class SwanCI extends BaseCI {
   private swanBin
 
   init (): void {
-    if (this.pluginOpts.swan == null) {
+    if (!this.pluginOpts.swan) {
       throw new Error('请为"@tarojs/plugin-mini-ci"插件配置 "swan" 选项')
     }
     const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper

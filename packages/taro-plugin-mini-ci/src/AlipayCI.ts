@@ -12,11 +12,12 @@ export default class AlipayCI extends BaseCI {
   protected minidev: AlipayInstance
 
   init (): void {
-    if (this.pluginOpts.alipay == null) {
+    if (!this.pluginOpts.alipay) {
       throw new Error('请为"@tarojs/plugin-mini-ci"插件配置 "alipay" 选项')
     }
     const { fs, printLog, ProcessTypeEnum, chalk } = this.ctx.helper
     try {
+      // 参考：https://www.npmjs.com/package/minidev
       this.minidev = getNpmPkgSync('minidev', process.cwd())
     } catch (error) {
       printLog(ProcessTypeEnum.ERROR, chalk.red('请安装依赖：minidev'))
@@ -33,7 +34,9 @@ export default class AlipayCI extends BaseCI {
         printLog(ProcessTypeEnum.ERROR, chalk.red(`"alipay.privateKeyPath"选项配置的路径"${privateKeyPath}"不存在,本次上传终止`))
         process.exit(1)
       } else {
-        privateKey = fs.readFileSync(privateKeyPath, 'utf-8')
+        privateKey = fs.readFileSync(privateKeyPath, {
+          encoding: 'utf8'
+        })
       }
     }
 
@@ -52,15 +55,10 @@ export default class AlipayCI extends BaseCI {
     const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     try {
       printLog(ProcessTypeEnum.START, '小程序开发者工具...', this.projectPath)
-      await this.minidev.minidev
-        .startIde(
-          Object.assign(
-            {
-              project: this.projectPath
-            },
-            devToolsInstallPath ? { appPath: devToolsInstallPath } : {}
-          )
-        )
+      await this.minidev.minidev.startIde({
+        project: this.projectPath,
+        appPath: devToolsInstallPath || undefined
+      })
     } catch (error) {
       printLog(ProcessTypeEnum.ERROR, chalk.red(error.message))
     }
@@ -82,7 +80,6 @@ export default class AlipayCI extends BaseCI {
       /** 注意： 这是二维码的线上图片地址， 不是二维码中的内容 */
       const qrcodeUrl = previewResult.qrcodeUrl
       const qrcodeContent = await readQrcodeImageContent(qrcodeUrl)
-      // console.log('qrcodeContent', qrcodeContent)
       await generateQrcodeImageFile(previewQrcodePath, qrcodeContent)
       printLog(ProcessTypeEnum.REMIND, `预览版二维码已生成，存储在:"${previewQrcodePath}",二维码内容是："${qrcodeContent}"`)
 
@@ -116,12 +113,12 @@ export default class AlipayCI extends BaseCI {
 
     //  SDK上传不支持设置描述信息; 版本号必须大于现有版本号
     try {
-      const lasterVersion = await this.minidev.minidev.app.getUploadedVersion({
+      const latestVersion = await this.minidev.minidev.app.getUploadedVersion({
         appId,
         clientType
       })
-      if (this.version && compareVersion(this.version, lasterVersion) <= 0) {
-        printLog(ProcessTypeEnum.ERROR, chalk.red(`上传版本号 "${this.version}" 必须大于最新上传版本 "${lasterVersion}"`))
+      if (this.version && compareVersion(this.version, latestVersion) <= 0) {
+        printLog(ProcessTypeEnum.ERROR, chalk.red(`上传版本号 "${this.version}" 必须大于最新上传版本 "${latestVersion}"`))
       }
       const result = await this.minidev.minidev.upload({
         project: this.projectPath,
@@ -129,7 +126,7 @@ export default class AlipayCI extends BaseCI {
         version: this.version,
         clientType,
         experience: true,
-        deleteVersion: deleteVersion || lasterVersion // 默认删除上个版本
+        deleteVersion: deleteVersion || latestVersion // 默认删除上个版本
       })
       /** 注意： 这是二维码的线上图片地址， 不是二维码中的内容 */
       const qrcodeUrl = result.experienceQrCodeUrl!

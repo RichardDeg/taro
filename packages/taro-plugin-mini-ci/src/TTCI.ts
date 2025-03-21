@@ -11,11 +11,12 @@ export default class TTCI extends BaseCI {
 
   init () {
     const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
-    if (this.pluginOpts.tt == null) {
-      printLog(ProcessTypeEnum.ERROR, chalk.red(('请为"@tarojs/plugin-mini-ci"插件配置 "tt" 选项')))
+    if (!this.pluginOpts.tt) {
+      printLog(ProcessTypeEnum.ERROR, chalk.red('请为"@tarojs/plugin-mini-ci"插件配置 "tt" 选项'))
       process.exit(1)
     }
     try {
+      // 参考：https://www.npmjs.com/package/tt-ide-cli
       // 调试使用版本是： tt-ide-cli@0.1.20
       this.tt = getNpmPkgSync('tt-ide-cli', process.cwd())
     } catch (error) {

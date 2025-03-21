@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-import * as fs from 'node:fs'
 import * as path from 'node:path'
 
 import BaseCI from './BaseCi'
@@ -7,6 +6,7 @@ import { AlipayInstance, DingTalk } from './types'
 import { getNpmPkgSync } from './utils/npm'
 import { generateQrcodeImageFile } from './utils/qrcode'
 
+// TODO: 看到这里了
 /**
  * 钉钉小程序CI https://github.com/open-dingtalk/dingtalk-design-cli/blob/develop/packages/opensdk/package.json
  */
@@ -16,10 +16,10 @@ export default class DingtalkCI extends BaseCI {
   private entryPage: string
 
   init (): void {
-    if (this.pluginOpts.dd == null) {
+    if (!this.pluginOpts.dd) {
       throw new Error('请为"@tarojs/plugin-mini-ci"插件配置 "dd" 选项')
     }
-    const { printLog, ProcessTypeEnum, chalk } = this.ctx.helper
+    const { printLog, ProcessTypeEnum, chalk, fs } = this.ctx.helper
     const { token } = this.pluginOpts.dd!
     try {
       this.dingtalkSDK = getNpmPkgSync('dingtalk-miniapp-opensdk', process.cwd()).sdk
@@ -56,15 +56,11 @@ export default class DingtalkCI extends BaseCI {
     }
     try {
       printLog(ProcessTypeEnum.START, '小程序开发者工具...', this.projectPath)
-      await minidev.minidev.startIde(
-        Object.assign(
-          {
-            project: this.projectPath,
-            projectType,
-          },
-          devToolsInstallPath ? { appPath: devToolsInstallPath } : {}
-        )
-      )
+      await minidev.minidev.startIde({
+        project: this.projectPath,
+        projectType,
+        appPath: devToolsInstallPath || undefined
+      })
     } catch (error) {
       printLog(ProcessTypeEnum.ERROR, chalk.red(error.message))
     }
