@@ -136,13 +136,13 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
         ci = new AlipayCI(ctx, pluginOpts)
         break
       case 'dd':
-        // TODO: 看到这里了
         ci = new DingtalkCI(ctx, pluginOpts)
         break
       case 'swan':
         ci = new SwanCI(ctx, pluginOpts)
         break
       case 'jd':
+        // TODO: 看到这里了
         ci = new JdCI(ctx, pluginOpts)
         break
     }

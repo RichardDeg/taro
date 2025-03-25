@@ -16,7 +16,7 @@ export namespace DingTalk {
     host?: string
   }
   export interface ITaskProgressMessage<T> {
-    status: 'pending' |'building' |'success' |'failed' | 'overtime'
+    status: 'pending' | 'building' | 'success' | 'failed' | 'overtime'
     data: T
   }
   export interface ITaskOptionBase {

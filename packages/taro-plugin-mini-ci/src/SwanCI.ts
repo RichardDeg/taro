@@ -7,6 +7,22 @@ import BaseCI from './BaseCi'
 import { resolveNpmSync } from './utils/npm'
 import { generateQrcodeImageFile, printQrcode2Terminal } from './utils/qrcode'
 
+interface FileSizeSub {
+  [k : string]: number
+}
+interface FileSize {
+  main: number
+  sub: FileSizeSub
+}
+interface UploadResponse {
+  fileSize: FileSize
+  /** 体验码内容 */
+  schemeUrl: string
+  schemeUrlOpti: unknown
+  /** 警告信息 */
+  warningList: string[]
+}
+
 export default class SwanCI extends BaseCI {
   private swanBin
 
@@ -46,13 +62,10 @@ export default class SwanCI extends BaseCI {
         stdout = JSON.parse(stdout)
         // @ts-ignore
         const qrContent = stdout.list[0].url
-        // console.log('预览图片：', stdout.list[0].urlBase64)
+
         await printQrcode2Terminal(qrContent)
         await generateQrcodeImageFile(previewQrcodePath, qrContent)
-        printLog(
-          ProcessTypeEnum.REMIND,
-          `预览二维码已生成，存储在:"${previewQrcodePath}",二维码内容是：${qrContent}`
-        )
+        printLog(ProcessTypeEnum.REMIND, `预览二维码已生成，存储在:"${previewQrcodePath}",二维码内容是：${qrContent}`)
 
         this.triggerPreviewHooks({
           success: true,
@@ -90,10 +103,7 @@ export default class SwanCI extends BaseCI {
 
         await printQrcode2Terminal(qrContent)
         await generateQrcodeImageFile(uploadQrcodePath, qrContent)
-        printLog(
-          ProcessTypeEnum.REMIND,
-          `体验版二维码已生成，存储在:"${uploadQrcodePath}",二维码内容是：${qrContent}`
-        )
+        printLog(ProcessTypeEnum.REMIND, `体验版二维码已生成，存储在:"${uploadQrcodePath}",二维码内容是：${qrContent}`)
 
         this.triggerUploadHooks({
           success: true,
@@ -116,18 +126,4 @@ export default class SwanCI extends BaseCI {
       }
     })
   }
-}
-
-interface UploadResponse {
-  fileSize: {
-    main: number
-    sub: {
-      [k : string]: number
-    }
-  }
-  /** 体验码内容 */
-  schemeUrl: string
-  schemeUrlOpti: unknown
-  /** 警告信息 */
-  warningList: string[]
 }

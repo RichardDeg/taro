@@ -6,7 +6,6 @@ import { AlipayInstance, DingTalk } from './types'
 import { getNpmPkgSync } from './utils/npm'
 import { generateQrcodeImageFile } from './utils/qrcode'
 
-// TODO: 看到这里了
 /**
  * 钉钉小程序CI https://github.com/open-dingtalk/dingtalk-design-cli/blob/develop/packages/opensdk/package.json
  */
@@ -45,8 +44,8 @@ export default class DingtalkCI extends BaseCI {
 
   //  和支付宝小程序共用ide
   async open () {
-    const { devToolsInstallPath, projectType = 'dingtalk-biz' } = this.pluginOpts.dd!
     const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
+    const { devToolsInstallPath, projectType = 'dingtalk-biz' } = this.pluginOpts.dd!
     let minidev: AlipayInstance
     try {
       minidev = getNpmPkgSync('minidev', process.cwd())
@@ -69,7 +68,7 @@ export default class DingtalkCI extends BaseCI {
   //  特性： CI 内部会自己打印二维码； 预览版不会上传到后台，只有预览码作为入口访问
   async preview () {
     const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
-    const { appid, } = this.pluginOpts.dd!
+    const { appid } = this.pluginOpts.dd!
 
     try {
       const previewUrl = await this.dingtalkSDK.previewBuild({
@@ -81,7 +80,6 @@ export default class DingtalkCI extends BaseCI {
         ignoreWebViewDomainCheck: true,
         buildTarget: 'Preview',
         onProgressUpdate (info) {
-          //   logger.debug('拉取构建结果', info);
           console.log('info.status', info.status)
           if (info.status === 'failed') {
             console.error('构建失败')
@@ -126,16 +124,12 @@ export default class DingtalkCI extends BaseCI {
     const { appid } = this.pluginOpts.dd!
     printLog(ProcessTypeEnum.START, '上传代码到钉钉小程序后台')
 
-    let hasDone = false
-    const uploadCommonParams = {
-      project: this.projectPath,
-      miniAppId: appid,
-      packageVersion: this.version
-    }
-
     try {
+      let hasDone = false
       const result = await this.dingtalkSDK.miniUpload({
-        ...uploadCommonParams,
+        project: this.projectPath,
+        miniAppId: appid,
+        packageVersion: this.version,
         onProgressUpdate: info => {
           console.log(info)
           const { data = {} as any, status } = info
@@ -143,18 +137,12 @@ export default class DingtalkCI extends BaseCI {
           // @ts-ignore
           const log = data.log
 
-          if (status === 'success') {
-            if (!hasDone) {
-              console.log('构建成功')
-              console.log('本次上传版本号', data.version)
-              hasDone = true
-            }
+          if (status === 'success' && !hasDone) {
+            console.log('构建成功')
+            console.log('本次上传版本号', data.version)
+            hasDone = true
           } else if (status === 'building') {
-            console.log(
-              `构建中，正在查询构建结果。 ${
-                logId ? `logId: ${logId}` : ''
-              }`
-            )
+            console.log(`构建中，正在查询构建结果。 ${logId ? `logId: ${logId}` : ''}`)
           } else if (status === 'overtime') {
             console.log('构建超时，请重试', log)
           } else if (status === 'failed') {

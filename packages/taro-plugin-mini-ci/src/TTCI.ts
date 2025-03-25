@@ -9,7 +9,7 @@ import { printQrcode2Terminal } from './utils/qrcode'
 export default class TTCI extends BaseCI {
   tt
 
-  init () {
+  init (): void {
     const { chalk, printLog, ProcessTypeEnum } = this.ctx.helper
     if (!this.pluginOpts.tt) {
       printLog(ProcessTypeEnum.ERROR, chalk.red('请为"@tarojs/plugin-mini-ci"插件配置 "tt" 选项'))

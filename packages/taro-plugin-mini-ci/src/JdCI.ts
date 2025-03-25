@@ -7,7 +7,7 @@ import { generateQrcodeImageFile, printQrcode2Terminal, readQrcodeImageContent }
 
 export default class JdCI extends BaseCI {
   jdCi
-  init () {
+  init (): void {
     if (!this.pluginOpts.jd) {
       throw new Error('请为"@tarojs/plugin-mini-ci"插件配置 "jd" 选项')
     }
