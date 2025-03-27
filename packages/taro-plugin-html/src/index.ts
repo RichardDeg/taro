@@ -1,7 +1,7 @@
 import * as path from 'node:path'
 
 import { babelKit } from '@tarojs/helper'
-import { isArray, isString } from '@tarojs/shared'
+import { injectRuntimePath } from '@tarojs/shared'
 
 import type { IPluginContext, TaroPlatformBase } from '@tarojs/service'
 import type { IComponentConfig } from '@tarojs/taro/types/compile/hooks'
@@ -37,7 +37,8 @@ export default (ctx: IPluginContext, options: IOptions) => {
   ctx.registerMethod({
     name: 'onSetupClose',
     fn (platform: TaroPlatformBase) {
-      injectRuntimePath(platform)
+      const injectedPath = '@tarojs/plugin-html/dist/runtime'
+      platform.runtimePath = injectRuntimePath(platform.runtimePath, injectedPath)
     }
   })
   // 映射、收集使用到的小程序组件
@@ -66,15 +67,6 @@ export default (ctx: IPluginContext, options: IOptions) => {
   ctx.modifyRunnerOpts(({ opts }) => {
     modifyPostcssConfig(opts, options)
   })
-}
-
-function injectRuntimePath (platform: TaroPlatformBase) {
-  const injectedPath = '@tarojs/plugin-html/dist/runtime'
-  if (isArray(platform.runtimePath)) {
-    platform.runtimePath.push(injectedPath)
-  } else if (isString(platform.runtimePath)) {
-    platform.runtimePath = [platform.runtimePath, injectedPath]
-  }
 }
 
 function modifyPostcssConfig (config: Record<string, any>, options: IOptions) {

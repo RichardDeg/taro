@@ -1,5 +1,5 @@
 import { chalk, fs } from '@tarojs/helper'
-import { isArray, isString } from '@tarojs/shared'
+import { injectRuntimePath, isString } from '@tarojs/shared'
 
 import type { IPluginContext, TaroPlatformBase } from '@tarojs/service'
 
@@ -34,7 +34,8 @@ export default function (ctx: IPluginContext, options: IOptions) {
   ctx.registerMethod({
     name: 'onSetupClose',
     fn (platform: TaroPlatformBase) {
-      injectRuntimePath(platform)
+      const injectedPath = 'post:@tarojs/plugin-react-devtools/dist/runtime'
+      platform.runtimePath = injectRuntimePath(platform.runtimePath, injectedPath)
     }
   })
 
@@ -95,13 +96,4 @@ export default function (ctx: IPluginContext, options: IOptions) {
       esbuildConfig.plugins.push(taroReactDevtoolsPlugin)
     }
   })
-}
-
-function injectRuntimePath (platform: TaroPlatformBase) {
-  const injectedPath = 'post:@tarojs/plugin-react-devtools/dist/runtime'
-  if (isArray(platform.runtimePath)) {
-    (platform.runtimePath as string []).push(injectedPath)
-  } else if (isString(platform.runtimePath)) {
-    platform.runtimePath = [platform.runtimePath as string, injectedPath]
-  }
 }

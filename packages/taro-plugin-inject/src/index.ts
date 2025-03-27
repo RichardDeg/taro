@@ -1,7 +1,7 @@
 import * as path from 'node:path'
 
 import { esbuild } from '@tarojs/helper'
-import { isArray, isFunction, isObject, isString } from '@tarojs/shared'
+import { isArray, isFunction, isObject, injectRuntimePath } from '@tarojs/shared'
 
 import type { IPluginContext, TaroPlatformBase } from '@tarojs/service'
 
@@ -52,7 +52,8 @@ export default (ctx: IPluginContext, options: IOptions) => {
       }
 
       if (components || syncApis || asyncApis || componentsMap) {
-        platform.runtimePath = injectRuntimePath(platform)
+        const injectedPath = `@tarojs/plugin-inject/dist/runtime`
+        platform.runtimePath = injectRuntimePath(platform.runtimePath, injectedPath)
 
         if (components) {
           template.mergeComponents(ctx, components)
@@ -72,19 +73,6 @@ export default (ctx: IPluginContext, options: IOptions) => {
       }
     }
   })
-}
-
-function injectRuntimePath (runtimePath: string | string[]) {
-  let mergedRuntimePath = runtimePath
-
-  const injectedPath = `@tarojs/plugin-inject/dist/runtime`
-  if (isArray(mergedRuntimePath)) {
-    mergedRuntimePath.push(injectedPath)
-  } else if (isString(mergedRuntimePath)) {
-    mergedRuntimePath = [mergedRuntimePath, injectedPath]
-  }
-
-  return mergedRuntimePath
 }
 
 function injectComponentsReact (fs, taroComponentsPath, componentsMap) {

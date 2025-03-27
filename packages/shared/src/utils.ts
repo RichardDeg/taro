@@ -1,5 +1,6 @@
 import { internalComponents } from './components'
 import { PLATFORM_CONFIG_MAP, PLATFORM_TYPE } from './constants'
+import { isArray, isString } from './is'
 import { hooks } from './runtime-hooks'
 
 export const EMPTY_OBJ: any = {}
@@ -251,3 +252,9 @@ export function indent (str: string, size: number): string {
 export const isWebPlatform = () => process.env.TARO_ENV === 'h5' || process.env.TARO_PLATFORM === 'web'
 
 export const isSameStr = (str1: string, str2: string) => str1.toLowerCase() === str2.toLowerCase()
+
+export function injectRuntimePath (runtimePath: string | string[], injectedPath: string) {
+  if (isArray(runtimePath)) return [...runtimePath, injectedPath]
+  if (isString(runtimePath)) return [runtimePath, injectedPath]
+  return runtimePath
+}
