@@ -142,37 +142,26 @@ export default (ctx: IPluginContext, _pluginOpts: CIOptions | (() => CIOptions))
         ci = new SwanCI(ctx, pluginOpts)
         break
       case 'jd':
-        // TODO: 看到这里了
         ci = new JdCI(ctx, pluginOpts)
         break
     }
     if (!ci) {
-      printLog(ProcessTypeEnum.WARNING, `"@tarojs/plugin-mini-ci" 插件暂时不支持 "${platform}" 平台`)
-      return
+      return printLog(ProcessTypeEnum.WARNING, `"@tarojs/plugin-mini-ci" 插件暂时不支持 "${platform}" 平台`)
     }
 
-    projectPath = projectPath || pluginOpts.projectPath || ctx.paths.outputPath
+    projectPath ||= pluginOpts.projectPath || ctx.paths.outputPath
     projectPath = path.isAbsolute(projectPath) ? projectPath : path.join(ctx.paths.appPath, projectPath)
 
     if (!fs.pathExistsSync(projectPath)) {
       printLog(ProcessTypeEnum.ERROR, `"projectPath"选项配置的路径不存在:${projectPath}`)
       process.exit(0)
     }
+
     ci.setProjectPath(projectPath)
 
     ci.init()
 
-    switch (action) {
-      case EnumAction.open:
-        ci.open()
-        break
-      case EnumAction.upload:
-        ci.upload()
-        break
-      case EnumAction.preview:
-        ci.preview()
-        break
-    }
+    ci[action]()
   }
 
   // 构建小程序后执行
