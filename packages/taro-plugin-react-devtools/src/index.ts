@@ -49,6 +49,9 @@ export default function (ctx: IPluginContext, options: IOptions) {
       return [mergedPluginConfig, ...restArgs]
     })
 
+    // TODO: 严重怀疑是拼写错误导致的，可以改为理想状态，把以下代码注释掉
+    // TODO: ??? 为什么是 providerPlugin，而不是 providePlugin ??? 拼写错了么
+
     // 最理想是可以使用 definePlugin 设置 __REACT_DEVTOOLS_GLOBAL_HOOK__: window.__REACT_DEVTOOLS_GLOBAL_HOOK__
     // 但是 providerPlugin 不会识别 definePlugin 改写的 window 从而注入 window，可能是两个插件的调用时机问题
     // 因此使用 loader 魔改 react-reconciler，代替 definePlugin

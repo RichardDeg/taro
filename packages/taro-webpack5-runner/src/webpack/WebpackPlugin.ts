@@ -36,7 +36,7 @@ export default class WebpackPlugin {
     return WebpackPlugin.getPlugin(CopyWebpackPlugin, [args])
   }
 
-  static getProviderPlugin (args: Record<string, string | string[]>) {
+  static getProvidePlugin (args: Record<string, string | string[]>) {
     return WebpackPlugin.getPlugin(webpack.ProvidePlugin, [args])
   }
 

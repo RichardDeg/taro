@@ -17,7 +17,7 @@ export class HarmonyWebpackPlugin {
 
   getPlugins () {
     const plugins: Record<string, { plugin: any, args: PluginArgs }> = {
-      providerPlugin: this.getProviderPlugin(),
+      providePlugin: this.getProvidePlugin(),
       definePlugin: this.getDefinePlugin(),
     }
 
@@ -30,8 +30,8 @@ export class HarmonyWebpackPlugin {
     return plugins
   }
 
-  getProviderPlugin () {
-    return WebpackPlugin.getProviderPlugin({
+  getProvidePlugin () {
+    return WebpackPlugin.getProvidePlugin({
       window: ['@tarojs/runtime', 'window'],
       document: ['@tarojs/runtime', 'document'],
       navigator: ['@tarojs/runtime', 'navigator'],

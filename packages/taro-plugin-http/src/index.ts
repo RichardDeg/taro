@@ -27,7 +27,7 @@ export default (ctx: IPluginContext, options: IOptions) => {
       const runtimeAlias = `${packageName}/dist/runtime`
       chain.resolve.alias.set(runtimeAlias, path.join(__dirname, 'runtime.js'))
       // 注入相关全局BOM对象
-      chain.plugin('providerPlugin').tap(([pluginConfig, ...restArgs]) => {
+      chain.plugin('providePlugin').tap(([pluginConfig, ...restArgs]) => {
         let mergedFormData = pluginConfig.FormData
         let mergedBlob = pluginConfig.Blob
         // 实际上本runtime 没有实现 FormData 和 Blob 对象， 所以第三方库中的这2个对象会被替换成 undefined

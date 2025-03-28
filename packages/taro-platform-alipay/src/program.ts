@@ -99,7 +99,7 @@ export default class Alipay extends TaroPlatformBase {
   modifyWebpackConfig () {
     this.ctx.modifyWebpackChain(({ chain }) => {
       // 支付宝系小程序全局就有 navigator 对象，不需要模拟
-      chain.plugin('providerPlugin')
+      chain.plugin('providePlugin')
         .tap(args => {
           const newArgs = Object.assign({}, args[0])
           delete newArgs.navigator

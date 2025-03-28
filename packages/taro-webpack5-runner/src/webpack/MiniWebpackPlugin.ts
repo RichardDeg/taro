@@ -20,7 +20,7 @@ export class MiniWebpackPlugin {
 
   getPlugins () {
     const plugins: Record<string, { plugin: any, args: PluginArgs }> = {
-      providerPlugin: this.getProviderPlugin(),
+      providePlugin: this.getProvidePlugin(),
       definePlugin: this.getDefinePlugin(),
       miniCssExtractPlugin: this.getMiniCssExtractPlugin()
     }
@@ -47,8 +47,8 @@ export class MiniWebpackPlugin {
     return plugins
   }
 
-  getProviderPlugin () {
-    return WebpackPlugin.getProviderPlugin({
+  getProvidePlugin () {
+    return WebpackPlugin.getProvidePlugin({
       window: ['@tarojs/runtime', 'window'],
       document: ['@tarojs/runtime', 'document'],
       navigator: ['@tarojs/runtime', 'navigator'],

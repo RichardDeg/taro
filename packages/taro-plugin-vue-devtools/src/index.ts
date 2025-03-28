@@ -52,7 +52,7 @@ export default function (ctx: IPluginContext, options: IOptions) {
     })
 
     chain
-      .plugin('providerPlugin')
+      .plugin('providePlugin')
       .tap(args => {
         const config = args[0]
         config.globalThis = ['@tarojs/runtime', 'window']
