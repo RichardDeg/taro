@@ -53,11 +53,13 @@ export default function (ctx: IPluginContext, options: IOptions) {
 
     chain
       .plugin('providePlugin')
-      .tap(args => {
-        const config = args[0]
-        config.globalThis = ['@tarojs/runtime', 'window']
-        config.HTMLElement = ['@tarojs/runtime', 'TaroElement']
-        return args
+      .tap(([pluginConfig, ...restArgs]) => {
+        const mergedPluginConfig = {
+          ...pluginConfig,
+          globalThis: ['@tarojs/runtime', 'window'],
+          HTMLElement: ['@tarojs/runtime', 'TaroElement']
+        }
+        return [mergedPluginConfig, ...restArgs]
       })
   })
 
